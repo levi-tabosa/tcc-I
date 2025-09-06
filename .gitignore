@@ -3,6 +3,9 @@ __pycache__/
 *.py[codz]
 *$py.class
 
+camara
+camara.zip
+
 # C extensions
 *.so
 
