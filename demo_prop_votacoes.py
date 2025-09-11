@@ -3,7 +3,6 @@ import json
 from pathlib import Path
 from typing import List, Dict, Optional, Any
 from io import StringIO
-import ijson
 from functools import reduce
 
 import dash
@@ -11,10 +10,11 @@ from dash import dcc, html, dash_table, callback_context
 from dash.dependencies import Input, Output, State
 import plotly.express as px
 import pandas as pd
+import ijson
 
 DATA_LEG_ROOT = Path("camara/legislaturas")
 
-# ---------- JSON HELPERS (Unchanged) ----------
+# ---------- JSON HELPERS ----------
 def fetch_json(filepath: Path):
     try:
         with filepath.open("r", encoding="utf-8") as f:
@@ -53,7 +53,7 @@ def read_json_array_limited(path: Path, max_entries: int, key: Optional[str] = N
 def scan_info_files_limited(info_dir: Path, max_entries: int):
     results = []
     if not info_dir.exists(): return results
-    for i, entry in enumerate(sorted(info_dir.iterdir())):
+    for i, entry in enumerate(info_dir.iterdir()):
         if i >= max_entries: break
         data = fetch_json(entry / "info.json")
         if not data: continue
@@ -74,37 +74,37 @@ def _process_votacoes_rows(items: List[Dict]) -> List[Dict]:
     for item in items:
         aprovacao = item.get('aprovacao')
         if aprovacao == 1:
-            item['resultado'] = "Aprovada"
-        elif pd.isna(aprovacao):
-            item['resultado'] = "Indefinido"
-        else:
-            item['resultado'] = "Rejeitada/Outro"
+            item['aprovacao'] = "Aprovada"
+        elif aprovacao == 0:
+            item['aprovacao'] = "Rejeitada/Outro"
+        else: 
+            item['aprovacao'] = "Indefinido"
         
         proposicoes_afetadas = get_nested_value(item, 'proposicoesAfetadas', []) or []
         
         if not proposicoes_afetadas:
             row = item.copy()
-            row["proposicaoAfetada"] = "N/A"
-            row["proposicaoUri"] = None
-            enriched.append(row)
         else:
+            i = 0 # TODO: remover o `i`
             for p in proposicoes_afetadas:
                 if isinstance(p, dict):
                     row = item.copy()
-                    row["proposicaoAfetada"] = f"{p.get('siglaTipo')} {p.get('numero')}/{p.get('ano')}"
-                    row["proposicaoUri"] = p.get('uri')
-                    enriched.append(row)
+                    # NO CASO ONDE HAVER MAIS DE UMA PROPOSICAO AFETADA O VALOR SERA SOBRESCRITO
+                    row["proposicaoAfetada"] = f"{i} {p.get('id')} {p.get('siglaTipo')} {p.get('id')}/{p.get('ano')}"
+                    i += 1
+        enriched.append(row)
     return enriched
 
 DATA_TYPE_CONFIG = {
     "proposicoes": {
         "display_name": "Proposições",
-        "base_fields": ["id", "siglaTipo", "codTipo", "numero", "ano", "ementa", "descricaoTipo"],
-        "enrichment_fields": {
-            "ementaDetalhada": "ementaDetalhada",
-            "dataApresentacao": "dataApresentacao",
-            "descricaoTramitacao": "statusProposicao.descricaoTramitacao",
-            "despacho": "statusProposicao.despacho"
+        "base_fields": ["id", "siglaTipo", "codTipo", "numero", "ano", "ementa"], 
+        "enrichment_fields": { 
+            "ementaDetalhada": "ementaDetalhada", 
+            "dataApresentacao": "dataApresentacao", 
+            "descricaoTramitacao": "statusProposicao.descricaoTramitacao", 
+            "despacho": "statusProposicao.despacho",
+            "descricaoTipo": "descricaoTipo",
         },
         "sort_by": ["ano", "numero"],
         "sort_ascending": [False, False],
@@ -115,12 +115,15 @@ DATA_TYPE_CONFIG = {
         "display_name": "Votações",
         "base_fields": ["id", "dataHoraRegistro", "siglaOrgao", "descricao", "aprovacao"],
         "enrichment_fields": {
-            "proposicoesAfetadas": "proposicoesAfetadas",
+            # A CELULA DA TABELA PODE RECEBER UM LINK GERADO PARA UMA 
+            # TABELA SEPARADA EM CASOS COM ESTE ONDE O VALOR É UM `[]` CONTENDO OS ELEMENTOS.
+            # POR ENQUANTO O ULTIMO ELEMENTO ASSUME A CELULA
+            "proposicoesAfetadas": "proposicoesAfetadas",        
         },
         "processor": _process_votacoes_rows,
         "sort_by": ["dataHoraRegistro"],
-        "sort_ascending": [False],
-        "graph_column_x": "resultado",
+        "sort_iascending": [False],
+        "graph_column_x": "aprovacao",
         "graph_hover_data": ["siglaOrgao"],
     }
 }
@@ -162,8 +165,8 @@ def load_generic_dataframe(data_type: str, legislatura: int, max_entries: int) -
             if info:
                 dados = info.get("dados") if isinstance(info, dict) and "dados" in info else info
                 if isinstance(dados, dict):
-                    for target_col, source_path in config["enrichment_fields"].items():
-                        value = get_nested_value(dados, source_path)
+                    for target_col, key_path in config["enrichment_fields"].items():
+                        value = get_nested_value(dados, key_path)
                         if value is not None:
                             row[target_col] = value
         
@@ -181,7 +184,7 @@ def load_generic_dataframe(data_type: str, legislatura: int, max_entries: int) -
         return pd.DataFrame()
 
     df = pd.DataFrame(processed_data)
-    
+
     if 'sort_by' in config:
         for col in config['sort_by']:
             if 'data' in col.lower() or 'time' in col.lower():
@@ -203,8 +206,7 @@ def sanitize_max_entries(max_entries, default=1000, min_allowed=10, max_allowed=
     return max(min_allowed, min(me, max_allowed))
 
 # ---------- DASH APP ----------
-app = dash.Dash(__name__)
-
+app = dash.Dash(__name__, suppress_callback_exceptions=True)
 app.layout = html.Div([
     dcc.Store(id='generic-data-store'),
     html.H1("Dashboard Genérico: Câmara dos Deputados"),
@@ -232,10 +234,10 @@ app.layout = html.Div([
         id='loading-output',
         type='default',
         children=html.Div(id='output-area')
-    )
+    ),
+    html.Button(id='reset-filter-button', style={'display': 'none'})
 ])
 
-# ---------- CALLBACKS ----------
 def create_table(df, max_entries, display_columns):
     """Helper function to create the DataTable."""
     if df.empty:
@@ -264,12 +266,13 @@ def create_table(df, max_entries, display_columns):
         columns=[{"name": col, "id": col} for col in display_columns],
         data=df.to_dict("records"),
         sort_action="native",
-        page_size=min(max(int(sanitize_max_entries(max_entries) / 10), 10), 50),  # Ensure integer, cap at 50
+        page_size=max(int(sanitize_max_entries(max_entries) / 10), 10),  # Ensure integer, cap at 50
         style_table={'overflowX': 'auto'},
         style_cell={'textAlign': 'left', 'whiteSpace': 'normal', 'height': 'auto', 'minWidth': '120px', 'maxWidth': '350px'},
         style_header={'fontWeight': 'bold'}
     )
 
+# ---------- CALLBACKS ----------
 @app.callback(
     Output('generic-data-store', 'data'),
     [Input('leg-dropdown', 'value'),
