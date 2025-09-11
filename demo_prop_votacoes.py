@@ -223,83 +223,346 @@ def sanitize_max_entries(max_entries, default=1000, min_allowed=10, max_allowed=
 
 app = dash.Dash(__name__, suppress_callback_exceptions=True)
 
+# Estilos CSS customizados
+app.index_string = '''
+<!DOCTYPE html>
+<html>
+    <head>
+        {%metas%}
+        <title>{%title%}</title>
+        {%favicon%}
+        {%css%}
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+            
+            body {
+                font-family: 'Inter', sans-serif;
+                background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+                margin: 0;
+                padding: 20px;
+                min-height: 100vh;
+            }
+            
+            .main-container {
+                max-width: 1400px;
+                margin: 0 auto;
+                background: white;
+                border-radius: 16px;
+                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+                overflow: hidden;
+            }
+            
+            .header {
+                background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+                color: white;
+                padding: 30px;
+                text-align: center;
+            }
+            
+            .header h1 {
+                margin: 0;
+                font-size: 2.5rem;
+                font-weight: 700;
+                text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            }
+            
+            .header p {
+                margin: 10px 0 0 0;
+                font-size: 1.1rem;
+                opacity: 0.9;
+                font-weight: 300;
+            }
+            
+            .controls-section {
+                background: #f8fafc;
+                padding: 25px 30px;
+                border-bottom: 1px solid #e2e8f0;
+            }
+            
+            .control-group {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 25px;
+                align-items: end;
+            }
+            
+            .control-item {
+                display: flex;
+                flex-direction: column;
+                min-width: 150px;
+            }
+            
+            .control-item label {
+                font-weight: 600;
+                color: #374151;
+                margin-bottom: 8px;
+                font-size: 0.9rem;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+            
+            .warning-card {
+                background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+                border: 1px solid #f59e0b;
+                border-radius: 12px;
+                padding: 15px;
+                margin: 20px 30px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+            
+            .warning-icon {
+                width: 24px;
+                height: 24px;
+                background: #f59e0b;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-weight: bold;
+                flex-shrink: 0;
+            }
+            
+            .content-section {
+                padding: 30px;
+            }
+            
+            .stats-card {
+                background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+                border: 1px solid #10b981;
+                border-radius: 12px;
+                padding: 20px;
+                margin-bottom: 25px;
+                text-align: center;
+            }
+            
+            .chart-container {
+                background: white;
+                border-radius: 12px;
+                padding: 20px;
+                margin-bottom: 25px;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            }
+            
+            .table-section {
+                background: white;
+                border-radius: 12px;
+                padding: 25px;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            }
+            
+            .section-title {
+                font-size: 1.5rem;
+                font-weight: 600;
+                color: #1f2937;
+                margin-bottom: 20px;
+                padding-bottom: 10px;
+                border-bottom: 2px solid #e5e7eb;
+            }
+            
+            .filter-info {
+                background: #eff6ff;
+                border: 1px solid #3b82f6;
+                border-radius: 8px;
+                padding: 12px 16px;
+                margin-bottom: 20px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            
+            .reset-button {
+                background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 8px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.2s;
+                margin-bottom: 15px;
+            }
+            
+            .reset-button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+            }
+        </style>
+    </head>
+    <body>
+        {%app_entry%}
+        <footer>
+            {%config%}
+            {%scripts%}
+            {%renderer%}
+        </footer>
+    </body>
+</html>
+'''
+
 app.layout = html.Div([
     dcc.Store(id='generic-data-store'),
     dcc.Store(id='modal-content-store'),
-    html.H1("Dashboard Genérico: Câmara dos Deputados"),
-
+    
     html.Div([
-        html.Label("Selecione a Legislatura:"),
-        dcc.Dropdown(id='leg-dropdown', options=[{'label': str(x), 'value': x} for x in (53, 54, 55, 56, 57)], value=57, clearable=False, style={'width': '150px'}),
+        # Header Section
+        html.Div([
+            html.H1("📊 Dashboard Câmara dos Deputados"),
+            html.P("Análise de Proposições e Votações Legislativas")
+        ], className="header"),
+        
+        # Controls Section
+        html.Div([
+            html.Div([
+                html.Div([
+                    html.Label("🏛️ Legislatura"),
+                    dcc.Dropdown(
+                        id='leg-dropdown', 
+                        options=[{'label': f'{x}ª Legislatura', 'value': x} for x in (53, 54, 55, 56, 57)], 
+                        value=57, 
+                        clearable=False,
+                        style={'minWidth': '160px'}
+                    )
+                ], className="control-item"),
 
-        html.Label("Tipo de Dado:", style={'marginLeft': '20px'}),
-        dcc.Dropdown(
-            id='data-type-dropdown',
-            options=[{'label': v['display_name'], 'value': k} for k, v in DATA_TYPE_CONFIG.items()],
-            value='proposicoes',
-            clearable=False,
-            style={'width': '200px'}
-        ),
-        html.Label("Limite de entradas:", style={'marginLeft': '20px'}),
-        dcc.Input(id='max-entries', type='number', value=1000, min=10, step=100, style={'width': '150px'}, debounce=True),
-    ], style={'display': 'flex', 'alignItems': 'center', 'marginBottom': '20px'}),
+                html.Div([
+                    html.Label("📋 Tipo de Dados"),
+                    dcc.Dropdown(
+                        id='data-type-dropdown',
+                        options=[{'label': f'{v["display_name"]}', 'value': k} for k, v in DATA_TYPE_CONFIG.items()],
+                        value='proposicoes',
+                        clearable=False,
+                        style={'minWidth': '200px'}
+                    )
+                ], className="control-item"),
+                
+                html.Div([
+                    html.Label("📊 Limite de Registros"),
+                    dcc.Input(
+                        id='max-entries', 
+                        type='number', 
+                        value=1000, 
+                        min=10, 
+                        step=100, 
+                        style={'width': '150px', 'padding': '8px', 'border': '1px solid #d1d5db', 'borderRadius': '8px'}, 
+                        debounce=True
+                    )
+                ], className="control-item"),
+            ], className="control-group")
+        ], className="controls-section"),
 
-    html.Div(id='loading-warning', style={'color': 'orange', 'marginBottom': '10px'}),
+        # Warning Section
+        html.Div(id='loading-warning-container'),
 
-    dcc.Loading(
-        id='loading-output',
-        type='default',
-        children=[html.Div(id='output-area')]
-    ),
+        # Content Section
+        html.Div([
+            dcc.Loading(
+                id='loading-output',
+                type='circle',
+                color='#3b82f6',
+                children=[html.Div(id='output-area')]
+            )
+        ], className="content-section"),
+        
+    ], className="main-container"),
 
     html.Div(
         id='proposicoes-modal',
         style={
             'display': 'none',
             'position': 'fixed',
-            'zIndex': '2000',
+            'zIndex': '3000',
             'left': 0,
             'top': 0,
             'width': '100%',
             'height': '100%',
             'overflow': 'auto',
-            'backgroundColor': 'rgba(0,0,0,0.5)',
-            'padding': '40px'
+            'backgroundColor': 'rgba(0,0,0,0.6)',
+            'padding': '20px'
         },
         children=html.Div(
             id='proposicoes-modal-content',
             style={
                 'backgroundColor': 'white',
                 'margin': 'auto',
-                'padding': '20px',
-                'borderRadius': '8px',
-                'maxWidth': '1100px',
-                'boxShadow': '0 4px 30px rgba(0,0,0,0.2)'
+                'padding': '0',
+                'borderRadius': '16px',
+                'maxWidth': '1200px',
+                'boxShadow': '0 25px 50px -12px rgba(0,0,0,0.25)',
+                'overflow': 'hidden'
             },
             children=[
-                html.Div(
-                    style={'display': 'flex', 'justifyContent': 'space-between', 'alignItems': 'center'},
-                    children=[
-                        html.H3("Proposições Afetadas & Contexto", style={'margin': 0}),
-                        html.Div([
-                            html.Button("Copiar resumo", id='modal-copy-button', n_clicks=0, style={'marginRight': '8px'}),
-                            html.A("Abrir JSON em nova aba", id='modal-open-json', href='#', target='_blank', style={'marginRight': '8px'}),
-                            html.Button("Fechar", id='modal-close-button', n_clicks=0)
-                        ])
-                    ]
-                ),
-                html.Hr(),
+                # Modal Header
                 html.Div([
-                    dcc.Input(id='modal-search', placeholder='Filtrar proposições por texto (sigla, número, palavras da ementa)...', type='text', style={'width': '60%'}),
-                    html.Span(id='modal-count', style={'marginLeft': '12px', 'fontWeight': 'bold'})
-                ], style={'marginBottom': '12px'}),
-                html.Div(
-                    style={'display': 'grid', 'gridTemplateColumns': '380px 1fr', 'gap': '16px'},
-                    children=[
-                        html.Div(id='modal-row-summary', style={'maxHeight': '60vh', 'overflowY': 'auto', 'paddingRight': '8px', 'borderRight': '1px solid #eee'}),
-                        html.Div(id='modal-body', style={'maxHeight': '70vh', 'overflowY': 'auto'})
-                    ]
-                )
+                    html.Div([
+                        html.H3("📄 Proposições Afetadas & Contexto", style={'margin': 0, 'color': '#1f2937', 'fontSize': '1.5rem'}),
+                        html.P("Detalhes da votação e proposições relacionadas", style={'margin': '5px 0 0 0', 'color': '#6b7280', 'fontSize': '0.9rem'})
+                    ]),
+                    html.Div([
+                        html.Button("📋 Copiar", id='modal-copy-button', n_clicks=0, 
+                                  style={'marginRight': '8px', 'padding': '8px 16px', 'background': '#10b981', 'color': 'white', 'border': 'none', 'borderRadius': '6px', 'cursor': 'pointer'}),
+                        html.A("🔗 JSON", id='modal-open-json', href='#', target='_blank', 
+                               style={'marginRight': '8px', 'padding': '8px 16px', 'background': '#3b82f6', 'color': 'white', 'textDecoration': 'none', 'borderRadius': '6px'}),
+                        html.Button("✕", id='modal-close-button', n_clicks=0,
+                                  style={'padding': '8px 12px', 'background': '#ef4444', 'color': 'white', 'border': 'none', 'borderRadius': '6px', 'cursor': 'pointer'})
+                    ], style={'display': 'flex', 'alignItems': 'center'})
+                ], style={
+                    'display': 'flex', 
+                    'justifyContent': 'space-between', 
+                    'alignItems': 'center',
+                    'padding': '20px 25px',
+                    'borderBottom': '1px solid #e5e7eb',
+                    'background': '#f9fafb'
+                }),
+                
+                # Search Section
+                html.Div([
+                    html.Div([
+                        dcc.Input(
+                            id='modal-search', 
+                            placeholder='🔍 Filtrar proposições por texto, sigla, número ou palavras da ementa...', 
+                            type='text', 
+                            style={
+                                'width': '100%', 
+                                'padding': '12px 16px', 
+                                'border': '2px solid #e5e7eb', 
+                                'borderRadius': '8px',
+                                'fontSize': '14px',
+                                'outline': 'none'
+                            }
+                        ),
+                        html.Span(id='modal-count', style={'marginTop': '8px', 'fontSize': '0.9rem', 'color': '#6b7280', 'fontWeight': '500'})
+                    ])
+                ], style={'padding': '20px 25px', 'borderBottom': '1px solid #e5e7eb'}),
+                
+                # Content Grid
+                html.Div([
+                    html.Div([
+                        html.H4("ℹ️ Resumo da Votação", style={'margin': '0 0 15px 0', 'color': '#374151', 'fontSize': '1.1rem'}),
+                        html.Div(id='modal-row-summary')
+                    ], style={
+                        'background': '#f8fafc',
+                        'padding': '20px',
+                        'borderRadius': '8px',
+                        'maxHeight': '60vh', 
+                        'overflowY': 'auto'
+                    }),
+                    
+                    html.Div([
+                        html.H4("📋 Proposições Detalhadas", style={'margin': '0 0 15px 0', 'color': '#374151', 'fontSize': '1.1rem'}),
+                        html.Div(id='modal-body')
+                    ], style={
+                        'maxHeight': '60vh', 
+                        'overflowY': 'auto',
+                        'padding': '20px'
+                    })
+                ], style={
+                    'display': 'grid', 
+                    'gridTemplateColumns': '400px 1fr', 
+                    'gap': '0'
+                })
             ]
         )
     ),
@@ -316,12 +579,12 @@ def create_table(df, max_entries):
     display_columns = get_display_columns(df)
     
     if df.empty:
-        return dash_table.DataTable(
-            id='generic-table',
-            columns=[{"name": col, "id": col} for col in display_columns],
-            data=[],
-            page_size=20,
-        )
+        return html.Div([
+            html.Div([
+                html.H3("📭 Nenhum Dado Encontrado", style={'textAlign': 'center', 'color': '#6b7280', 'margin': '40px 0 20px 0'}),
+                html.P("Tente ajustar os filtros ou selecionar outra legislatura.", style={'textAlign': 'center', 'color': '#9ca3af'})
+            ], style={'padding': '40px', 'background': '#f9fafb', 'borderRadius': '12px', 'border': '2px dashed #d1d5db'})
+        ])
 
     if 'ementa' in display_columns:
         df['ementa'] = df['ementa'].astype(str).apply(lambda x: (x[:120] + '...') if len(x) > 120 else x)
@@ -332,11 +595,31 @@ def create_table(df, max_entries):
     for col in display_columns:
         if col == 'proposicoesAfetadas_resumo':
             columns.append({
-                "name": "Proposições Afetadas",
+                "name": "📄 Proposições Afetadas",
+                "id": col,
+            })
+        elif col == 'aprovacao':
+            columns.append({
+                "name": "✅ Resultado",
+                "id": col,
+            })
+        elif col == 'siglaTipo':
+            columns.append({
+                "name": "📋 Tipo",
+                "id": col,
+            })
+        elif col == 'dataHoraRegistro':
+            columns.append({
+                "name": "📅 Data/Hora",
+                "id": col,
+            })
+        elif col == 'siglaOrgao':
+            columns.append({
+                "name": "🏛️ Órgão",
                 "id": col,
             })
         else:
-            columns.append({"name": col, "id": col})
+            columns.append({"name": col.title(), "id": col})
 
     data_for_table = df[display_columns].to_dict("records")
 
@@ -346,23 +629,59 @@ def create_table(df, max_entries):
         data=data_for_table,
         sort_action="native",
         page_size=max(int(sanitize_max_entries(max_entries) / 10), 10),
-        style_table={'overflowX': 'auto'},
+        style_table={
+            'overflowX': 'auto',
+            'border': '1px solid #e5e7eb',
+            'borderRadius': '12px',
+        },
         style_cell={
             'textAlign': 'left',
             'whiteSpace': 'normal',
             'height': 'auto',
             'minWidth': '120px',
             'maxWidth': '350px',
+            'padding': '12px',
+            'fontFamily': 'Inter, sans-serif',
+            'fontSize': '14px',
+            'border': '1px solid #f3f4f6',
         },
-        style_header={'fontWeight': 'bold'},
+        style_header={
+            'fontWeight': '600',
+            'backgroundColor': '#f8fafc',
+            'color': '#374151',
+            'textTransform': 'uppercase',
+            'fontSize': '12px',
+            'letterSpacing': '0.5px',
+            'border': '1px solid #e5e7eb',
+        },
         style_data_conditional=[
             {
                 'if': {'column_id': 'proposicoesAfetadas_resumo'},
-                'color': 'blue',
+                'color': '#2563eb',
                 'textDecoration': 'underline',
                 'cursor': 'pointer',
+                'fontWeight': '500',
+            },
+            {
+                'if': {'column_id': 'aprovacao', 'filter_query': '{aprovacao} = Aprovada'},
+                'backgroundColor': '#dcfce7',
+                'color': '#166534',
+                'fontWeight': '600',
+            },
+            {
+                'if': {'column_id': 'aprovacao', 'filter_query': '{aprovacao} contains Rejeitada'},
+                'backgroundColor': '#fef2f2',
+                'color': '#dc2626',
+                'fontWeight': '600',
+            },
+            {
+                'if': {'row_index': 'odd'},
+                'backgroundColor': '#f9fafb'
             }
-        ]
+        ],
+        style_data={
+            'border': '1px solid #f3f4f6',
+        }
     )
 
 @app.callback(
@@ -375,14 +694,43 @@ def create_table(df, max_entries):
 def render_output_area(json_data, data_type, legislatura, max_entries):
     if not json_data:
         return html.Div([
-            html.H3(f"Nenhum dado encontrado para '{DATA_TYPE_CONFIG[data_type]['display_name']}' na legislatura {legislatura}."),
-            html.P("Tente ajustar o limite de entradas ou selecionar outra legislatura.")
+            html.Div([
+                html.H3("📭 Nenhum Dado Encontrado", style={'textAlign': 'center', 'margin': '0 0 15px 0', 'color': '#374151'}),
+                html.P(f"Não foram encontrados dados para '{DATA_TYPE_CONFIG[data_type]['display_name']}' na {legislatura}ª legislatura.", 
+                      style={'textAlign': 'center', 'color': '#6b7280', 'margin': '0 0 15px 0'}),
+                html.P("💡 Tente ajustar o limite de entradas ou selecionar outra legislatura.", 
+                      style={'textAlign': 'center', 'color': '#9ca3af', 'fontSize': '0.9rem'})
+            ], style={
+                'padding': '60px 40px',
+                'background': 'linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)',
+                'borderRadius': '16px',
+                'border': '2px dashed #d1d5db',
+                'textAlign': 'center'
+            })
         ])
+    
     df = pd.read_json(StringIO(json_data), orient='split')
     config = DATA_TYPE_CONFIG[data_type]
 
+    # Stats Card
+    total_records = len(df)
+    stats_card = html.Div([
+        html.Div([
+            html.Div([
+                html.H3(f"{total_records:,}", style={'margin': '0', 'fontSize': '2.5rem', 'fontWeight': '700', 'color': '#059669'}),
+                html.P(f"Total de {config['display_name']}", style={'margin': '5px 0 0 0', 'color': '#065f46', 'fontWeight': '500'})
+            ], style={'textAlign': 'center'}),
+            html.Div([
+                html.Span(f"📊 {legislatura}ª Legislatura", style={'background': '#dbeafe', 'color': '#1d4ed8', 'padding': '4px 12px', 'borderRadius': '20px', 'fontSize': '0.85rem', 'fontWeight': '500'}),
+                html.Span(f"🔢 Máx: {sanitize_max_entries(max_entries):,}", style={'background': '#fef3c7', 'color': '#92400e', 'padding': '4px 12px', 'borderRadius': '20px', 'fontSize': '0.85rem', 'fontWeight': '500', 'marginLeft': '10px'})
+            ], style={'textAlign': 'center', 'marginTop': '15px'})
+        ])
+    ], className="stats-card")
+
+    # Graph
     graph_col_x = config.get('graph_column_x')
     graph_component = html.Div()
+    
     if graph_col_x and graph_col_x in df.columns:
         counts = df.groupby(graph_col_x).size().reset_index(name='Contagem')
         hover_cols = config.get('graph_hover_data', [])
@@ -398,23 +746,68 @@ def render_output_area(json_data, data_type, legislatura, max_entries):
             count_df = counts
 
         count_df = count_df.sort_values(by='Contagem', ascending=False)
-        fig = px.bar(count_df, x=graph_col_x, y='Contagem', color=graph_col_x,
-                     hover_data=config.get('graph_hover_data', []),
-                     labels={graph_col_x: 'Categoria', 'Contagem': 'Quantidade'},
-                     title=f"Contagem por Categoria: {config['display_name']} (Leg. {legislatura}, máx. {sanitize_max_entries(max_entries)})",
-                     text='Contagem')
-        fig.update_traces(textposition='outside').update_layout(showlegend=False)
-        graph_component = dcc.Graph(id='generic-graph', figure=fig)
+        
+        # Cores personalizadas baseadas no tipo
+        color_discrete_map = {}
+        if data_type == 'votacoes':
+            color_discrete_map = {
+                'Aprovada': '#10b981',
+                'Rejeitada/Outro': '#ef4444',
+                'Indefinido': '#6b7280'
+            }
+        
+        fig = px.bar(
+            count_df, 
+            x=graph_col_x, 
+            y='Contagem', 
+            color=graph_col_x,
+            color_discrete_map=color_discrete_map if color_discrete_map else None,
+            hover_data=config.get('graph_hover_data', []),
+            labels={graph_col_x: 'Categoria', 'Contagem': 'Quantidade'},
+            title=f"📊 Distribuição: {config['display_name']} - {legislatura}ª Legislatura",
+            text='Contagem'
+        )
+        
+        fig.update_traces(
+            textposition='outside',
+            textfont=dict(size=12, color='#374151'),
+            hovertemplate='<b>%{x}</b><br>Quantidade: %{y}<extra></extra>'
+        )
+        
+        fig.update_layout(
+            showlegend=False,
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            font=dict(family="Inter", size=12, color='#374151'),
+            title=dict(font=dict(size=16, color='#1f2937')),
+            xaxis=dict(
+                gridcolor='#f3f4f6',
+                title_font=dict(size=14, color='#6b7280')
+            ),
+            yaxis=dict(
+                gridcolor='#f3f4f6',
+                title_font=dict(size=14, color='#6b7280')
+            ),
+            margin=dict(l=20, r=20, t=60, b=20)
+        )
+        
+        graph_component = html.Div([
+            dcc.Graph(id='generic-graph', figure=fig)
+        ], className="chart-container")
     else:
-        fig = px.bar(title="Não é possível gerar o gráfico: coluna de agregação não definida ou não encontrada.")
-        graph_component = dcc.Graph(id='generic-graph', figure=fig)
+        fig = px.bar(title="❌ Não é possível gerar o gráfico: coluna de agregação não definida.")
+        graph_component = html.Div([
+            dcc.Graph(id='generic-graph', figure=fig)
+        ], className="chart-container")
 
     return html.Div([
+        stats_card,
         graph_component,
-        html.Hr(),
-        html.H4("Dados Detalhados"),
-        html.Button("Resetar Filtro", id='reset-filter-button', n_clicks=0),
-        html.Div(id='table-container', children=create_table(df, max_entries))
+        html.Div([
+            html.H4("📋 Dados Detalhados", className="section-title"),
+            html.Button("🔄 Resetar Filtro", id='reset-filter-button', n_clicks=0, className="reset-button"),
+            html.Div(id='table-container', children=create_table(df, max_entries))
+        ], className="table-section")
     ])
 
 @app.callback(
@@ -431,13 +824,22 @@ def load_data_to_store(legislatura, data_type, max_entries):
     return df.to_json(date_format='iso', orient='split')
 
 @app.callback(
-    Output('loading-warning', 'children'),
+    Output('loading-warning-container', 'children'),
     Input('max-entries', 'value')
 )
 def update_loading_warning(max_entries):
     max_entries = sanitize_max_entries(max_entries)
     if max_entries > 5000:
-        return f"Aviso: Limite grande ({max_entries}) selecionado. O carregamento pode demorar vários segundos ou minutos devido ao processamento de arquivos."
+        return html.Div([
+            html.Div([
+                html.Div("⚠️", className="warning-icon"),
+                html.Div([
+                    html.Strong("Atenção: Processamento Intensivo"),
+                    html.Br(),
+                    f"Limite de {max_entries:,} registros selecionado. O carregamento pode demorar alguns minutos devido ao processamento de arquivos."
+                ], style={'flex': '1'})
+            ], className="warning-card")
+        ])
     return ""
 
 @app.callback(
@@ -463,12 +865,20 @@ def update_table_on_click(click_data, n_clicks, json_data, data_type, max_entrie
         clicked_category = click_data['points'][0]['x']
         filtered_df = df[df[graph_col_x] == clicked_category]
         return html.Div([
-            html.P(f"Filtrado por: {clicked_category}", style={'fontWeight': 'bold'}),
+            html.Div([
+                html.Span("🔍", style={'marginRight': '8px'}),
+                html.Strong(f"Filtrado por: {clicked_category}"),
+                html.Span(f" ({len(filtered_df)} registros)", style={'color': '#6b7280', 'marginLeft': '8px'})
+            ], className="filter-info"),
             create_table(filtered_df, max_entries)
         ])
     
     return html.Div([
-        html.P("Mostrando todos os dados", style={'fontWeight': 'bold'}),
+        html.Div([
+            html.Span("📊", style={'marginRight': '8px'}),
+            html.Strong("Mostrando todos os dados"),
+            html.Span(f" ({len(df)} registros)", style={'color': '#6b7280', 'marginLeft': '8px'})
+        ], className="filter-info"),
         create_table(df, max_entries)
     ])
 
@@ -527,58 +937,107 @@ def show_modal(content, search_value):
     else:
         filtered = props
 
-    # mini-table resumo com alguns campos chave (cruzamento de dados)
+    # Criar tabela de resumo mais visual
     summary_rows = []
-    # mostrar as chaves mais úteis (se existirem)
-    keys_to_show = ['id', 'dataHoraRegistro', 'siglaOrgao', 'descricao', 'aprovacao']
-    for k in keys_to_show:
-        if k in row:
-            summary_rows.append(html.Tr([html.Td(html.B(k)), html.Td(str(row.get(k))) ]))
+    keys_to_show = [
+        ('🆔', 'id', 'ID'),
+        ('📅', 'dataHoraRegistro', 'Data/Hora'),
+        ('🏛️', 'siglaOrgao', 'Órgão'),
+        ('📝', 'descricao', 'Descrição'),
+        ('✅', 'aprovacao', 'Resultado')
+    ]
+    
+    for icon, key, label in keys_to_show:
+        if key in row:
+            value = str(row.get(key))
+            if key == 'descricao' and len(value) > 100:
+                value = value[:100] + '...'
+            summary_rows.append(
+                html.Tr([
+                    html.Td([
+                        html.Span(icon, style={'marginRight': '8px'}),
+                        html.Strong(label)
+                    ], style={'padding': '8px 12px', 'verticalAlign': 'top', 'width': '40%', 'borderBottom': '1px solid #f3f4f6'}),
+                    html.Td(value, style={'padding': '8px 12px', 'borderBottom': '1px solid #f3f4f6', 'wordBreak': 'break-word'})
+                ])
+            )
 
-    # adicionar quaisquer outros campos curtos presentes (até 5)
-    other_keys = [k for k in row.keys() if k not in keys_to_show][:5]
-    for k in other_keys:
-        summary_rows.append(html.Tr([html.Td(html.B(k)), html.Td(str(row.get(k)))]))
+    summary_table = html.Table(
+        summary_rows, 
+        style={
+            'width': '100%', 
+            'borderCollapse': 'collapse',
+            'fontSize': '0.9rem',
+            'backgroundColor': 'white',
+            'borderRadius': '8px',
+            'overflow': 'hidden',
+            'border': '1px solid #e5e7eb'
+        }
+    )
 
-    summary_table = html.Table(summary_rows, style={'width': '100%', 'borderCollapse': 'collapse'})
-
-    # Criar lista de proposições com <details> expansível e botão para abrir JSON individual
+    # Criar lista de proposições melhorada
     prop_children = []
-    for p in filtered:
+    for i, p in enumerate(filtered):
         text = p.get('text', 'Proposição não identificada')
         details = p.get('details', '')
         details_truncated = (details[:800] + '...') if len(details) > 800 else details
         prop_json_href = "data:application/json;charset=utf-8," + urllib.parse.quote(json.dumps(p, ensure_ascii=False, indent=2))
+        
         prop_children.append(
             html.Div([
                 html.Details([
-                    html.Summary(html.B(text)),
+                    html.Summary([
+                        html.Span(f"📄", style={'marginRight': '8px'}),
+                        html.Strong(text)
+                    ], style={'cursor': 'pointer', 'padding': '12px', 'background': '#f8fafc', 'borderRadius': '8px', 'border': '1px solid #e5e7eb'}),
                     html.Div([
-                        html.P(details_truncated, style={'whiteSpace': 'pre-wrap'}),
+                        html.Div(details_truncated, style={
+                            'whiteSpace': 'pre-wrap', 
+                            'lineHeight': '1.6',
+                            'color': '#374151',
+                            'background': '#f9fafb',
+                            'padding': '15px',
+                            'borderRadius': '8px',
+                            'border': '1px solid #f3f4f6',
+                            'margin': '10px 0'
+                        }),
                         html.Div([
-                            html.A("Abrir JSON (nova aba)", href=prop_json_href, target="_blank", style={'marginRight':'8px'}),
-                        ], style={'marginTop': '8px'})
-                    ], style={'marginLeft': '12px'})
-                ], style={'marginBottom': '10px'})
+                            html.A("🔗 Abrir JSON", href=prop_json_href, target="_blank", style={
+                                'background': '#3b82f6',
+                                'color': 'white',
+                                'padding': '6px 12px',
+                                'borderRadius': '6px',
+                                'textDecoration': 'none',
+                                'fontSize': '0.85rem',
+                                'fontWeight': '500'
+                            }),
+                        ], style={'marginTop': '10px'})
+                    ], style={'marginLeft': '20px', 'marginTop': '10px'})
+                ], style={'marginBottom': '15px'})
             ])
         )
 
-    body_children = prop_children if prop_children else [html.P("Nenhuma proposição encontrada para o filtro atual.")]
+    body_children = prop_children if prop_children else [
+        html.Div([
+            html.Div("🔍", style={'fontSize': '3rem', 'textAlign': 'center', 'color': '#d1d5db', 'marginBottom': '15px'}),
+            html.P("Nenhuma proposição encontrada para o filtro atual.", style={'textAlign': 'center', 'color': '#6b7280'})
+        ], style={'padding': '40px', 'textAlign': 'center'})
+    ]
 
     modal_style = {
         'display': 'block',
         'position': 'fixed',
-        'zIndex': '2000',
+        'zIndex': '3000',
         'left': 0,
         'top': 0,
         'width': '100%',
         'height': '100%',
         'overflow': 'auto',
-        'backgroundColor': 'rgba(0,0,0,0.5)',
-        'padding': '40px'
+        'backgroundColor': 'rgba(0,0,0,0.6)',
+        'padding': '20px'
     }
 
-    count_text = f"{len(filtered)} / {len(props)} proposição(ões)"
+    count_text = f"📊 {len(filtered)} de {len(props)} proposição(ões) encontrada(s)"
 
     return modal_style, body_children, summary_table, count_text
 
