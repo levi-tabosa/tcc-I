@@ -1,4 +1,6 @@
 dash
 plotly
 pandas
-ijson
+sqlalchemy
+dotenv
+psycopg2-binary

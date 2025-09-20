@@ -1,4 +1,5 @@
 import os
+from dotenv import load_dotenv
 import json
 import urllib.parse
 from pathlib import Path
@@ -10,197 +11,196 @@ from dash import dcc, html, dash_table, callback_context
 from dash.dependencies import Input, Output, State
 import plotly.express as px
 import pandas as pd
-import ijson
+import sqlalchemy
 
-DATA_LEG_ROOT = Path("camara/legislaturas")
+load_dotenv()
 
-def fetch_json(filepath: Path):
-    try:
-        with filepath.open("r", encoding="utf-8") as f:
-            return json.load(f)
-    except FileNotFoundError:
-        return None
-    except json.JSONDecodeError as e:
-        print(f"JSON decode error for {filepath}: {e}")
-        return None
 
-def read_ndjson_limited(path: Path, max_entries: int) -> List[Dict]:
-    results = []
-    with path.open("r", encoding="utf-8") as f:
-        for i, line in enumerate(f):
-            if i >= max_entries: break
-            line = line.strip()
-            if not line: continue
-            try:
-                results.append(json.loads(line))
-            except json.JSONDecodeError:
-                continue
-    return results
+# ---------- CONFIGURAÇÃO DO BANCO DE DADOS ----------
+DB_CONFIG = {
+    "user": os.getenv("DB_USER"),
+    "password": os.getenv("DB_PWD"),
+    "host": os.getenv("DB_HOST"),
+    "port": os.getenv("DB_PORT"),
+    "dbname": os.getenv("DB_NAME")
+}
 
-def read_json_array_limited(path: Path, max_entries: int, key: Optional[str] = None) -> List[Dict]:
-    results = []
-    with path.open("r", encoding="utf-8") as f:
-        prefix = f"{key}.item" if key else "item"
-        try:
-            for obj in ijson.items(f, prefix):
-                results.append(obj)
-                if len(results) >= max_entries: break
-        except ijson.common.IncompleteJSONError as e:
-            print(f"Warning: Incomplete JSON file at {path}. Processed {len(results)} items. Error: {e}")
-    return results
+# Criar a string de conexão e o engine do SQLAlchemy
+try:
+    db_connection_str = f"postgresql+psycopg2://{DB_CONFIG['user']}:{DB_CONFIG['password']}@{DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['dbname']}"
+    db_engine = sqlalchemy.create_engine(db_connection_str)
+    print("Conexão com o banco de dados estabelecida com sucesso.")
+except Exception as e:
+    print(f"Erro ao conectar ao banco de dados: {e}")
+    db_engine = None
 
-def scan_info_files_limited(info_dir: Path, max_entries: int):
-    results = []
-    if not info_dir.exists(): return results
-    for i, entry in enumerate(info_dir.iterdir()):
-        if i >= max_entries: break
-        data = fetch_json(entry / "info.json")
-        if not data: continue
-        dados = data.get("dados") if isinstance(data, dict) and "dados" in data else data
-        results.append(dados)
-    return results
-
-# ---------- GENERIC DATA LOADING ----------
-def get_nested_value(data: Dict, key_path: str, default: Any = None) -> Any:
-    keys = key_path.split('.')
-    try:
-        return reduce(lambda d, key: d.get(key) if isinstance(d, dict) else default, keys, data)
-    except (TypeError, KeyError):
-        return default
+# ---------- FUNÇÕES AUXILIARES ----------
+def get_legislatura_years(legislatura: int) -> List[int]:
+    """Mapeia o número da legislatura para um range de anos."""
+    start_year_map = {
+        53: 2007,
+        54: 2011,
+        55: 2015,
+        56: 2019,
+        57: 2023,
+    }
+    start_year = start_year_map.get(legislatura)
+    if not start_year:
+        return []
+    return list(range(start_year, start_year + 4))
 
 def _process_votacoes_rows(items: List[Dict], legislatura: Optional[int] = None) -> List[Dict]:
+    """Processa as linhas de votações, principalmente a coluna de proposições."""
     enriched = []
     for item in items:
-        aprovacao = item.get('aprovacao')
-        if aprovacao == 1:
-            item['aprovacao'] = "Aprovada"
-        elif aprovacao == 0:
-            item['aprovacao'] = "Rejeitada/Outro"
-        else:
-            item['aprovacao'] = "Indefinido"
-
-        proposicoes_afetadas = get_nested_value(item, 'proposicoesAfetadas', []) or []
+        # A coluna proposicoesAfetadas vem como uma string JSON do banco de dados
+        proposicoes_afetadas = item.get('proposicoesAfetadas')
         
-        if proposicoes_afetadas and legislatura:
-            enriched_proposicoes = []
-            for prop_summary in proposicoes_afetadas:
-                if not isinstance(prop_summary, dict): continue
-                
-                prop_id = prop_summary.get('id')
-                display_text = f"{prop_summary.get('siglaTipo', '')} {prop_summary.get('numero', '')}/{prop_summary.get('ano', '')}"
-                details = "Ementa não encontrada."
-
-                if prop_id:
-                    prop_info_path = DATA_LEG_ROOT / str(legislatura) / "proposicoes" / str(prop_id) / "info.json"
-                    prop_info_data = fetch_json(prop_info_path)
-                    
-                    if prop_info_data:
-                        prop_dados = prop_info_data.get("dados", {})
-                        ementa = prop_dados.get("ementa", details)
-                        details = ementa if ementa else "Ementa não disponível."
-                
-                enriched_proposicoes.append({
-                    "text": display_text,
-                    "details": details,
-                    "id": prop_id,
-                })
-            
-            item['proposicoesAfetadas'] = enriched_proposicoes
-            item['proposicoesAfetadas_resumo'] = f"{len(enriched_proposicoes)} proposição(ões) afetada(s)"
+        # Parseia a string JSON para uma lista de dicionários
+        if isinstance(proposicoes_afetadas, str):
+            try:
+                proposicoes_list = json.loads(proposicoes_afetadas)
+            except json.JSONDecodeError:
+                proposicoes_list = []
+        elif isinstance(proposicoes_afetadas, list): # Caso o driver já converta
+             proposicoes_list = proposicoes_afetadas
         else:
-            item['proposicoesAfetadas'] = []
+            proposicoes_list = []
+
+        item['proposicoesAfetadas'] = proposicoes_list if proposicoes_list else []
+        
+        if proposicoes_list:
+            item['proposicoesAfetadas_resumo'] = f"{len(proposicoes_list)} proposição(ões) afetada(s)"
+        else:
             item['proposicoesAfetadas_resumo'] = "Nenhuma proposição afetada"
             
         enriched.append(item)
     return enriched
 
+# ---------- CONFIGURAÇÃO DOS TIPOS DE DADOS E QUERIES SQL ----------
 DATA_TYPE_CONFIG = {
     "proposicoes": {
         "display_name": "Proposições",
-        "base_fields": ["id", "siglaTipo", "codTipo", "numero", "ano", "ementa"],
-        "enrichment_fields": {
-            "ementaDetalhada": "ementaDetalhada",
-            "dataApresentacao": "dataApresentacao",
-            "descricaoTramitacao": "statusProposicao.descricaoTramitacao",
-            "despacho": "statusProposicao.despacho",
-            "descricaoTipo": "descricaoTipo",
-        },
         "sort_by": ["ano", "numero"],
         "sort_ascending": [False, False],
         "graph_column_x": "siglaTipo",
         "graph_hover_data": ["descricaoTipo"],
+        "query_template": """
+            WITH latest_status AS (
+                SELECT DISTINCT ON (proposicao_id)
+                    proposicao_id,
+                    descricao_tramitacao,
+                    despacho
+                FROM proposicoes_status
+                ORDER BY proposicao_id, data_hora DESC
+            )
+            SELECT
+                p.id,
+                p.sigla_tipo AS "siglaTipo",
+                p.cod_tipo AS "codTipo",
+                p.numero,
+                p.ano,
+                p.ementa,
+                p.ementa_detalhada AS "ementaDetalhada",
+                p.data_apresentacao AS "dataApresentacao",
+                p.descricao_tipo AS "descricaoTipo",
+                ls.descricao_tramitacao AS "descricaoTramitacao",
+                ls.despacho
+            FROM
+                proposicoes p
+            LEFT JOIN
+                latest_status ls ON p.id = ls.proposicao_id
+            WHERE
+                p.ano IN ({years_tuple})
+            ORDER BY
+                p.ano DESC, p.numero DESC
+            LIMIT {max_entries};
+        """
     },
     "votacoes": {
         "display_name": "Votações",
-        "base_fields": ["id", "dataHoraRegistro", "siglaOrgao", "descricao", "aprovacao"],
-        "enrichment_fields": {
-            "proposicoesAfetadas": "proposicoesAfetadas",
-        },
         "processor": _process_votacoes_rows,
         "sort_by": ["dataHoraRegistro"],
         "sort_ascending": [False],
         "graph_column_x": "aprovacao",
         "graph_hover_data": ["siglaOrgao"],
+        "query_template": """
+            SELECT
+                v.id,
+                v.data_hora_registro AS "dataHoraRegistro",
+                v.sigla_orgao AS "siglaOrgao",
+                v.descricao,
+                CASE
+                    WHEN v.aprovacao = 1 THEN 'Aprovada'
+                    WHEN v.aprovacao = 0 THEN 'Rejeitada/Outro'
+                    ELSE 'Indefinido'
+                END AS aprovacao,
+                (
+                    SELECT json_agg(
+                        json_build_object(
+                            'id', p.id,
+                            'text', p.sigla_tipo || ' ' || p.numero || '/' || p.ano,
+                            'details', p.ementa
+                        )
+                    )
+                    FROM votacoes_proposicoes vp
+                    JOIN proposicoes p ON vp.proposicao_id = p.id
+                    WHERE vp.votacao_id = v.id
+                ) AS "proposicoesAfetadas"
+            FROM
+                votacoes v
+            WHERE
+                EXTRACT(YEAR FROM v.data_hora_registro) IN ({years_tuple})
+            ORDER BY
+                v.data_hora_registro DESC
+            LIMIT {max_entries};
+        """
     }
 }
 
-def load_summary_list(data_type: str, legislatura: int, max_entries: int) -> List[Dict]:
-    summary_path = DATA_LEG_ROOT / str(legislatura) / f"{data_type}.json"
-    if not summary_path.exists():
-        return scan_info_files_limited(DATA_LEG_ROOT / str(legislatura) / data_type, max_entries)
-
-    with summary_path.open("r", encoding="utf-8") as f:
-        first_bytes = f.read(2048)
-
-    if "\n" in first_bytes and not first_bytes.lstrip().startswith(("{", "[")):
-        return read_ndjson_limited(summary_path, max_entries)
-
-    try:
-        return read_json_array_limited(summary_path, max_entries, key="dados")
-    except Exception:
-        return read_json_array_limited(summary_path, max_entries, key=None)
-
+# ---------- CARREGAMENTO DE DADOS DO BANCO ----------
 def load_generic_dataframe(data_type: str, legislatura: int, max_entries: int) -> pd.DataFrame:
+    if not db_engine:
+        print("Erro: Conexão com o banco de dados não está disponível.")
+        return pd.DataFrame()
+
     config = DATA_TYPE_CONFIG.get(data_type)
     if not config:
         print(f"Error: No configuration found for data type '{data_type}'")
         return pd.DataFrame()
 
-    items = load_summary_list(data_type, legislatura, max_entries)
-    enriched = []
+    years = get_legislatura_years(legislatura)
+    if not years:
+        print(f"Erro: Anos para a legislatura {legislatura} não definidos.")
+        return pd.DataFrame()
+    
+    # Formata a tupla de anos para a cláusula IN do SQL
+    years_tuple_str = ', '.join(map(str, years))
+    
+    query = config["query_template"].format(
+        years_tuple=years_tuple_str,
+        max_entries=max_entries
+    )
 
-    for item in items:
-        if not isinstance(item, dict): continue
-
-        row = {key: item.get(key) for key in config["base_fields"]}
-
-        item_id = row.get("id")
-        if item_id and config.get("enrichment_fields"):
-            info_path = DATA_LEG_ROOT / str(legislatura) / data_type / str(item_id) / "info.json"
-            info = fetch_json(info_path)
-            if info:
-                dados = info.get("dados") if isinstance(info, dict) and "dados" in info else info
-                if isinstance(dados, dict):
-                    for target_col, key_path in config["enrichment_fields"].items():
-                        value = get_nested_value(dados, key_path)
-                        if value is not None:
-                            row[target_col] = value
-
-        enriched.append(row)
-
-    if not enriched:
+    try:
+        with db_engine.connect() as connection:
+            df = pd.read_sql_query(sqlalchemy.text(query), connection)
+    except Exception as e:
+        print(f"Erro ao executar a query para '{data_type}': {e}")
         return pd.DataFrame()
 
+    if df.empty:
+        return pd.DataFrame()
+
+    # Aplica o processador pós-query, se houver (para 'votacoes')
     if 'processor' in config:
-        processed_data = config['processor'](enriched, legislatura=legislatura)
-    else:
-        processed_data = enriched
+        # O processador espera uma lista de dicionários
+        processed_data = config['processor'](df.to_dict('records'), legislatura=legislatura)
+        if not processed_data:
+            return pd.DataFrame()
+        df = pd.DataFrame(processed_data)
 
-    if not processed_data:
-        return pd.DataFrame()
-
-    df = pd.DataFrame(processed_data)
-
+    # Garante a ordenação final, se especificada
     if 'sort_by' in config:
         for col in config['sort_by']:
             if 'data' in col.lower() or 'time' in col.lower():
@@ -223,7 +223,15 @@ def sanitize_max_entries(max_entries, default=1000, min_allowed=10, max_allowed=
 
 app = dash.Dash(__name__, suppress_callback_exceptions=True)
 
-# Estilos CSS customizados
+# O restante do código (layout e callbacks do Dash) permanece o mesmo
+# ... (cole o restante do seu código original aqui, sem alterações)
+# app.index_string = ...
+# app.layout = ...
+# def get_display_columns(df): ...
+# def create_table(df, max_entries): ...
+# @app.callback(...)
+# def render_output_area(...): ...
+# ... e assim por diante
 app.index_string = '''
 <!DOCTYPE html>
 <html>
@@ -699,7 +707,7 @@ def render_output_area(json_data, data_type, legislatura, max_entries):
                 html.H3("Nenhum Dado Encontrado", style={'textAlign': 'center', 'margin': '0 0 15px 0', 'color': '#374151'}),
                 html.P(f"Não foram encontrados dados para '{DATA_TYPE_CONFIG[data_type]['display_name']}' na {legislatura}ª legislatura.", 
                       style={'textAlign': 'center', 'color': '#6b7280', 'margin': '0 0 15px 0'}),
-                html.P("Tente ajustar o limite de entradas ou selecionar outra legislatura.", 
+                html.P("Verifique a conexão com o banco de dados ou ajuste os filtros.", 
                       style={'textAlign': 'center', 'color': '#9ca3af', 'fontSize': '0.9rem'})
             ], style={
                 'padding': '60px 40px',
@@ -719,11 +727,11 @@ def render_output_area(json_data, data_type, legislatura, max_entries):
         html.Div([
             html.Div([
                 html.H3(f"{total_records:,}", style={'margin': '0', 'fontSize': '2.5rem', 'fontWeight': '700', 'color': '#059669'}),
-                html.P(f"Total de {config['display_name']}", style={'margin': '5px 0 0 0', 'color': '#065f46', 'fontWeight': '500'})
+                html.P(f"Total de {config['display_name']} Carregados", style={'margin': '5px 0 0 0', 'color': '#065f46', 'fontWeight': '500'})
             ], style={'textAlign': 'center'}),
             html.Div([
                 html.Span(f"Legislatura {legislatura}", style={'background': '#dbeafe', 'color': '#1d4ed8', 'padding': '4px 12px', 'borderRadius': '20px', 'fontSize': '0.85rem', 'fontWeight': '500'}),
-                html.Span(f"Máx: {sanitize_max_entries(max_entries):,}", style={'background': '#fef3c7', 'color': '#92400e', 'padding': '4px 12px', 'borderRadius': '20px', 'fontSize': '0.85rem', 'fontWeight': '500', 'marginLeft': '10px'})
+                html.Span(f"Limite: {sanitize_max_entries(max_entries):,}", style={'background': '#fef3c7', 'color': '#92400e', 'padding': '4px 12px', 'borderRadius': '20px', 'fontSize': '0.85rem', 'fontWeight': '500', 'marginLeft': '10px'})
             ], style={'textAlign': 'center', 'marginTop': '15px'})
         ])
     ], className="stats-card")
@@ -748,7 +756,6 @@ def render_output_area(json_data, data_type, legislatura, max_entries):
 
         count_df = count_df.sort_values(by='Contagem', ascending=False)
         
-        # Cores personalizadas baseadas no tipo
         color_discrete_map = {}
         if data_type == 'votacoes':
             color_discrete_map = {
@@ -830,14 +837,14 @@ def load_data_to_store(legislatura, data_type, max_entries):
 )
 def update_loading_warning(max_entries):
     max_entries = sanitize_max_entries(max_entries)
-    if max_entries > 5000:
+    if max_entries > 20000: # Aumentado o limite pois o DB é mais rápido
         return html.Div([
             html.Div([
                 html.Div("!", className="warning-icon"),
                 html.Div([
-                    html.Strong("Atenção: Processamento Intensivo"),
+                    html.Strong("Atenção: Consulta Grande"),
                     html.Br(),
-                    f"Limite de {max_entries:,} registros selecionado. O carregamento pode demorar alguns minutos devido ao processamento de arquivos."
+                    f"Limite de {max_entries:,} registros selecionado. A consulta pode ser mais lenta."
                 ], style={'flex': '1'})
             ], className="warning-card")
         ])
@@ -904,7 +911,11 @@ def store_modal_content(active_cell, json_data):
 
             if isinstance(proposicoes_list, list) and proposicoes_list:
                 try:
+                    # Garantir que Timestamps sejam convertidos para string
                     row_dict = row.to_dict()
+                    for k, v in row_dict.items():
+                        if isinstance(v, pd.Timestamp):
+                            row_dict[k] = v.isoformat()
                 except Exception:
                     row_dict = {k: str(v) for k, v in row.items()}
                 return {
@@ -920,10 +931,9 @@ def store_modal_content(active_cell, json_data):
     Output('modal-row-summary', 'children'),
     Output('modal-count', 'children'),
     Input('modal-content-store', 'data'),
-    Input('modal-search', 'value')  # permite filtrar dentro do modal 
+    Input('modal-search', 'value')
 )  
 def show_modal(content, search_value):
-    # estilo padrão oculto
     hidden_style = {'display': 'none'}
     if not content:
         return hidden_style, "", "", ""
@@ -931,14 +941,12 @@ def show_modal(content, search_value):
     row = content.get('row', {})
     props = content.get('proposicoes', []) or []
 
-    # aplica filtro simples (texto em texto da proposição ou ementa)
     if search_value:
         sv = search_value.strip().lower()
         filtered = [p for p in props if sv in (p.get('text','').lower() + " " + p.get('details','').lower())]
     else:
         filtered = props
 
-    # Criar tabela de resumo mais visual
     summary_rows = []
     keys_to_show = [
         ('ID', 'id', 'ID'),
@@ -950,7 +958,7 @@ def show_modal(content, search_value):
     
     for icon, key, label in keys_to_show:
         if key in row:
-            value = str(row.get(key))
+            value = str(row.get(key, ''))
             if key == 'descricao' and len(value) > 100:
                 value = value[:100] + '...'
             summary_rows.append(
@@ -976,11 +984,10 @@ def show_modal(content, search_value):
         }
     )
 
-    # Criar lista de proposições melhorada
     prop_children = []
     for i, p in enumerate(filtered):
         text = p.get('text', 'Proposição não identificada')
-        details = p.get('details', '')
+        details = p.get('details', '') or "Ementa não disponível."
         details_truncated = (details[:800] + '...') if len(details) > 800 else details
         prop_json_href = "data:application/json;charset=utf-8," + urllib.parse.quote(json.dumps(p, ensure_ascii=False, indent=2))
         
@@ -988,7 +995,7 @@ def show_modal(content, search_value):
             html.Div([
                 html.Details([
                     html.Summary([
-                        html.Span(f"Doc", style={'marginRight': '8px'}),
+                        html.Span("📄", style={'marginRight': '8px'}),
                         html.Strong(text)
                     ], style={'cursor': 'pointer', 'padding': '12px', 'background': '#f8fafc', 'borderRadius': '8px', 'border': '1px solid #e5e7eb'}),
                     html.Div([
@@ -1020,7 +1027,7 @@ def show_modal(content, search_value):
 
     body_children = prop_children if prop_children else [
         html.Div([
-            html.Div("?", style={'fontSize': '3rem', 'textAlign': 'center', 'color': '#d1d5db', 'marginBottom': '15px'}),
+            html.Div("🧐", style={'fontSize': '3rem', 'textAlign': 'center', 'color': '#d1d5db', 'marginBottom': '15px'}),
             html.P("Nenhuma proposição encontrada para o filtro atual.", style={'textAlign': 'center', 'color': '#6b7280'})
         ], style={'padding': '40px', 'textAlign': 'center'})
     ]
@@ -1048,7 +1055,6 @@ def show_modal(content, search_value):
     prevent_initial_call=True
 )
 def close_modal(n_clicks):
-    # limpar o store fecha o modal
     return None
 
 @app.callback(
@@ -1058,13 +1064,8 @@ def close_modal(n_clicks):
 def update_json_link(content):
     if not content:
         return '#'
-    # cria data URI com JSON formatado (linha + proposicoes)
     payload = json.dumps(content, ensure_ascii=False, indent=2)
     return "data:application/json;charset=utf-8," + urllib.parse.quote(payload)
-
-# Copiar para área de transferência: usamos um pequeno truque com um elemento dcc.Location
-# Observação: copiar para clipboard via servidor não é possível; essa ação dependeria de JS no cliente.
-# Aqui apenas retornamos o texto para ser exibido; caso queira cópia automática, é preciso um clientside callback.
 
 @app.callback(
     Output('modal-copy-button', 'children'),
@@ -1073,10 +1074,12 @@ def update_json_link(content):
     prevent_initial_call=True
 )
 def copy_modal_text(n_clicks, content):
-    # Retornamos texto alternativo no botão confirmando a cópia (o usuário pode usar "Abrir JSON" e copiar manualmente)
     if not content:
         return "Copiar resumo"
-    return "Resumo pronto (clicar Abrir JSON para copiar)"
+    return "Use 'Abrir JSON' para copiar"
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    if db_engine:
+        app.run(debug=True)
+    else:
+        print("\n\n*** A APLICAÇÃO NÃO PODE INICIAR. VERIFIQUE AS CONFIGURAÇÕES DO BANCO DE DADOS. ***\n\n")

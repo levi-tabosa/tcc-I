@@ -3,8 +3,7 @@ __pycache__/
 *.py[codz]
 *$py.class
 
-camara
-camara.zip
+camara.sql
 
 # C extensions
 *.so
