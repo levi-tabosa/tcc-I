@@ -2,5 +2,7 @@ dash
 plotly
 pandas
 sqlalchemy
-dotenv
+python-dotenv
 psycopg2-binary
+flask
+requests
