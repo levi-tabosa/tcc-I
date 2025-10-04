@@ -1,0 +1,149 @@
+@import "tailwindcss";
+
+:root {
+  --background: oklch(0 0 0);
+  --foreground: oklch(1 0 0);
+  --card: oklch(0 0 0);
+  --card-foreground: oklch(1 0 0);
+  --popover: oklch(0 0 0);
+  --popover-foreground: oklch(1 0 0);
+  --primary: oklch(0.7 0.15 240);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.1 0 0);
+  --secondary-foreground: oklch(1 0 0);
+  --muted: oklch(0.1 0 0);
+  --muted-foreground: oklch(0.7 0 0);
+  --accent: oklch(0.1 0 0);
+  --accent-foreground: oklch(1 0 0);
+  --destructive: oklch(0.5 0.2 25);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.2 0 0);
+  --input: oklch(0.1 0 0);
+  --ring: oklch(0.4 0 0);
+  --chart-1: oklch(0.6 0.2 220);
+  --chart-2: oklch(0.7 0.15 160);
+  --chart-3: oklch(0.8 0.18 70);
+  --chart-4: oklch(0.65 0.25 300);
+  --chart-5: oklch(0.75 0.2 16);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.05 0 0);
+  --sidebar-foreground: oklch(1 0 0);
+  --sidebar-primary: oklch(0.6 0.2 240);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.1 0 0);
+  --sidebar-accent-foreground: oklch(1 0 0);
+  --sidebar-border: oklch(0.2 0 0);
+  --sidebar-ring: oklch(0.4 0 0);
+}
+
+.dark {
+  --background: oklch(0 0 0);
+  --foreground: oklch(1 0 0);
+  --card: oklch(0 0 0);
+  --card-foreground: oklch(1 0 0);
+  --popover: oklch(0 0 0);
+  --popover-foreground: oklch(1 0 0);
+  --primary: oklch(0.7 0.15 240);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.1 0 0);
+  --secondary-foreground: oklch(1 0 0);
+  --muted: oklch(0.1 0 0);
+  --muted-foreground: oklch(0.7 0 0);
+  --accent: oklch(0.1 0 0);
+  --accent-foreground: oklch(1 0 0);
+  --destructive: oklch(0.5 0.2 25);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.2 0 0);
+  --input: oklch(0.1 0 0);
+  --ring: oklch(0.4 0 0);
+  --chart-1: oklch(0.6 0.2 220);
+  --chart-2: oklch(0.7 0.15 160);
+  --chart-3: oklch(0.8 0.18 70);
+  --chart-4: oklch(0.65 0.25 300);
+  --chart-5: oklch(0.75 0.2 16);
+  --sidebar: oklch(0.05 0 0);
+  --sidebar-foreground: oklch(1 0 0);
+  --sidebar-primary: oklch(0.6 0.2 240);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.1 0 0);
+  --sidebar-accent-foreground: oklch(1 0 0);
+  --sidebar-border: oklch(0.2 0 0);
+  --sidebar-ring: oklch(0.4 0 0);
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+/* Garantir que todos os elementos tenham fundo preto e texto branco */
+html {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+div, section, header, main, footer, article, aside, nav, p, h1, h2, h3, h4, h5, h6, span, a {
+  color: #ffffff !important;
+}
+
+/* Sobrescrever cores específicas do Tailwind */
+.text-foreground {
+  color: #ffffff !important;
+}
+
+.text-muted-foreground {
+  color: #cccccc !important;
+}
+
+.bg-background {
+  background-color: #000000 !important;
+}
+
+.bg-card {
+  background-color: #000000 !important;
+}
+
+/* Botão primário - fundo branco com texto preto */
+.bg-primary {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+.text-primary-foreground {
+  color: #000000 !important;
+}
+
+/* Hover do botão primário */
+.hover\:bg-primary\/90:hover {
+  background-color: #e6e6e6 !important;
+}
+
+/* Garantir que botões mantenham o estilo correto */
+button.bg-primary, 
+[type="submit"].bg-primary,
+.bg-primary {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border-color: #ffffff !important;
+}
+
+/* Estilo específico para botões com variant primary */
+button:not([class*="variant"]),
+button[class*="variant-default"],
+.inline-flex.items-center.justify-center {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #ffffff !important;
+}
+
+/* Hover para botões brancos */
+button:not([class*="variant"]):hover,
+button[class*="variant-default"]:hover,
+.inline-flex.items-center.justify-center:hover {
+  background-color: #e6e6e6 !important;
+  color: #000000 !important;
+}
