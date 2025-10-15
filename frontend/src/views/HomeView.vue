@@ -1,26 +1,26 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+  <div class="page-wrapper">
     <!-- Header -->
-    <header class="sticky top-0 z-50 backdrop-blur-md bg-white/80 border-b border-slate-200">
-      <div class="max-w-6xl mx-auto px-4 py-4">
-        <nav class="flex items-center justify-center md:justify-between">
-          <div class="flex items-center gap-2">
-            <Shield class="w-8 h-8 text-blue-600" />
-            <span class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+    <header class="header">
+      <div class="header-container">
+        <nav class="nav">
+          <div class="nav-brand">
+            <Shield class="nav-icon" />
+            <span class="nav-title">
               Fiscaliza Brasil
             </span>
           </div>
-          <div class="hidden md:flex gap-6">
-            <a href="#inicio" class="text-slate-600 hover:text-blue-600 transition-colors font-medium">
+          <div class="nav-links">
+            <a href="#inicio" class="nav-link">
               Início
             </a>
-            <a href="#funcionalidades" class="text-slate-600 hover:text-blue-600 transition-colors font-medium">
+            <a href="#funcionalidades" class="nav-link">
               Funcionalidades
             </a>
-            <a href="#como-usar" class="text-slate-600 hover:text-blue-600 transition-colors font-medium">
+            <a href="#como-usar" class="nav-link">
               Como Usar
             </a>
-            <a href="#sobre" class="text-slate-600 hover:text-blue-600 transition-colors font-medium">
+            <a href="#sobre" class="nav-link">
               Sobre
             </a>
           </div>
@@ -28,103 +28,99 @@
       </div>
     </header>
 
-    <main class="container-center">
-      <!-- Hero Section - Melhorado -->
-      <section id="inicio" class="relative overflow-hidden w-full">
+    <main class="main-content">
+      <!-- Hero Section -->
+      <section id="inicio" class="hero-section">
         <!-- Background decorativo -->
-        <div class="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-slate-50 opacity-70"></div>
-        <div class="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-blue-100/30 to-transparent"></div>
+        <div class="hero-bg-overlay"></div>
+        <div class="hero-bg-accent"></div>
         
-        <div class="relative max-w-4xl mx-auto px-4 py-20 lg:py-32 text-center">
-          <div class="flex justify-center mb-6">
-            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 text-blue-700 text-sm font-semibold">
-              <Eye class="w-4 h-4" />
-              Transparência · Dados Públicos · Cidadania
-            </div>
+        <div class="hero-content">
+          <div class="hero-badge">
+            <Eye class="hero-badge-icon" />
+            Transparência · Dados Públicos · Cidadania
           </div>
           
-          <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-slate-900 mb-6 leading-tight">
+          <h1 class="hero-title">
             Fiscalize seus
-            <span class="block bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+            <span class="hero-title-accent">
               representantes
             </span>
             com clareza
           </h1>
           
-          <p class="text-lg md:text-xl text-slate-600 mb-8 leading-relaxed max-w-3xl mx-auto">
+          <p class="hero-description">
             Transformamos dados complexos do Congresso em informações claras e acessíveis. 
             Fiscalização parlamentar não precisa de expertise técnica – é direito de todos.
           </p>
 
-          <!-- Search Bar Melhorada -->
-          <div class="max-w-2xl mx-auto mb-6">
-            <form @submit="handleSearch" class="flex flex-col sm:flex-row gap-3">
-              <div class="relative flex-1">
-                <Search class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+          <!-- Search Bar -->
+          <div class="search-container">
+            <form @submit="handleSearch" class="search-form">
+              <div class="search-input-wrapper">
+                <Search class="search-icon" />
                 <input 
                   v-model="searchQuery"
                   type="text"
                   placeholder="Busque por parlamentar, partido ou proposição..."
-                  class="w-full h-14 pl-12 pr-4 rounded-xl border-2 border-slate-200 focus:border-blue-500 focus:outline-none text-slate-900 placeholder-slate-400"
+                  class="search-input"
                 />
               </div>
               <button 
                 type="submit"
-                class="h-14 px-8 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:shadow-xl whitespace-nowrap"
+                class="search-button"
               >
                 Buscar
               </button>
             </form>
           </div>
           
-          <div class="flex flex-col sm:flex-row items-center justify-center gap-4 text-sm text-slate-500 mb-12">
-            <div class="flex items-center gap-2">
-              <CheckCircle2 class="w-4 h-4 text-green-600" />
+          <div class="hero-features">
+            <div class="hero-feature">
+              <CheckCircle2 class="hero-feature-icon" />
               <span>Dados oficiais em tempo real</span>
             </div>
-            <div class="flex items-center gap-2">
-              <CheckCircle2 class="w-4 h-4 text-green-600" />
+            <div class="hero-feature">
+              <CheckCircle2 class="hero-feature-icon" />
               <span>100% gratuito</span>
             </div>
           </div>
 
           <!-- Stats Preview -->
-          <div class="max-w-2xl mx-auto">
-            <div class="grid grid-cols-2 gap-4">
-              <div class="bg-white rounded-2xl p-4 md:p-6 shadow-lg border border-slate-100">
-                <Users class="w-6 md:w-8 h-6 md:h-8 text-blue-600 mb-3 mx-auto" />
-                <div class="text-2xl md:text-4xl font-bold text-slate-900 mb-1 text-center">594</div>
-                <div class="text-xs md:text-sm text-slate-600 text-center">Parlamentares monitorados</div>
-              </div>
-              <div class="bg-white rounded-2xl p-4 md:p-6 shadow-lg border border-slate-100">
-                <TrendingUp class="w-6 md:w-8 h-6 md:h-8 text-green-600 mb-3 mx-auto" />
-                <div class="text-2xl md:text-4xl font-bold text-slate-900 mb-1 text-center">23</div>
-                <div class="text-xs md:text-sm text-slate-600 text-center">Partidos políticos</div>
-              </div>
-              <div class="bg-white rounded-2xl p-4 md:p-6 shadow-lg border border-slate-100">
-                <FileText class="w-6 md:w-8 h-6 md:h-8 text-purple-600 mb-3 mx-auto" />
-                <div class="text-2xl md:text-4xl font-bold text-slate-900 mb-1 text-center">+10k</div>
-                <div class="text-xs md:text-sm text-slate-600 text-center">Votações analisadas</div>
-              </div>
-              <div class="bg-white rounded-2xl p-4 md:p-6 shadow-lg border border-slate-100">
-                <BarChart3 class="w-6 md:w-8 h-6 md:h-8 text-orange-600 mb-3 mx-auto" />
-                <div class="text-2xl md:text-4xl font-bold text-slate-900 mb-1 text-center">Real-time</div>
-                <div class="text-xs md:text-sm text-slate-600 text-center">Atualização diária</div>
-              </div>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <Users class="stat-icon stat-icon-blue" />
+              <div class="stat-number">594</div>
+              <div class="stat-label">Parlamentares monitorados</div>
+            </div>
+            <div class="stat-card">
+              <TrendingUp class="stat-icon stat-icon-green" />
+              <div class="stat-number">23</div>
+              <div class="stat-label">Partidos políticos</div>
+            </div>
+            <div class="stat-card">
+              <FileText class="stat-icon stat-icon-purple" />
+              <div class="stat-number">+10k</div>
+              <div class="stat-label">Votações analisadas</div>
+            </div>
+            <div class="stat-card">
+              <BarChart3 class="stat-icon stat-icon-orange" />
+              <div class="stat-number">Real-time</div>
+              <div class="stat-label">Atualização diária</div>
             </div>
           </div>
         </div>
       </section>
 
       <!-- Problema e Solução -->
-      <section class="py-20 bg-white">
-        <div class="max-w-5xl mx-auto px-4">
-          <div class="max-w-4xl mx-auto">
-            <div class="flex flex-col md:flex-row items-start gap-4 p-6 md:p-8 bg-red-50 border-l-4 border-red-500 rounded-r-2xl mb-8">
-              <AlertCircle class="w-6 h-6 text-red-600 mt-1 flex-shrink-0" />
-              <div class="text-center md:text-left">
-                <h3 class="text-xl font-bold text-slate-900 mb-2">O Problema</h3>
-                <p class="text-slate-700 leading-relaxed">
+      <section class="problem-solution-section">
+        <div class="problem-solution-container">
+          <div class="problem-solution-content">
+            <div class="problem-box">
+              <AlertCircle class="box-icon box-icon-red" />
+              <div class="box-content">
+                <h3>O Problema</h3>
+                <p>
                   Embora a Câmara e o Senado disponibilizem dados públicos, o acesso exige conhecimento 
                   técnico para manipular <strong>APIs, CSV e JSON</strong>. O Portal da Transparência 
                   limita-se a consultas individualizadas, incapaz de gerar <strong>estatísticas consolidadas, 
@@ -133,14 +129,14 @@
               </div>
             </div>
 
-            <div class="flex flex-col md:flex-row items-start gap-4 p-6 md:p-8 bg-green-50 border-l-4 border-green-500 rounded-r-2xl">
-              <CheckCircle2 class="w-6 h-6 text-green-600 mt-1 flex-shrink-0" />
-              <div class="text-center md:text-left">
-                <h3 class="text-xl font-bold text-slate-900 mb-2">Nossa Solução</h3>
-                <p class="text-slate-700 leading-relaxed">
+            <div class="solution-box">
+              <CheckCircle2 class="box-icon box-icon-green" />
+              <div class="box-content">
+                <h3>Nossa Solução</h3>
+                <p>
                   Convertemos dados complexos em <strong>visualizações intuitivas, indicadores objetivos 
                   e dashboards comparativos</strong>. Qualquer pessoa pode avaliar gastos, votações e 
-                  fidelidade partidária sem conhecimento técnico. <strong class="text-green-700">
+                  fidelidade partidária sem conhecimento técnico. <strong style="color: #15803d;">
                   A fiscalização parlamentar deixa de ser privilégio de especialistas</strong>.
                 </p>
               </div>
@@ -150,40 +146,39 @@
       </section>
 
       <!-- Funcionalidades Principais -->
-      <section id="funcionalidades" class="py-20 bg-slate-50">
-        <div class="max-w-5xl mx-auto px-4">
-          <div class="text-center mb-16">
-            <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+      <section id="funcionalidades" class="features-section">
+        <div class="features-container">
+          <div class="features-header">
+            <h2 class="features-title">
               O que você pode fiscalizar
             </h2>
-            <p class="text-lg md:text-xl text-slate-600 max-w-3xl mx-auto">
+            <p class="features-description">
               Três pilares fundamentais para avaliar a atuação parlamentar de forma completa e objetiva
             </p>
           </div>
 
-          <div class="flex flex-wrap justify-center gap-6 md:gap-8">
+          <div class="features-grid">
             <div 
               v-for="(feature, idx) in features" 
               :key="idx" 
-              class="w-full max-w-sm bg-white rounded-2xl p-6 md:p-8 shadow-lg hover:shadow-xl transition-all border border-slate-100"
+              class="feature-card"
             >
-              <div class="text-center">
-                <div :class="`w-16 h-16 bg-${feature.color}-100 rounded-2xl flex items-center justify-center text-3xl mb-6 mx-auto`">
+              <div class="feature-card-content">
+                <div :class="`feature-icon-wrapper feature-icon-${feature.color}`">
                   {{ feature.icon }}
                 </div>
-                <h3 class="text-xl md:text-2xl font-bold text-slate-900 mb-3">{{ feature.title }}</h3>
-                <p class="text-slate-600 mb-6">{{ feature.description }}</p>
-                <ul class="space-y-3 text-left">
+                <h3>{{ feature.title }}</h3>
+                <p>{{ feature.description }}</p>
+                <ul class="feature-list">
                   <li 
                     v-for="(item, i) in feature.features" 
-                    :key="i" 
-                    class="flex items-start gap-2 text-sm text-slate-700"
+                    :key="i"
                   >
-                    <CheckCircle2 class="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 class="feature-check-icon" />
                     <span>{{ item }}</span>
                   </li>
                 </ul>
-                <button class="mt-6 w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-900 font-semibold rounded-xl transition-colors">
+                <button class="feature-button">
                   Explorar
                 </button>
               </div>
@@ -193,32 +188,32 @@
       </section>
 
       <!-- Como Funciona -->
-      <section id="como-usar" class="py-20 bg-white">
-        <div class="max-w-5xl mx-auto px-4">
-          <div class="text-center mb-16">
-            <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+      <section id="como-usar" class="how-it-works-section">
+        <div class="how-it-works-container">
+          <div class="how-it-works-header">
+            <h2 class="how-it-works-title">
               Como transformamos dados em transparência
             </h2>
-            <p class="text-lg md:text-xl text-slate-600 max-w-3xl mx-auto">
+            <p class="how-it-works-description">
               Processo automatizado que garante precisão, atualização constante e total confiabilidade
             </p>
           </div>
 
-          <div class="flex flex-wrap justify-center gap-8 md:gap-12">
+          <div class="steps-grid">
             <div 
               v-for="(step, idx) in steps" 
               :key="idx" 
-              class="relative text-center max-w-xs"
+              class="step-card"
             >
-              <div class="flex flex-col items-center">
-                <div class="w-20 h-20 bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl flex items-center justify-center text-white mb-6 shadow-lg relative">
-                  <component :is="step.icon" class="w-8 h-8" />
-                  <div class="absolute -top-2 -left-2 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <span class="text-sm font-bold text-blue-600">{{ step.number }}</span>
+              <div class="step-content">
+                <div class="step-icon-wrapper">
+                  <component :is="step.icon" class="step-icon" />
+                  <div class="step-number">
+                    <span>{{ step.number }}</span>
                   </div>
                 </div>
-                <h3 class="text-xl font-bold text-slate-900 mb-3">{{ step.title }}</h3>
-                <p class="text-slate-600 leading-relaxed">{{ step.description }}</p>
+                <h3 class="step-title">{{ step.title }}</h3>
+                <p class="step-description">{{ step.description }}</p>
               </div>
             </div>
           </div>
@@ -226,56 +221,56 @@
       </section>
 
       <!-- Fontes e Metodologia -->
-      <section class="py-20 bg-slate-50">
-        <div class="max-w-5xl mx-auto px-4">
-          <div class="bg-white rounded-3xl p-8 md:p-12 shadow-xl border border-slate-100">
-            <div class="max-w-4xl mx-auto text-center">
-              <div class="flex items-center justify-center gap-3 mb-8">
-                <Shield class="w-10 h-10 text-blue-600" />
-                <h2 class="text-2xl md:text-3xl font-bold text-slate-900">Confiabilidade e Transparência</h2>
+      <section class="methodology-section">
+        <div class="methodology-container">
+          <div class="methodology-card">
+            <div class="methodology-content">
+              <div class="methodology-header">
+                <Shield class="methodology-shield-icon" />
+                <h2 class="methodology-title">Confiabilidade e Transparência</h2>
               </div>
               
-              <div class="grid md:grid-cols-2 gap-8 mb-8 text-left">
-                <div>
-                  <h3 class="text-lg font-bold text-slate-900 mb-4 text-center md:text-left">📊 Fontes Oficiais</h3>
-                  <ul class="space-y-2 text-slate-700">
-                    <li class="flex items-start gap-2">
-                      <CheckCircle2 class="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+              <div class="methodology-grid">
+                <div class="methodology-item">
+                  <h3 class="methodology-subtitle">📊 Fontes Oficiais</h3>
+                  <ul class="methodology-list">
+                    <li class="methodology-list-item">
+                      <CheckCircle2 class="methodology-check-icon" />
                       <span>API de Dados Abertos da Câmara dos Deputados</span>
                     </li>
-                    <li class="flex items-start gap-2">
-                      <CheckCircle2 class="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <li class="methodology-list-item">
+                      <CheckCircle2 class="methodology-check-icon" />
                       <span>API do Senado Federal</span>
                     </li>
-                    <li class="flex items-start gap-2">
-                      <CheckCircle2 class="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <li class="methodology-list-item">
+                      <CheckCircle2 class="methodology-check-icon" />
                       <span>Portal da Transparência</span>
                     </li>
                   </ul>
                 </div>
                 
-                <div>
-                  <h3 class="text-lg font-bold text-slate-900 mb-4 text-center md:text-left">🔄 Atualização</h3>
-                  <ul class="space-y-2 text-slate-700">
-                    <li class="flex items-start gap-2">
-                      <CheckCircle2 class="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                <div class="methodology-item">
+                  <h3 class="methodology-subtitle">🔄 Atualização</h3>
+                  <ul class="methodology-list">
+                    <li class="methodology-list-item">
+                      <CheckCircle2 class="methodology-check-icon" />
                       <span>Sincronização automática diária</span>
                     </li>
-                    <li class="flex items-start gap-2">
-                      <CheckCircle2 class="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <li class="methodology-list-item">
+                      <CheckCircle2 class="methodology-check-icon" />
                       <span>Verificação de integridade dos dados</span>
                     </li>
-                    <li class="flex items-start gap-2">
-                      <CheckCircle2 class="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <li class="methodology-list-item">
+                      <CheckCircle2 class="methodology-check-icon" />
                       <span>Registro completo de alterações</span>
                     </li>
                   </ul>
                 </div>
               </div>
 
-              <div class="bg-blue-50 border border-blue-200 rounded-xl p-6">
-                <p class="text-slate-700 leading-relaxed text-center">
-                  <strong class="text-slate-900">Compromisso com a precisão:</strong> Todos os dados 
+              <div class="methodology-commitment">
+                <p>
+                  <strong>Compromisso com a precisão:</strong> Todos os dados 
                   exibidos na plataforma são obtidos diretamente de fontes governamentais oficiais, sem 
                   qualquer tipo de manipulação ou interpretação editorial. Nossa metodologia está documentada 
                   e pode ser auditada por qualquer pessoa interessada.
@@ -287,56 +282,56 @@
       </section>
 
       <!-- CTA Final -->
-      <section class="py-20 bg-gradient-to-br from-blue-600 to-blue-800 text-white">
-        <div class="max-w-4xl mx-auto px-4 text-center">
-          <h2 class="text-3xl md:text-4xl lg:text-5xl font-bold mb-6">
+      <section class="cta-section">
+        <div class="cta-container">
+          <h2 class="cta-title">
             A fiscalização começa agora
           </h2>
-          <p class="text-lg md:text-xl text-blue-100 mb-10 leading-relaxed max-w-3xl mx-auto">
+          <p class="cta-description">
             Não é preciso ser especialista para acompanhar seus representantes. Exercer a cidadania 
             fiscalizadora é um direito fundamental – e agora está ao alcance de todos.
           </p>
-          <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <button class="px-8 md:px-10 py-4 bg-white text-blue-700 font-bold rounded-xl hover:bg-blue-50 transition-colors shadow-xl flex items-center justify-center gap-2">
+          <div class="cta-buttons">
+            <button class="cta-button-primary">
               Começar a Fiscalizar
-              <ArrowRight class="w-5 h-5" />
+              <ArrowRight class="cta-arrow-icon" />
             </button>
-            <button class="px-8 md:px-10 py-4 bg-blue-700 text-white font-bold rounded-xl hover:bg-blue-800 transition-colors border-2 border-blue-400">
+            <button class="cta-button-secondary">
               Sobre o Projeto
             </button>
           </div>
-          <p class="text-sm text-blue-200 mt-8">
+          <p class="cta-note">
             ✓ 100% gratuito · ✓ Sem cadastro · ✓ Dados oficiais verificados
           </p>
         </div>
       </section>
 
       <!-- Footer -->
-      <footer class="bg-slate-900 text-slate-300 py-12">
-        <div class="max-w-6xl mx-auto px-4">
-          <div class="grid md:grid-cols-3 gap-8 mb-8 text-center md:text-left">
-            <div class="flex flex-col items-center md:items-start">
-              <div class="flex items-center gap-2 mb-4">
-                <Shield class="w-6 h-6 text-blue-400" />
-                <span class="text-xl font-bold text-white">Fiscaliza Brasil</span>
+      <footer class="footer">
+        <div class="footer-container">
+          <div class="footer-grid">
+            <div class="footer-brand">
+              <div class="footer-brand-header">
+                <Shield class="footer-shield-icon" />
+                <span class="footer-brand-name">Fiscaliza Brasil</span>
               </div>
-              <p class="text-sm text-slate-400 leading-relaxed max-w-xs">
+              <p class="footer-brand-description">
                 Democratizando o acesso aos dados parlamentares para promover a fiscalização cidadã 
                 e fortalecer a transparência democrática.
               </p>
             </div>
             
-            <div class="flex flex-col items-center md:items-start">
-              <h4 class="font-bold text-white mb-4">Sobre o Projeto</h4>
-              <p class="text-sm text-slate-400 max-w-xs">
+            <div class="footer-section">
+              <h4 class="footer-section-title">Sobre o Projeto</h4>
+              <p class="footer-section-description">
                 Trabalho de Conclusão de Curso desenvolvido com o objetivo de quebrar as barreiras 
                 técnicas que impedem o acesso amplo aos dados públicos parlamentares.
               </p>
             </div>
             
-            <div class="flex flex-col items-center md:items-start">
-              <h4 class="font-bold text-white mb-4">Fontes de Dados</h4>
-              <ul class="space-y-2 text-sm text-slate-400">
+            <div class="footer-section">
+              <h4 class="footer-section-title">Fontes de Dados</h4>
+              <ul class="footer-list">
                 <li>• Câmara dos Deputados (API Oficial)</li>
                 <li>• Senado Federal (API Oficial)</li>
                 <li>• Portal da Transparência</li>
@@ -344,11 +339,11 @@
             </div>
           </div>
           
-          <div class="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-center">
-            <p class="text-sm text-slate-500">
+          <div class="footer-bottom">
+            <p class="footer-copyright">
               © 2025 Fiscaliza Brasil · TCC · Todos os dados são públicos e verificáveis
             </p>
-            <p class="text-sm text-slate-500">
+            <p class="footer-credits">
               Desenvolvido com transparência e propósito cívico
             </p>
           </div>
@@ -422,19 +417,19 @@ const features = [
 
 const steps = [
   {
-    number: "1",
+ 
     icon: Database,
     title: "Coleta Automatizada",
     description: "Extração diária via APIs oficiais da Câmara dos Deputados e Senado Federal. Dados brutos em JSON, CSV e XML são capturados com total integridade."
   },
   {
-    number: "2",
+ 
     icon: BarChart3,
     title: "Processamento Inteligente",
     description: "Algoritmos convertem dados técnicos em estatísticas consolidadas, identificam tendências, calculam índices e geram métricas comparativas objetivas."
   },
   {
-    number: "3",
+ 
     icon: Eye,
     title: "Visualização Acessível",
     description: "Dashboards intuitivos, gráficos interativos e relatórios compreensíveis. Sem jargão técnico, sem barreiras de acesso."
@@ -443,42 +438,1113 @@ const steps = [
 </script>
 
 <style scoped>
-/* Garantir centralização em todas as seções */
-section {
+/* Page wrapper */
+.page-wrapper {
+  min-height: 100vh;
+  background: linear-gradient(180deg, var(--color-gray-50), var(--color-white));
+}
+
+/* Header */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: blur(12px);
+  background-color: rgba(255, 255, 255, 0.8);
+  border-bottom: 1px solid var(--color-gray-200);
+}
+
+.header-container {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: var(--space-4);
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (min-width: 768px) {
+  .nav {
+    justify-content: space-between;
+  }
+}
+
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.nav-icon {
+  width: var(--space-8);
+  height: var(--space-8);
+  color: var(--color-primary);
+}
+
+.nav-title {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  background: linear-gradient(to right, var(--color-primary), var(--color-primary-dark));
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.nav-links {
+  display: none;
+  gap: var(--space-6);
+}
+
+@media (min-width: 768px) {
+  .nav-links {
+    display: flex;
+  }
+}
+
+.nav-link {
+  color: var(--color-gray-600);
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.15s ease-in-out;
+}
+
+.nav-link:hover {
+  color: var(--color-primary);
+}
+
+/* Main content */
+.main-content {
+  margin: 0 auto;
+  text-align: center;
+}
+
+/* Hero section */
+.hero-section {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  padding: var(--space-20) 0;
+}
+
+@media (min-width: 1024px) {
+  .hero-section {
+    padding: var(--space-32) 0;
+  }
+}
+
+.hero-bg-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #eff6ff, var(--color-white), var(--color-gray-50));
+  opacity: 0.7;
+}
+
+.hero-bg-accent {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(to left, rgba(219, 234, 254, 0.3), transparent);
+}
+
+.hero-content {
+  position: relative;
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 0 var(--space-4);
+  text-align: center;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-full);
+  background-color: #dbeafe;
+  color: var(--color-primary-dark);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  margin-bottom: var(--space-6);
+}
+
+.hero-badge-icon {
+  width: var(--space-4);
+  height: var(--space-4);
+}
+
+.hero-title {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: var(--color-gray-900);
+  margin-bottom: var(--space-6);
+  line-height: 1.25;
+}
+
+@media (min-width: 768px) {
+  .hero-title {
+    font-size: 3rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero-title {
+    font-size: 3.75rem;
+  }
+}
+
+.hero-title-accent {
+  display: block;
+  background: linear-gradient(to right, var(--color-primary), var(--color-primary-dark));
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.hero-description {
+  font-size: var(--font-size-lg);
+  color: var(--color-gray-600);
+  margin-bottom: var(--space-8);
+  line-height: 1.625;
+  max-width: 48rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (min-width: 768px) {
+  .hero-description {
+    font-size: var(--font-size-xl);
+  }
+}
+
+/* Search */
+.search-container {
+  max-width: 42rem;
+  margin: 0 auto var(--space-6);
+}
+
+.search-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+@media (min-width: 640px) {
+  .search-form {
+    flex-direction: row;
+  }
+}
+
+.search-input-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+.search-icon {
+  position: absolute;
+  left: var(--space-4);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--color-gray-400);
+}
+
+.search-input {
+  width: 100%;
+  height: 3.5rem;
+  padding-left: var(--space-12);
+  padding-right: var(--space-4);
+  border-radius: var(--radius-xl);
+  border: 2px solid var(--color-gray-200);
+  color: var(--color-gray-900);
+  transition: border-color 0.15s ease-in-out;
+}
+
+.search-input:focus {
+  border-color: var(--color-primary-light);
+  outline: none;
+}
+
+.search-input::placeholder {
+  color: var(--color-gray-400);
+}
+
+.search-button {
+  height: 3.5rem;
+  padding: 0 var(--space-8);
+  background: linear-gradient(to right, var(--color-primary), var(--color-primary-dark));
+  color: var(--color-white);
+  font-weight: 600;
+  border-radius: var(--radius-xl);
+  transition: all 0.15s ease-in-out;
+  box-shadow: var(--shadow-lg);
+  white-space: nowrap;
+}
+
+.search-button:hover {
+  background: linear-gradient(to right, var(--color-primary-dark), #1e40af);
+  box-shadow: var(--shadow-xl);
+}
+
+/* Hero features */
+.hero-features {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: var(--space-4);
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-500);
+  margin-bottom: var(--space-12);
 }
 
-/* Centralizar container principal */
-.container-center {
-  margin-left: auto;
-  margin-right: auto;
-  text-align: center;
-}
-
-/* Forçar centralização do header */
-header nav {
-  justify-content: center !important;
-}
-
-@media (min-width: 768px) {
-  header nav {
-    justify-content: space-between !important;
+@media (min-width: 640px) {
+  .hero-features {
+    flex-direction: row;
   }
 }
 
-/* Centralizar elementos flexbox */
-.flex-center {
+.hero-feature {
   display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.hero-feature-icon {
+  width: var(--space-4);
+  height: var(--space-4);
+  color: var(--color-success);
+}
+
+/* Stats grid */
+.stats-grid {
+  max-width: 42rem;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.stat-card {
+  background-color: var(--color-white);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--color-gray-100);
+}
+
+@media (min-width: 768px) {
+  .stat-card {
+    padding: var(--space-6);
+  }
+}
+
+.stat-icon {
+  width: var(--space-6);
+  height: var(--space-6);
+  margin: 0 auto var(--space-3);
+}
+
+@media (min-width: 768px) {
+  .stat-icon {
+    width: var(--space-8);
+    height: var(--space-8);
+  }
+}
+
+.stat-icon-blue {
+  color: var(--color-primary);
+}
+
+.stat-icon-green {
+  color: var(--color-success);
+}
+
+.stat-icon-purple {
+  color: #9333ea;
+}
+
+.stat-icon-orange {
+  color: #ea580c;
+}
+
+.stat-number {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--color-gray-900);
+  margin-bottom: var(--space-1);
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .stat-number {
+    font-size: var(--font-size-4xl);
+  }
+}
+
+.stat-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-600);
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .stat-label {
+    font-size: var(--font-size-sm);
+  }
+}
+
+/* Problem/Solution section */
+.problem-solution-section {
+  padding: var(--space-20) 0;
+  background-color: var(--color-white);
+}
+
+.problem-solution-container {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 0 var(--space-4);
+}
+
+.problem-solution-content {
+  max-width: 56rem;
+  margin: 0 auto;
+}
+
+.problem-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  background-color: #fef2f2;
+  border-left: 4px solid var(--color-error);
+  border-radius: 0 var(--radius-2xl) var(--radius-2xl) 0;
+  margin-bottom: var(--space-8);
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .problem-box {
+    flex-direction: row;
+    padding: var(--space-8);
+    text-align: left;
+  }
+}
+
+.solution-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  background-color: #ecfdf5;
+  border-left: 4px solid var(--color-success);
+  border-radius: 0 var(--radius-2xl) var(--radius-2xl) 0;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .solution-box {
+    flex-direction: row;
+    padding: var(--space-8);
+    text-align: left;
+  }
+}
+
+.box-icon {
+  width: var(--space-6);
+  height: var(--space-6);
+  margin-top: var(--space-1);
+  flex-shrink: 0;
+}
+
+.box-icon-red {
+  color: var(--color-error);
+}
+
+.box-icon-green {
+  color: var(--color-success);
+}
+
+.box-content h3 {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--color-gray-900);
+  margin-bottom: var(--space-2);
+}
+
+.box-content p {
+  color: var(--color-gray-700);
+  line-height: 1.625;
+}
+
+/* Features section */
+.features-section {
+  padding: var(--space-20) 0;
+  background-color: var(--color-gray-50);
+}
+
+.features-container {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 0 var(--space-4);
+}
+
+.features-header {
+  text-align: center;
+  margin-bottom: var(--space-16);
+}
+
+.features-title {
+  font-size: var(--font-size-3xl);
+  font-weight: 700;
+  color: var(--color-gray-900);
+  margin-bottom: var(--space-4);
+}
+
+@media (min-width: 768px) {
+  .features-title {
+    font-size: var(--font-size-4xl);
+  }
+}
+
+.features-description {
+  font-size: var(--font-size-lg);
+  color: var(--color-gray-600);
+  max-width: 48rem;
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .features-description {
+    font-size: var(--font-size-xl);
+  }
+}
+
+.features-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-6);
+}
+
+@media (min-width: 768px) {
+  .features-grid {
+    gap: var(--space-8);
+  }
+}
+
+.feature-card {
+  width: 100%;
+  max-width: 24rem;
+  background-color: var(--color-white);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--color-gray-100);
+  transition: box-shadow 0.15s ease-in-out;
+}
+
+@media (min-width: 768px) {
+  .feature-card {
+    padding: var(--space-8);
+  }
+}
+
+.feature-card:hover {
+  box-shadow: var(--shadow-xl);
+}
+
+.feature-card-content {
+  text-align: center;
+}
+
+.feature-icon-wrapper {
+  width: var(--space-16);
+  height: var(--space-16);
+  border-radius: var(--radius-2xl);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-3xl);
+  margin: 0 auto var(--space-6);
+}
+
+.feature-icon-blue {
+  background-color: #dbeafe;
+}
+
+.feature-icon-purple {
+  background-color: #f3e8ff;
+}
+
+.feature-icon-green {
+  background-color: #dcfce7;
+}
+
+.feature-card h3 {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--color-gray-900);
+  margin-bottom: var(--space-3);
+}
+
+@media (min-width: 768px) {
+  .feature-card h3 {
+    font-size: var(--font-size-2xl);
+  }
+}
+
+.feature-card p {
+  color: var(--color-gray-600);
+  margin-bottom: var(--space-6);
+}
+
+.feature-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--space-6) 0;
+  text-align: left;
+}
+
+.feature-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-700);
+  margin-bottom: var(--space-3);
+}
+
+.feature-list li:last-child {
+  margin-bottom: 0;
+}
+
+.feature-check-icon {
+  width: var(--space-4);
+  height: var(--space-4);
+  color: var(--color-success);
+  margin-top: 0.125rem;
+  flex-shrink: 0;
+}
+
+.feature-button {
+  width: 100%;
+  padding: var(--space-3) 0;
+  background-color: var(--color-gray-100);
+  color: var(--color-gray-900);
+  font-weight: 600;
+  border-radius: var(--radius-xl);
+  transition: background-color 0.15s ease-in-out;
+  border: none;
+  cursor: pointer;
+}
+
+.feature-button:hover {
+  background-color: var(--color-gray-200);
+}
+
+/* How it works section */
+.how-it-works-section {
+  padding: var(--space-20) 0;
+  background-color: var(--color-white);
+}
+
+.how-it-works-container {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 0 var(--space-4);
+}
+
+.how-it-works-header {
+  text-align: center;
+  margin-bottom: var(--space-16);
+}
+
+.how-it-works-title {
+  font-size: var(--font-size-3xl);
+  font-weight: 700;
+  color: var(--color-gray-900);
+  margin-bottom: var(--space-4);
+}
+
+@media (min-width: 768px) {
+  .how-it-works-title {
+    font-size: var(--font-size-4xl);
+  }
+}
+
+.how-it-works-description {
+  font-size: var(--font-size-lg);
+  color: var(--color-gray-600);
+  max-width: 48rem;
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .how-it-works-description {
+    font-size: var(--font-size-xl);
+  }
+}
+
+.steps-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-8);
+}
+
+@media (min-width: 768px) {
+  .steps-grid {
+    gap: var(--space-12);
+  }
+}
+
+.step-card {
+  position: relative;
+  text-align: center;
+  max-width: 20rem;
+}
+
+.step-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.step-icon-wrapper {
+  position: relative;
+  width: var(--space-20);
+  height: var(--space-20);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  border-radius: var(--radius-2xl);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-white);
+  margin-bottom: var(--space-6);
+  box-shadow: var(--shadow-lg);
+}
+
+.step-icon {
+  width: var(--space-8);
+  height: var(--space-8);
+}
+
+.step-number {
+  position: absolute;
+  top: -0.5rem;
+  left: -0.5rem;
+  width: var(--space-8);
+  height: var(--space-8);
+  background-color: #dbeafe;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.step-number span {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.step-title {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--color-gray-900);
+  margin-bottom: var(--space-3);
+}
+
+.step-description {
+  color: var(--color-gray-600);
+  line-height: 1.625;
+}
+
+/* Methodology section */
+.methodology-section {
+  padding: var(--space-20) 0;
+  background-color: var(--color-gray-50);
+}
+
+.methodology-container {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 0 var(--space-4);
+}
+
+.methodology-card {
+  background-color: var(--color-white);
+  border-radius: var(--radius-3xl);
+  padding: var(--space-8);
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--color-gray-100);
+}
+
+@media (min-width: 768px) {
+  .methodology-card {
+    padding: var(--space-12);
+  }
+}
+
+.methodology-content {
+  max-width: 56rem;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.methodology-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-8);
+}
+
+.methodology-shield-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  color: var(--color-primary);
+}
+
+.methodology-title {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--color-gray-900);
+}
+
+@media (min-width: 768px) {
+  .methodology-title {
+    font-size: var(--font-size-3xl);
+  }
+}
+
+.methodology-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-8);
+  margin-bottom: var(--space-8);
+  text-align: left;
+}
+
+@media (min-width: 768px) {
+  .methodology-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.methodology-item h3 {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--color-gray-900);
+  margin-bottom: var(--space-4);
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .methodology-item h3 {
+    text-align: left;
+  }
+}
+
+.methodology-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.methodology-list-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  color: var(--color-gray-700);
+  margin-bottom: var(--space-2);
+}
+
+.methodology-list-item:last-child {
+  margin-bottom: 0;
+}
+
+.methodology-check-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--color-success);
+  margin-top: 0.125rem;
+  flex-shrink: 0;
+}
+
+.methodology-commitment {
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+}
+
+.methodology-commitment p {
+  color: var(--color-gray-700);
+  line-height: 1.625;
+  text-align: center;
+  margin: 0;
+}
+
+.methodology-commitment strong {
+  color: var(--color-gray-900);
+}
+
+/* CTA section */
+.cta-section {
+  padding: var(--space-20) 0;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  color: var(--color-white);
+}
+
+.cta-container {
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 0 var(--space-4);
+  text-align: center;
+}
+
+.cta-title {
+  font-size: var(--font-size-3xl);
+  font-weight: 700;
+  margin-bottom: var(--space-6);
+}
+
+@media (min-width: 768px) {
+  .cta-title {
+    font-size: var(--font-size-4xl);
+  }
+}
+
+@media (min-width: 1024px) {
+  .cta-title {
+    font-size: var(--font-size-5xl);
+  }
+}
+
+.cta-description {
+  font-size: var(--font-size-lg);
+  color: #dbeafe;
+  margin-bottom: 2.5rem;
+  line-height: 1.625;
+  max-width: 48rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (min-width: 768px) {
+  .cta-description {
+    font-size: var(--font-size-xl);
+  }
+}
+
+.cta-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
   justify-content: center;
   align-items: center;
 }
 
-/* Grid centralizado */
-.grid-center {
+@media (min-width: 640px) {
+  .cta-buttons {
+    flex-direction: row;
+  }
+}
+
+.cta-button-primary {
+  padding: var(--space-4) var(--space-8);
+  background-color: var(--color-white);
+  color: var(--color-primary-dark);
+  font-weight: 700;
+  border-radius: var(--radius-xl);
+  transition: background-color 0.15s ease-in-out;
+  box-shadow: var(--shadow-xl);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border: none;
+  cursor: pointer;
+}
+
+@media (min-width: 768px) {
+  .cta-button-primary {
+    padding: var(--space-4) 2.5rem;
+  }
+}
+
+.cta-button-primary:hover {
+  background-color: #eff6ff;
+}
+
+.cta-arrow-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.cta-button-secondary {
+  padding: var(--space-4) var(--space-8);
+  background-color: var(--color-primary-dark);
+  color: var(--color-white);
+  font-weight: 700;
+  border-radius: var(--radius-xl);
+  transition: background-color 0.15s ease-in-out;
+  border: 2px solid #60a5fa;
+  cursor: pointer;
+}
+
+@media (min-width: 768px) {
+  .cta-button-secondary {
+    padding: var(--space-4) 2.5rem;
+  }
+}
+
+.cta-button-secondary:hover {
+  background-color: #1e40af;
+}
+
+.cta-note {
+  font-size: var(--font-size-sm);
+  color: #bfdbfe;
+  margin-top: var(--space-8);
+}
+
+/* Footer */
+.footer {
+  background-color: var(--color-gray-900);
+  color: #cbd5e1;
+  padding: var(--space-12) 0;
+}
+
+.footer-container {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 0 var(--space-4);
+}
+
+.footer-grid {
   display: grid;
-  place-items: center;
+  grid-template-columns: 1fr;
+  gap: var(--space-8);
+  margin-bottom: var(--space-8);
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .footer-grid {
+    grid-template-columns: repeat(3, 1fr);
+    text-align: left;
+  }
+}
+
+.footer-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@media (min-width: 768px) {
+  .footer-brand {
+    align-items: flex-start;
+  }
+}
+
+.footer-brand-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.footer-shield-icon {
+  width: var(--space-6);
+  height: var(--space-6);
+  color: #60a5fa;
+}
+
+.footer-brand-name {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--color-white);
+}
+
+.footer-brand-description {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-400);
+  line-height: 1.625;
+  max-width: 20rem;
+}
+
+.footer-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@media (min-width: 768px) {
+  .footer-section {
+    align-items: flex-start;
+  }
+}
+
+.footer-section-title {
+  font-weight: 700;
+  color: var(--color-white);
+  margin-bottom: var(--space-4);
+}
+
+.footer-section-description {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-400);
+  max-width: 20rem;
+}
+
+.footer-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-list li {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-400);
+  margin-bottom: var(--space-2);
+}
+
+.footer-list li:last-child {
+  margin-bottom: 0;
+}
+
+.footer-bottom {
+  border-top: 1px solid var(--color-gray-800);
+  padding-top: var(--space-8);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-4);
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .footer-bottom {
+    flex-direction: row;
+  }
+}
+
+.footer-copyright,
+.footer-credits {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-500);
+  margin: 0;
 }
 </style>
