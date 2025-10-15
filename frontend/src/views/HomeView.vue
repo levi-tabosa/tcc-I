@@ -164,9 +164,6 @@
               class="feature-card"
             >
               <div class="feature-card-content">
-                <div :class="`feature-icon-wrapper feature-icon-${feature.color}`">
-                  {{ feature.icon }}
-                </div>
                 <h3>{{ feature.title }}</h3>
                 <p>{{ feature.description }}</p>
                 <ul class="feature-list">
@@ -208,9 +205,6 @@
               <div class="step-content">
                 <div class="step-icon-wrapper">
                   <component :is="step.icon" class="step-icon" />
-                  <div class="step-number">
-                    <span>{{ step.number }}</span>
-                  </div>
                 </div>
                 <h3 class="step-title">{{ step.title }}</h3>
                 <p class="step-description">{{ step.description }}</p>
@@ -232,7 +226,10 @@
               
               <div class="methodology-grid">
                 <div class="methodology-item">
-                  <h3 class="methodology-subtitle">📊 Fontes Oficiais</h3>
+                  <h3 class="methodology-subtitle">
+                    <BarChart class="methodology-title-icon" />
+                    Fontes Oficiais
+                  </h3>
                   <ul class="methodology-list">
                     <li class="methodology-list-item">
                       <CheckCircle2 class="methodology-check-icon" />
@@ -250,7 +247,10 @@
                 </div>
                 
                 <div class="methodology-item">
-                  <h3 class="methodology-subtitle">🔄 Atualização</h3>
+                  <h3 class="methodology-subtitle">
+                    <RefreshCw class="methodology-title-icon" />
+                    Atualização
+                  </h3>
                   <ul class="methodology-list">
                     <li class="methodology-list-item">
                       <CheckCircle2 class="methodology-check-icon" />
@@ -366,7 +366,9 @@ import {
   Database, 
   BarChart3, 
   CheckCircle2, 
-  AlertCircle 
+  AlertCircle,
+  BarChart,
+  RefreshCw
 } from 'lucide-vue-next'
 
 const searchQuery = ref('')
@@ -378,7 +380,6 @@ const handleSearch = (e: Event) => {
 
 const features = [
   {
-    icon: "💰",
     color: "blue",
     title: "Gastos da Cota Parlamentar",
     description: "Acompanhe em tempo real como cada parlamentar utiliza recursos públicos",
@@ -390,7 +391,6 @@ const features = [
     ]
   },
   {
-    icon: "🗳️",
     color: "purple",
     title: "Histórico de Votações",
     description: "Analise decisões e posicionamento em pautas importantes",
@@ -402,7 +402,6 @@ const features = [
     ]
   },
   {
-    icon: "🎯",
     color: "green",
     title: "Fidelidade Partidária",
     description: "Avalie a coerência entre discurso partidário e ação política",
@@ -417,19 +416,16 @@ const features = [
 
 const steps = [
   {
- 
     icon: Database,
     title: "Coleta Automatizada",
     description: "Extração diária via APIs oficiais da Câmara dos Deputados e Senado Federal. Dados brutos em JSON, CSV e XML são capturados com total integridade."
   },
   {
- 
     icon: BarChart3,
     title: "Processamento Inteligente",
     description: "Algoritmos convertem dados técnicos em estatísticas consolidadas, identificam tendências, calculam índices e geram métricas comparativas objetivas."
   },
   {
- 
     icon: Eye,
     title: "Visualização Acessível",
     description: "Dashboards intuitivos, gráficos interativos e relatórios compreensíveis. Sem jargão técnico, sem barreiras de acesso."
@@ -965,29 +961,6 @@ const steps = [
   text-align: center;
 }
 
-.feature-icon-wrapper {
-  width: var(--space-16);
-  height: var(--space-16);
-  border-radius: var(--radius-2xl);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--font-size-3xl);
-  margin: 0 auto var(--space-6);
-}
-
-.feature-icon-blue {
-  background-color: #dbeafe;
-}
-
-.feature-icon-purple {
-  background-color: #f3e8ff;
-}
-
-.feature-icon-green {
-  background-color: #dcfce7;
-}
-
 .feature-card h3 {
   font-size: var(--font-size-xl);
   font-weight: 700;
@@ -1137,25 +1110,6 @@ const steps = [
   height: var(--space-8);
 }
 
-.step-number {
-  position: absolute;
-  top: -0.5rem;
-  left: -0.5rem;
-  width: var(--space-8);
-  height: var(--space-8);
-  background-color: #dbeafe;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.step-number span {
-  font-size: var(--font-size-sm);
-  font-weight: 700;
-  color: var(--color-primary);
-}
-
 .step-title {
   font-size: var(--font-size-xl);
   font-weight: 700;
@@ -1246,12 +1200,23 @@ const steps = [
   color: var(--color-gray-900);
   margin-bottom: var(--space-4);
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
 }
 
 @media (min-width: 768px) {
   .methodology-item h3 {
     text-align: left;
+    justify-content: flex-start;
   }
+}
+
+.methodology-title-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--color-primary);
 }
 
 .methodology-list {
