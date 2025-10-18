@@ -16,7 +16,7 @@ import sqlalchemy
 load_dotenv()
 
 
-# ---------- CONFIGURAÇÃO DO BANCO DE DADOS ----------
+
 DB_CONFIG = {
     "user": os.getenv("DB_USER"),
     "password": os.getenv("DB_PWD"),
@@ -25,7 +25,6 @@ DB_CONFIG = {
     "dbname": os.getenv("DB_NAME")
 }
 
-# Criar a string de conexão e o engine do SQLAlchemy
 try:
     db_connection_str = f"postgresql+psycopg2://{DB_CONFIG['user']}:{DB_CONFIG['password']}@{DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['dbname']}"
     db_engine = sqlalchemy.create_engine(db_connection_str)
@@ -34,9 +33,8 @@ except Exception as e:
     print(f"Erro ao conectar ao banco de dados: {e}")
     db_engine = None
 
-# ---------- FUNÇÕES AUXILIARES ----------
+
 def get_legislatura_years(legislatura: int) -> List[int]:
-    """Mapeia o número da legislatura para um range de anos."""
     start_year_map = {
         53: 2007,
         54: 2011,
@@ -53,10 +51,7 @@ def _process_votacoes_rows(items: List[Dict], legislatura: Optional[int] = None)
     """Processa as linhas de votações, principalmente a coluna de proposições."""
     enriched = []
     for item in items:
-        # A coluna proposicoesAfetadas vem como uma string JSON do banco de dados
         proposicoes_afetadas = item.get('proposicoesAfetadas')
-        
-        # Parseia a string JSON para uma lista de dicionários
         if isinstance(proposicoes_afetadas, str):
             try:
                 proposicoes_list = json.loads(proposicoes_afetadas)
@@ -77,7 +72,7 @@ def _process_votacoes_rows(items: List[Dict], legislatura: Optional[int] = None)
         enriched.append(item)
     return enriched
 
-# ---------- CONFIGURAÇÃO DOS TIPOS DE DADOS E QUERIES SQL ----------
+
 DATA_TYPE_CONFIG = {
     "proposicoes": {
         "display_name": "Proposições",
@@ -158,7 +153,7 @@ DATA_TYPE_CONFIG = {
     }
 }
 
-# ---------- CARREGAMENTO DE DADOS DO BANCO ----------
+
 def load_generic_dataframe(data_type: str, legislatura: int, max_entries: int) -> pd.DataFrame:
     if not db_engine:
         print("Erro: Conexão com o banco de dados não está disponível.")
@@ -226,12 +221,7 @@ app = dash.Dash(__name__, suppress_callback_exceptions=True)
 # O restante do código (layout e callbacks do Dash) permanece o mesmo
 # ... (cole o restante do seu código original aqui, sem alterações)
 # app.index_string = ...
-# app.layout = ...
-# def get_display_columns(df): ...
-# def create_table(df, max_entries): ...
-# @app.callback(...)
-# def render_output_area(...): ...
-# ... e assim por diante
+
 app.index_string = '''
 <!DOCTYPE html>
 <html>

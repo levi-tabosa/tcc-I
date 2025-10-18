@@ -60,7 +60,7 @@ def scan_info_files_limited(info_dir: Path, max_entries: int):
         results.append(dados)
     return results
 
-# ---------- GENERIC DATA LOADING ----------
+
 def get_nested_value(data: Dict, key_path: str, default: Any = None) -> Any:
     keys = key_path.split('.')
     try:
@@ -1062,9 +1062,7 @@ def update_json_link(content):
     payload = json.dumps(content, ensure_ascii=False, indent=2)
     return "data:application/json;charset=utf-8," + urllib.parse.quote(payload)
 
-# Copiar para área de transferência: usamos um pequeno truque com um elemento dcc.Location
-# Observação: copiar para clipboard via servidor não é possível; essa ação dependeria de JS no cliente.
-# Aqui apenas retornamos o texto para ser exibido; caso queira cópia automática, é preciso um clientside callback.
+
 
 @app.callback(
     Output('modal-copy-button', 'children'),

@@ -83,4 +83,8 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  
+  /* Melhorias para dispositivos touch */
+  -webkit-text-size-adjust: 100%;
+  -webkit-overflow-scrolling: touch;
 }
