@@ -90,6 +90,54 @@ uvicorn main:app --reload --host 127.0.0.1 --port 8000
 
 O servidor deve ficar acessível em `http://127.0.0.1:8000`.
 
+### Comandos rápidos (resumo)
+
+Backend (PowerShell):
+
+```powershell
+# entrar na pasta backend
+Set-Location -Path 'C:\Users\Bene\Desktop\Codes\tcc-I\backend'
+
+# criar e ativar venv
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+
+# instalar deps
+pip install -r ..\requirements.txt
+pip install fastapi uvicorn
+
+# criar .env (editar valores conforme necessário)
+# New-Item -Path . -Name '.env' -ItemType 'file' -Value 'DB_HOST=localhost`nDB_PORT=5432`nDB_NAME=pgdb`nDB_USER=postgres`nDB_PASSWORD=pgpwd'
+
+# rodar servidor
+uvicorn main:app --reload --host 127.0.0.1 --port 8000
+```
+
+Frontend (dentro da pasta `frontend/`):
+
+```powershell
+# entrar na pasta frontend
+Set-Location -Path 'C:\Users\Bene\Desktop\Codes\tcc-I\frontend'
+
+# instalar dependências (escolha um gerenciador)
+# npm
+npm install
+# ou pnpm
+pnpm install
+# ou yarn
+yarn install
+
+# rodar em modo dev (Vite)
+# npm
+npm run dev
+# ou pnpm
+pnpm dev
+# ou yarn
+yarn dev
+```
+
+> Nota: o frontend por padrão espera o backend rodando em http://localhost:5173 no CORS do backend há uma configuração que já permite `http://localhost:5173`.
+
 ## Endpoints principais
 
 - GET `/` — rota raiz; retorna: `{ "message": "API de Deputados em funcionamento" }`
