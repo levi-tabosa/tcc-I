@@ -13,7 +13,7 @@ def get_connect():
             user=os.getenv("DB_USER", "postgres"),
             password=os.getenv("DB_PASSWORD", "pgpwd")
         )
-        print(f"Connected to PostgreSQL database at")
+        print(f"Connected to PostgreSQL database at {os.getenv('DB_HOST', 'postgres')}")
         return conn
     except psycopg2.Error as e:
         print(f"Error connecting to PostgreSQL database: {e}")
