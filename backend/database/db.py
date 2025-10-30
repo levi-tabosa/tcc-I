@@ -8,10 +8,10 @@ def get_connect():
     try:
         conn = psycopg2.connect(
             host=os.getenv("DB_HOST", "localhost"),
-            port=os.getenv("DB_PORT", 5432),
-            database=os.getenv("DB_NAME", "pgdb"),
+            port=os.getenv("DB_PORT", 5434),
+            database=os.getenv("DB_NAME", "camara_db"),
             user=os.getenv("DB_USER", "postgres"),
-            password=os.getenv("DB_PASSWORD", "pgpwd")
+            password=os.getenv("DB_PASSWORD", "postgres")
         )
         print(f"Connected to PostgreSQL database at {os.getenv('DB_HOST', 'postgres')}")
         return conn

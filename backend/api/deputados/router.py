@@ -1,5 +1,3 @@
-
-
 from fastapi import APIRouter, HTTPException, Query
 from datetime import date
 import psycopg2
@@ -21,7 +19,7 @@ def buscar_deputados(nome: str = Query(..., min_length=2)):
     
     try:
         with conn.cursor() as cursor:
-            termo_busca = f"%{nome}%"
+            termo_busca = f"{nome}%"
             query = "SELECT id, nome_civil, uf_nascimento FROM deputados WHERE nome_civil ILIKE %s"
             
             cursor.execute(query, (termo_busca,))

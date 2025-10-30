@@ -91,27 +91,49 @@
             Fiscalização parlamentar não precisa de expertise técnica – é direito de todos.
           </p>
 
-          <!-- Search Bar -->
-          <div class="search-container">
-            <form @submit.prevent="handleSearch" class="search-form">
-              <div class="search-input-wrapper">
-                <Search class="search-icon" />
-                <input 
-                  v-model="searchQuery"
-                  type="text"
-                  placeholder="Busque por parlamentar, partido ou proposição..."
-                  class="search-input"
-                />
-              </div>
-              <button 
-                type="submit"
-                class="search-button"
-                :disabled="isLoading"
-              >
-                <span v-if="!isLoading">Buscar</span>
-                <span v-else>Buscando...</span>
-              </button>
-            </form>
+          <!-- Search Bar com Autocomplete -->
+          <div class="search-autocomplete-wrapper" ref="searchWrapper">
+            <div class="search-container">
+              <form @submit.prevent="handleSearch" class="search-form">
+                <div class="search-input-wrapper">
+                  <Search class="search-icon" />
+                  <input 
+                    v-model="searchQuery"
+                    type="text"
+                    placeholder="Busque por um parlamentar..."
+                    class="search-input"
+                    @keydown.down.prevent="onArrowDown"
+                    @keydown.up.prevent="onArrowUp"
+                    @keydown.enter.prevent="onEnter"
+                    autocomplete="off"
+                  />
+                </div>
+                <button 
+                  type="submit"
+                  class="search-button"
+                  :disabled="isLoading"
+                >
+                  <span v-if="!isLoading">Buscar</span>
+                  <span v-else>Buscando...</span>
+                </button>
+              </form>
+            </div>
+
+            <!-- LISTA DE SUGESTÕES FLUTUANTE -->
+            <div v-if="showSuggestions" class="autocomplete-results">
+              <div v-if="isLoading" class="autocomplete-feedback">Carregando...</div>
+              <ul v-else-if="searchResults.length > 0">
+                <li 
+                  v-for="(deputado, index) in searchResults" 
+                  :key="deputado.id"
+                  :class="{ 'is-active': index === activeIndex }"
+                  @click="selectSuggestion(deputado)"
+                >
+                  {{ deputado.nome_civil }} ({{ deputado.uf }})
+                </li>
+              </ul>
+              <div v-else class="autocomplete-feedback">Nenhum resultado encontrado.</div>
+            </div>
           </div>
           
           <div class="hero-features">
@@ -151,30 +173,7 @@
         </div>
       </section>
       
-      <!-- NOVA SEÇÃO DE RESULTADOS DA BUSCA (aparece dinamicamente) -->
-      <section class="results-section" v-if="hasSearched">
-        <div v-if="isLoading" class="feedback-message">
-          <p>Buscando parlamentares...</p>
-        </div>
-        <div v-else-if="error" class="feedback-message error-message">
-          <h3>Erro na Busca</h3>
-          <p>{{ error }}</p>
-        </div>
-        <div v-else-if="searchResults.length > 0" class="results-container">
-          <h2>Resultados para "<strong>{{ originalQuery }}</strong>"</h2>
-          <ul class="results-list">
-            <li v-for="deputado in searchResults" :key="deputado.id">
-              <router-link :to="{ name: 'Perfil', params: { id: deputado.id } }" class="result-item">
-                <span>{{ deputado.nome_civil }} ({{ deputado.uf }})</span>
-                <span>Ver Perfil →</span>
-              </router-link>
-            </li>
-          </ul>
-        </div>
-        <div v-else class="feedback-message">
-          <p>Nenhum resultado encontrado para "<strong>{{ originalQuery }}</strong>".</p>
-        </div>
-      </section>
+      <!-- A busca agora usa autocomplete; a seção de resultados antiga foi removida -->
 
 
       <!-- Problema e Solução -->
@@ -419,7 +418,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router' // <<< 1. IMPORTE O useRouter
 import { 
   Search, TrendingUp, Users, FileText, Shield, Eye, ArrowRight, Database, 
@@ -444,6 +443,13 @@ const isMobileMenuOpen = ref(false);
 
 const router = useRouter(); // <<< 2. CRIE A INSTÂNCIA DO ROUTER
 
+// Autocomplete helpers
+const searchWrapper = ref<HTMLElement | null>(null);
+const activeIndex = ref(-1);
+const showSuggestions = computed(() => {
+  return searchQuery.value.length >= 2 && (isLoading.value || searchResults.value.length > 0);
+});
+
 // --- Funções do Menu Mobile ---
 const toggleMobileMenu = () => {
   isMobileMenuOpen.value = !isMobileMenuOpen.value;
@@ -456,49 +462,136 @@ const closeMobileMenu = () => {
   document.body.style.overflow = '';
 };
 
-// --- Função de Busca ATUALIZADA ---
-const handleSearch = async () => {
-  // 1. Limpa os estados da busca anterior
-  searchResults.value = [];
-  error.value = null;
-  hasSearched.value = true;
-  isLoading.value = true;
-  originalQuery.value = searchQuery.value;
+// --- Busca com debounce e filtro por prefixo (nome começa com) ---
+let debounceTimer: number | null = null;
+const DEBOUNCE_MS = 300;
 
-  // 2. Validação simples
-  if (searchQuery.value.length < 2) {
-    error.value = "Por favor, digite pelo menos 2 caracteres.";
+const fetchSuggestions = async (q: string) => {
+  // limpa e prepara estados
+  error.value = null;
+  isLoading.value = true;
+  hasSearched.value = true;
+  originalQuery.value = q;
+  searchResults.value = [];
+
+  if (!q || q.length < 1) {
     isLoading.value = false;
     return;
   }
 
-  // 3. Chamada à API
   try {
-    const response = await fetch(`http://127.0.0.1:8000/api/deputados/buscar?nome=${searchQuery.value}`);
-    if (!response.ok) {
-      throw new Error('Falha ao comunicar com o servidor. A API está rodando?');
-    }
+    const response = await fetch(`http://127.0.0.1:8000/api/deputados/buscar?nome=${encodeURIComponent(q)}`);
+    if (!response.ok) throw new Error('Falha ao comunicar com o servidor. A API está rodando?');
     const data = await response.json();
-    
-    // <<< 3. LÓGICA DE REDIRECIONAMENTO >>>
-    if (data.resultados && data.resultados.length === 1) {
-      // Se encontrou EXATAMENTE um resultado...
-      const deputadoId = data.resultados[0].id;
-      // Navega programaticamente para a página de perfil.
-      router.push({ name: 'Perfil', params: { id: deputadoId } });
-    } else {
-      // Se encontrou 0 ou mais de 1 resultado...
-      // Apenas exibe a lista para o usuário (ou a mensagem de "não encontrado").
-      searchResults.value = data.resultados;
-    }
 
+    const resultados = Array.isArray(data.resultados) ? data.resultados : [];
+
+    // Filtra apenas aqueles cujo nome_civil COMEÇA com a query (case-insensitive)
+    const filtered = resultados.filter((r: any) => {
+      if (!r.nome_civil) return false;
+      return r.nome_civil.toLowerCase().startsWith(q.toLowerCase());
+    });
+
+    // Se houver correspondências por prefixo, mostra elas; senão, exibe as correspondências por substring
+    searchResults.value = filtered.length > 0 ? filtered : resultados;
+
+    // Se restar apenas 1 resultado e for uma busca por submit, redirecionamento será feito em handleSearch (veja abaixo)
   } catch (err: any) {
-    console.error("Erro na busca:", err);
-    error.value = err.message || "Ocorreu um erro inesperado.";
+    console.error('Erro na busca:', err);
+    error.value = err.message || 'Ocorreu um erro inesperado.';
   } finally {
     isLoading.value = false;
   }
 };
+
+// watcher: quando o usuário digita, pesquisamos com debounce
+watch(searchQuery, (newVal) => {
+  if (debounceTimer) window.clearTimeout(debounceTimer);
+  // mínima proteção: não pesquisar com string vazia
+  if (!newVal || newVal.length < 1) {
+    searchResults.value = [];
+    hasSearched.value = false;
+    error.value = null;
+    return;
+  }
+
+  debounceTimer = window.setTimeout(() => {
+    fetchSuggestions(newVal);
+  }, DEBOUNCE_MS);
+});
+
+// manter handleSearch para comportamento de submit (enter / botão)
+const handleSearch = async () => {
+  // se houver debounce pendente, limpar e executar imediatamente
+  if (debounceTimer) {
+    window.clearTimeout(debounceTimer);
+    debounceTimer = null;
+  }
+
+  const q = searchQuery.value;
+  if (!q || q.length < 1) {
+    error.value = 'Por favor, digite pelo menos 1 caractere.';
+    return;
+  }
+
+  // executar busca e redirecionar se encontrar exatamente um
+  await fetchSuggestions(q);
+
+  if (searchResults.value.length === 1) {
+    const deputadoId = searchResults.value[0].id;
+    router.push({ name: 'Perfil', params: { id: deputadoId } });
+  }
+};
+
+// --- Funções de Interatividade do Autocomplete ---
+
+// Clicar em uma sugestão
+const selectSuggestion = (deputado: SearchResult) => {
+  searchQuery.value = deputado.nome_civil;
+  searchResults.value = []; // Esconde o dropdown
+  activeIndex.value = -1;
+  // Redireciona imediatamente para o perfil
+  router.push({ name: 'Perfil', params: { id: deputado.id } });
+};
+
+// --- Funções de Navegação por Teclado ---
+const onArrowDown = () => {
+  if (searchResults.value.length === 0) return;
+  activeIndex.value = (activeIndex.value + 1) % searchResults.value.length;
+};
+
+const onArrowUp = () => {
+  if (searchResults.value.length === 0) return;
+  if (activeIndex.value <= 0) {
+    activeIndex.value = searchResults.value.length - 1;
+  } else {
+    activeIndex.value--;
+  }
+};
+
+const onEnter = () => {
+  if (activeIndex.value >= 0 && searchResults.value[activeIndex.value]) {
+    selectSuggestion(searchResults.value[activeIndex.value]);
+  } else {
+    handleSearch(); // comportamento padrão de busca
+  }
+};
+
+// --- Lógica para fechar ao clicar fora ---
+const handleClickOutside = (event: MouseEvent) => {
+  if (searchWrapper.value && !searchWrapper.value.contains(event.target as Node)) {
+    searchResults.value = []; // Esconde o dropdown
+    activeIndex.value = -1;
+  }
+};
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside);
+});
 
 
 
@@ -1970,6 +2063,64 @@ body {
   font-weight: 700;
   margin-bottom: 0.5rem;
   color: #f87171;
+}
+
+/* ==================================================== */
+/*          CSS PARA O AUTOCOMPLETE (ADICIONAL)       */
+/* ==================================================== */
+.search-autocomplete-wrapper {
+  position: relative;
+  max-width: 700px;
+  margin: 0 auto 2.5rem;
+}
+
+.autocomplete-results {
+  position: absolute;
+  top: calc(100% - 1rem);
+  left: 1rem;
+  right: 1rem;
+  background: linear-gradient(180deg, #1e293b, #0f172a);
+  border: 1px solid #475569;
+  border-top: none;
+  border-radius: 0 0 1rem 1rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 10;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  text-align: left;
+}
+
+.autocomplete-results ul {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.autocomplete-results li {
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  border-bottom: 1px solid #334155;
+  color: #cbd5e1;
+}
+
+.autocomplete-results li:last-child {
+  border-bottom: none;
+}
+
+.autocomplete-results li:hover,
+.autocomplete-results li.is-active {
+  background-color: #3b82f6;
+  color: #ffffff;
+}
+
+.autocomplete-feedback {
+  padding: 1rem 1.5rem;
+  color: #94a3b8;
+  font-style: italic;
 }
 
 </style>

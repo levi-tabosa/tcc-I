@@ -7,10 +7,10 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
+      # A porta foi alterada de volta para o padrão 5432:5432
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./camara_v2.sql:/docker-entrypoint-initdb.d/camara_v2.sql
     networks:
       - camara-network
     healthcheck:
@@ -25,7 +25,11 @@ services:
       dockerfile: backend/Dockerfile
     container_name: camara_backend
     environment:
+      # Esta URL usa o nome do serviço 'postgres' e a porta interna '5432'
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/camara_db
+      # Estas variáveis garantem que seu código Python (db.py) se conecte corretamente
+      - DB_HOST=postgres
+      - DB_PORT=5432
     ports:
       - "8000:8000"
     depends_on:
