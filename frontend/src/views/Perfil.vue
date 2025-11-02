@@ -1,47 +1,68 @@
 <template>
   <div class="page-container">
-    <!-- Header de Navegação -->
-    <nav class="nav-header">
-      <router-link to="/" class="nav-back-button">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="m12 19-7-7 7-7"/>
-          <path d="M19 12H5"/>
-        </svg>
-        Voltar à Busca
-      </router-link>
-    </nav>
-
-    <!-- Bloco 1: Feedback de Carregamento -->
+    <AppHeader />
+    
     <div v-if="isLoading" class="feedback-container loading-container">
       <div class="loading-spinner"></div>
       <p class="loading-text">Carregando dados do parlamentar...</p>
     </div>
 
-    <!-- Bloco 2: Mensagem de Erro -->
     <div v-else-if="error" class="feedback-container error-container">
       <div class="error-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="15" y1="9" x2="9" y2="15"/>
-          <line x1="9" y1="9" x2="15" y2="15"/>
-        </svg>
+        <span>❌</span>
       </div>
       <h2>Oops! Algo deu errado</h2>
       <p class="error-message">{{ error }}</p>
       <router-link to="/" class="back-button">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-        </svg>
         Voltar ao Início
       </router-link>
     </div>
 
-    <!-- Bloco 3: Conteúdo Principal do Perfil -->
     <div v-else-if="deputado" class="perfil-container animate-fade-in">
-      <!-- Card Principal do Perfil -->
       <div class="perfil-card">
-        <!-- Header do Perfil -->
         <header class="perfil-header">
+          <div class="header-background"></div>
+          <div class="header-content">
+            <div class="perfil-avatar">
+              <span class="avatar-placeholder">{{ deputado.nome_civil.charAt(0) }}</span>
+            </div>
+            <div class="perfil-info">
+              <h1 class="deputado-nome">{{ deputado.nome_civil }}</h1>
+              <p class="deputado-cargo">Deputado Federal</p>
+              <div class="deputado-detalhes">
+                <span class="badge">{{ deputado.uf_nascimento }}</span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div class="perfil-body">
+          <section class="info-section">
+            <h2>Informações Pessoais</h2>
+            <div class="info-grid">
+              <div class="info-item" v-if="deputado.data_nascimento">
+                <strong>Data de Nascimento:</strong>
+                <span>{{ formatarData(deputado.data_nascimento) }}</span>
+              </div>
+              <div class="info-item" v-if="deputado.escolaridade">
+                <strong>Escolaridade:</strong>
+                <span>{{ deputado.escolaridade }}</span>
+              </div>
+              <div class="info-item" v-if="deputado.email">
+                <strong>Email:</strong>
+                <span>{{ deputado.email }}</span>
+              </div>
+              <div class="info-item" v-if="deputado.municipio_nascimento">
+                <strong>Cidade de Nascimento:</strong>
+                <span>{{ deputado.municipio_nascimento }}, {{ deputado.uf_nascimento }}</span>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
           <div class="header-background"></div>
           <div class="header-content">
             <div class="avatar-container">
@@ -142,7 +163,246 @@
                   </svg>
                   Município de Nascimento
                 </div>
-                <div class="info-value">{{ deputado.municipio_nascimento }} / {{ deputado.uf_nascimento }}</div>
+                <div class="info-value">          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import AppHeader from '@/components/AppHeader.vue'
+
+interface Deputado {
+  id: number;
+  nome_civil: string;
+  email: string | null;
+  data_nascimento: string | null;
+  escolaridade: string | null;
+  uf_nascimento: string;
+  municipio_nascimento: string;
+}
+
+const route = useRoute()
+const isLoading = ref(true)
+const error = ref<string | null>(null)
+const deputado = ref<Deputado | null>(null)
+
+const formatarData = (dataString: string) => {
+  const data = new Date(dataString)
+  return data.toLocaleDateString('pt-BR')
+}
+
+const carregarDeputado = async () => {
+  const deputadoId = route.params.id
+  if (!deputadoId) {
+    error.value = 'ID do deputado não fornecido'
+    isLoading.value = false
+    return
+  }
+
+  try {
+    const response = await fetch(`http://127.0.0.1:8000/api/deputados/${deputadoId}`)
+    
+    if (response.status === 404) {
+      error.value = 'Deputado não encontrado. Verifique se o ID está correto.'
+      return
+    }
+    
+    if (!response.ok) {
+      throw new Error('Falha ao carregar dados do deputado')
+    }
+    
+    const dados = await response.json()
+    deputado.value = dados
+  } catch (err: any) {
+    console.error('Erro ao carregar deputado:', err)
+    error.value = err.message || 'Erro inesperado ao carregar dados'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+onMounted(() => {
+  carregarDeputado()
+})
+</script>
+
+<style scoped>
+.page-container {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #f8fafc, #f1f5f9);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: var(--color-gray-900);
+}
+
+.feedback-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  text-align: center;
+  padding: 2rem;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e2e8f0;
+  border-top: 4px solid #2563eb;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  color: var(--color-gray-600);
+  font-size: 1.1rem;
+}
+
+.error-container h2 {
+  color: var(--color-gray-900);
+  margin: 1rem 0 0.5rem 0;
+  font-size: 1.5rem;
+}
+
+.error-message {
+  color: var(--color-gray-600);
+  margin-bottom: 1.5rem;
+}
+
+.back-button {
+  padding: 0.75rem 1.5rem;
+  background: var(--color-primary);
+  color: white;
+  text-decoration: none;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.back-button:hover {
+  background: var(--color-primary-dark);
+}
+
+.perfil-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.perfil-card {
+  background: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.perfil-header {
+  position: relative;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  padding: 2rem;
+  color: white;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.perfil-avatar {
+  width: 80px;
+  height: 80px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: bold;
+  color: white;
+}
+
+.deputado-nome {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem 0;
+}
+
+.deputado-cargo {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin: 0 0 0.5rem 0;
+}
+
+.badge {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.perfil-body {
+  padding: 2rem;
+}
+
+.info-section h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-gray-900);
+  margin-bottom: 1rem;
+}
+
+.info-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .info-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.info-item {
+  background: var(--color-gray-50);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border-left: 4px solid var(--color-primary);
+}
+
+.info-item strong {
+  display: block;
+  color: var(--color-gray-700);
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+}
+
+.info-item span {
+  color: var(--color-gray-900);
+  font-weight: 500;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+</style></div>
               </div>
             </div>
           </section>
@@ -155,6 +415,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import AppHeader from '@/components/AppHeader.vue'
 
 // --- Interface de dados ajustada para o seu banco de dados ---
 interface Deputado {
@@ -236,56 +497,8 @@ onMounted(async () => {
 }
 
 /* ======================
-   NAVEGAÇÃO
+   FEEDBACK CONTAINERS
    ====================== */
-.nav-header {
-  max-width: 1000px;
-  margin: 0 auto 1rem;
-}
-
-@media (min-width: 640px) {
-  .nav-header {
-    margin: 0 auto 1.5rem;
-  }
-}
-
-@media (min-width: 768px) {
-  .nav-header {
-    margin: 0 auto 2rem;
-  }
-}
-
-.nav-back-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.625rem 1.25rem;
-  background: linear-gradient(135deg, #334155, #1e293b);
-  color: #cbd5e1;
-  text-decoration: none;
-  border-radius: 0.75rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  border: 1px solid #475569;
-  font-size: 0.875rem;
-  min-height: 44px; /* Tamanho mínimo touch-friendly */
-}
-
-@media (min-width: 640px) {
-  .nav-back-button {
-    padding: 0.75rem 1.5rem;
-    font-size: 0.95rem;
-  }
-}
-
-.nav-back-button:hover {
-  background: linear-gradient(135deg, #475569, #334155);
-  color: #f1f5f9;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-/* ======================
    FEEDBACK E LOADING
    ====================== */
 .feedback-container {
