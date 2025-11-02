@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-background">
+  <div class="min-h-screen bg-gradient-to-b from-slate-50 to-white">
     <AppHeader />
     
     <!-- Success State -->
@@ -8,24 +8,24 @@
         <div class="card-content pt-6">
           <div class="text-center space-y-4">
             <div class="flex justify-center">
-              <div class="rounded-full bg-primary/10 p-3">
+              <div class="rounded-full bg-blue-50 p-4">
                 <CheckCircle class="h-12 w-12 text-primary" />
               </div>
             </div>
             <div>
-              <h2 class="text-2xl font-bold mb-2">Feedback Enviado com Sucesso!</h2>
-              <p class="text-muted-foreground mb-4">Obrigado por contribuir para a transparência e melhoria da plataforma</p>
+              <h2 class="text-2xl font-bold mb-2 text-slate-900">Feedback Enviado com Sucesso!</h2>
+              <p class="text-slate-600 mb-4">Obrigado por contribuir para a transparência e melhoria da plataforma</p>
             </div>
             <div class="alert">
-              <AlertCircle class="h-4 w-4" />
+              <AlertCircle class="h-4 w-4 text-primary" />
               <div class="alert-description">
                 <strong>Número de Protocolo:</strong> {{ protocolo }}
                 <br />
                 <span class="text-sm">Guarde este número para acompanhar o status da sua solicitação</span>
               </div>
             </div>
-            <div class="space-y-3 text-sm text-muted-foreground text-left bg-muted/50 p-4 rounded-lg">
-              <p class="font-semibold text-foreground">Próximos passos:</p>
+            <div class="space-y-3 text-sm text-slate-600 text-left bg-slate-100 p-4 rounded-lg">
+              <p class="font-semibold text-slate-900">Próximos passos:</p>
               <ol class="list-decimal list-inside space-y-2">
                 <li>Nossa equipe revisará sua mensagem em até 48 horas úteis</li>
                 <li>Se for uma correção de dados, verificaremos nas fontes oficiais</li>
@@ -33,12 +33,12 @@
                 <li>Correções confirmadas serão aplicadas na próxima atualização</li>
               </ol>
             </div>
-            <div class="flex gap-2 justify-center pt-4">
+            <div class="flex gap-3 justify-center pt-4">
               <button @click="resetForm" class="btn btn-primary">
                 <MessageSquare class="h-4 w-4 mr-2" />
                 Enviar Outro Feedback
               </button>
-              <RouterLink to="/" class="btn btn-outline">Voltar ao Início</RouterLink>
+              <RouterLink to="/" class="btn btn-secondary">Voltar ao Início</RouterLink>
             </div>
           </div>
         </div>
@@ -49,8 +49,8 @@
     <div v-else class="container mx-auto px-4 py-8 max-w-4xl">
       <!-- Header -->
       <div class="mb-8 text-center">
-        <h1 class="text-4xl font-bold text-foreground mb-2">Feedback e Correções</h1>
-        <p class="text-lg text-muted-foreground">Ajude-nos a manter a precisão e qualidade dos dados</p>
+        <h1 class="text-4xl font-bold text-slate-900 mb-2">Feedback e Correções</h1>
+        <p class="text-lg text-slate-600">Ajude-nos a manter a precisão e qualidade dos dados</p>
       </div>
 
       <!-- Info Cards -->
@@ -58,12 +58,14 @@
         <div class="card">
           <div class="card-header pb-3">
             <div class="flex items-center gap-2">
-              <MessageSquare class="h-5 w-5 text-primary" />
-              <h3 class="card-title text-base">Sugestões</h3>
+              <div class="p-2 bg-blue-50 rounded-lg">
+                <MessageSquare class="h-5 w-5 text-primary" />
+              </div>
+              <h3 class="card-title text-base text-slate-900">Sugestões</h3>
             </div>
           </div>
           <div class="card-content">
-            <p class="text-sm text-muted-foreground">
+            <p class="text-sm text-slate-600">
               Compartilhe ideias para novas funcionalidades ou melhorias na plataforma
             </p>
           </div>
@@ -72,12 +74,14 @@
         <div class="card">
           <div class="card-header pb-3">
             <div class="flex items-center gap-2">
-              <AlertCircle class="h-5 w-5 text-primary" />
-              <h3 class="card-title text-base">Correções</h3>
+              <div class="p-2 bg-blue-50 rounded-lg">
+                <AlertCircle class="h-5 w-5 text-primary" />
+              </div>
+              <h3 class="card-title text-base text-slate-900">Correções</h3>
             </div>
           </div>
           <div class="card-content">
-            <p class="text-sm text-muted-foreground">
+            <p class="text-sm text-slate-600">
               Reporte dados incorretos ou inconsistências que você identificou
             </p>
           </div>
@@ -89,8 +93,8 @@
         <div class="lg:col-span-2">
           <div class="card">
             <div class="card-header">
-              <h3 class="card-title">Formulário de Contato</h3>
-              <p class="card-description">
+              <h3 class="card-title text-slate-900">Formulário de Contato</h3>
+              <p class="card-description text-slate-600">
                 Todos os campos são obrigatórios. Seu email será usado apenas para resposta.
               </p>
             </div>
@@ -102,7 +106,7 @@
                   <select 
                     id="tipo" 
                     v-model="formData.tipo" 
-                    class="select"
+                    class="input"
                     required
                   >
                     <option value="">Selecione o tipo</option>
@@ -142,7 +146,7 @@
                 </div>
 
                 <!-- Parlamentar (optional for corrections) -->
-                <div v-if="formData.tipo === 'correcao'" class="space-y-2">
+                <div v-if="formData.tipo === 'correcao'" class="space-y-2 fade-in">
                   <label for="parlamentar" class="label">Parlamentar (se aplicável)</label>
                   <input
                     id="parlamentar"
@@ -161,18 +165,25 @@
                     placeholder="Descreva detalhadamente sua solicitação..."
                     v-model="formData.mensagem"
                     rows="6"
-                    class="textarea"
+                    :maxlength="maxMessageLength"
+                    class="input"
                     required
+                    aria-describedby="mensagem-help mensagem-counter"
                   ></textarea>
-                  <p class="text-xs text-muted-foreground">
-                    Para correções, inclua links para as fontes oficiais quando possível
-                  </p>
+                  <div class="flex justify-between">
+                    <p id="mensagem-help" class="text-xs text-slate-500">
+                      Para correções, inclua links para as fontes oficiais quando possível
+                    </p>
+                    <div id="mensagem-counter" class="text-xs text-slate-500">
+                      {{ messageLength }} / {{ maxMessageLength }}
+                    </div>
+                  </div>
                 </div>
 
                 <!-- Privacy Notice -->
-                <div class="alert">
-                  <Mail class="h-4 w-4" />
-                  <div class="alert-description text-xs">
+                <div class="alert bg-blue-50 border-blue-200" role="status" aria-live="polite">
+                  <Mail class="h-4 w-4 text-primary" />
+                  <div class="alert-description text-xs text-slate-700">
                     <strong>Privacidade:</strong> Seus dados serão usados apenas para processar esta solicitação e não
                     serão compartilhados com terceiros. Conforme LGPD, você pode solicitar a exclusão dos seus dados a
                     qualquer momento.
@@ -180,13 +191,13 @@
                 </div>
 
                 <!-- Submit -->
-                <button type="submit" class="btn btn-primary w-full" size="lg" :disabled="isSubmitting">
+                <button type="submit" class="btn btn-primary w-full btn-lg" :disabled="isSubmitting">
                   <span v-if="!isSubmitting" class="flex items-center justify-center gap-2">
                     <MessageSquare class="h-4 w-4" />
                     Enviar Feedback
                   </span>
                   <span v-else class="flex items-center justify-center gap-2">
-                    <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white" aria-hidden="true"></div>
                     Enviando...
                   </span>
                 </button>
@@ -199,35 +210,51 @@
           <!-- Process Transparency -->
           <div class="card">
             <div class="card-header">
-              <h3 class="card-title text-base">Processo de Revisão</h3>
+              <h3 class="card-title text-base text-slate-900">Processo de Revisão</h3>
             </div>
-            <div class="card-content space-y-2 text-sm text-muted-foreground">
-              <p>
-                <strong class="text-foreground">Transparência:</strong> Todas as correções aplicadas são documentadas
-                publicamente no nosso repositório GitHub com referência ao protocolo.
-              </p>
-              <p>
-                <strong class="text-foreground">Tempo de resposta:</strong> Feedback é revisado em até 48 horas úteis.
-                Correções confirmadas são aplicadas na próxima atualização diária.
-              </p>
-              <p>
-                <strong class="text-foreground">Verificação:</strong> Correções de dados são verificadas diretamente
-                nas fontes oficiais antes de serem aplicadas.
-              </p>
+            <div class="card-content space-y-3 text-sm text-slate-600">
+              <div class="flex items-start gap-3">
+                <div class="w-6 h-6 bg-blue-50 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span class="text-xs font-semibold text-primary">1</span>
+                </div>
+                <div>
+                  <p class="font-semibold text-slate-900">Transparência</p>
+                  <p>Todas as correções aplicadas são documentadas publicamente no nosso repositório GitHub.</p>
+                </div>
+              </div>
+              <div class="flex items-start gap-3">
+                <div class="w-6 h-6 bg-blue-50 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span class="text-xs font-semibold text-primary">2</span>
+                </div>
+                <div>
+                  <p class="font-semibold text-slate-900">Tempo de resposta</p>
+                  <p>Feedback é revisado em até 48 horas úteis. Correções confirmadas são aplicadas na próxima atualização.</p>
+                </div>
+              </div>
+              <div class="flex items-start gap-3">
+                <div class="w-6 h-6 bg-blue-50 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span class="text-xs font-semibold text-primary">3</span>
+                </div>
+                <div>
+                  <p class="font-semibold text-slate-900">Verificação</p>
+                  <p>Correções de dados são verificadas diretamente nas fontes oficiais antes de serem aplicadas.</p>
+                </div>
+              </div>
             </div>
           </div>
 
           <!-- Alternative Contact -->
           <div class="card">
             <div class="card-content pt-6">
-              <div class="text-center text-sm text-muted-foreground">
-                <p class="mb-2">Prefere outro canal de contato?</p>
-                <div class="flex justify-center gap-4">
-                  <a href="mailto:contato@transparencia.gov.br" class="text-primary hover:underline">
+              <div class="text-center text-sm text-slate-600">
+                <p class="mb-3 font-medium text-slate-700">Prefere outro canal de contato?</p>
+                <div class="space-y-2">
+                  <a href="mailto:contato@transparencia.gov.br" class="flex items-center justify-center gap-2 p-2 rounded-lg hover:bg-slate-50 text-primary transition-colors">
+                    <Mail class="h-4 w-4" />
                     Email direto
                   </a>
-                  <span>•</span>
-                  <RouterLink to="/metodologia" class="text-primary hover:underline">
+                  <RouterLink to="/metodologia" class="flex items-center justify-center gap-2 p-2 rounded-lg hover:bg-slate-50 text-primary transition-colors">
+                    <AlertCircle class="h-4 w-4" />
                     Ver metodologia
                   </RouterLink>
                 </div>
@@ -241,10 +268,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch } from 'vue'
+import { ref, reactive } from 'vue'
 import { RouterLink } from 'vue-router'
 import AppHeader from '@/components/AppHeader.vue'
 import { CheckCircle, Mail, MessageSquare, AlertCircle } from 'lucide-vue-next'
+import { computed } from 'vue'
 
 // Reactive form data
 const formData = reactive({
@@ -259,6 +287,9 @@ const formData = reactive({
 const submitted = ref(false)
 const protocolo = ref('')
 const isSubmitting = ref(false)
+const maxMessageLength = 1000
+
+const messageLength = computed(() => formData.mensagem ? formData.mensagem.length : 0)
 
 // Form submission handler with loading state
 const handleSubmit = async () => {
@@ -288,921 +319,327 @@ const resetForm = () => {
   submitted.value = false
   protocolo.value = ''
 }
-
-// Character limit for textarea
-const messageLength = computed(() => formData.mensagem.length)
-
-// Watch for tipo changes to add smooth transitions
-watch(() => formData.tipo, (newVal) => {
-  if (newVal === 'correcao') {
-    // Add focus to parlamentar field after animation
-    setTimeout(() => {
-      const parlamentarField = document.getElementById('parlamentar')
-      if (parlamentarField) {
-        parlamentarField.focus()
-      }
-    }, 300)
-  }
-})
 </script>
 
 <style scoped>
-/* Base Layout */
-.min-h-screen {
-  min-height: 100vh;
+/* Use das CSS Custom Properties do projeto */
+.card {
+  background: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease;
 }
 
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 1rem;
+.card:hover {
+  box-shadow: var(--shadow-lg);
 }
 
-/* Header Section */
-.header-section {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 3rem;
-  align-items: center;
-  margin-bottom: 4rem;
-  padding: 2rem 0;
+.card-content {
+  padding: var(--space-6);
 }
 
-.header-content {
-  z-index: 10;
+.card-header {
+  padding: var(--space-6);
+  border-bottom: 1px solid var(--color-gray-200);
 }
 
-.header-badge {
+.card-title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-gray-900);
+  margin: 0;
+}
+
+.card-description {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-600);
+  margin: var(--space-2) 0 0 0;
+}
+
+/* Labels e Form Elements seguindo o padrão */
+.label {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-gray-700);
+  margin-bottom: var(--space-2);
+}
+
+.input {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  background-color: var(--color-white);
+  transition: all 0.2s ease;
+  color: var(--color-gray-900);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.input::placeholder {
+  color: var(--color-gray-400);
+}
+
+/* Alert usando o padrão do projeto */
+.alert {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-gray-50);
+}
+
+.alert-description {
+  flex: 1;
+  color: var(--color-gray-700);
+  line-height: 1.5;
+}
+
+/* Botões seguindo exatamente o padrão do projeto */
+.btn {
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: none;
+  font-size: var(--font-size-base);
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 2rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-}
-
-.badge-icon {
-  width: 1rem;
-  height: 1rem;
-}
-
-.header-title {
-  font-size: 3.5rem;
-  font-weight: 800;
-  background: linear-gradient(135deg, #1e293b, #3b82f6);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  line-height: 1.1;
-  margin-bottom: 1rem;
-}
-
-.header-subtitle {
-  font-size: 1.25rem;
-  color: #64748b;
-  line-height: 1.6;
-  max-width: 500px;
-}
-
-/* Header Visual */
-.header-visual {
-  position: relative;
-  height: 300px;
-  display: flex;
-  align-items: center;
   justify-content: center;
+  gap: var(--space-2);
 }
 
-.floating-card {
-  position: absolute;
-  background: white;
-  border-radius: 1rem;
-  padding: 1.5rem;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+.btn-lg {
+  padding: var(--space-4) var(--space-8);
+  font-size: var(--font-size-lg);
 }
 
-.card-1 {
-  top: 20px;
-  right: 50px;
-  animation: float 6s ease-in-out infinite;
+.btn-primary {
+  background-color: var(--color-primary);
+  color: var(--color-white);
 }
 
-.card-2 {
-  bottom: 80px;
-  left: 20px;
-  animation: float 6s ease-in-out infinite 2s;
-}
-
-.card-3 {
-  top: 120px;
-  left: 120px;
-  animation: float 6s ease-in-out infinite 4s;
-}
-
-.floating-icon {
-  width: 2rem;
-  height: 2rem;
-  color: #3b82f6;
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-20px) rotate(5deg); }
-}
-
-/* Features Grid */
-.features-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
-  margin-bottom: 4rem;
-}
-
-.feature-card {
-  background: white;
-  border-radius: 1.5rem;
-  padding: 2rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid #f1f5f9;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.feature-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, #3b82f6, #1d4ed8);
-}
-
-.feature-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
-}
-
-.feature-icon-wrapper {
-  width: 4rem;
-  height: 4rem;
-  border-radius: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 1.5rem;
-}
-
-.feature-icon-wrapper.suggestions {
-  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-}
-
-.feature-icon-wrapper.corrections {
-  background: linear-gradient(135deg, #fef3c7, #fde68a);
-}
-
-.feature-icon {
-  width: 2rem;
-  height: 2rem;
-  color: #3b82f6;
-}
-
-.feature-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 0.75rem;
-}
-
-.feature-description {
-  color: #64748b;
-  line-height: 1.6;
-  margin-bottom: 1rem;
-}
-
-.feature-stats {
-  display: flex;
-  gap: 1rem;
-}
-
-.stat-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 0.75rem 1rem;
-  background: #f8fafc;
-  border-radius: 0.5rem;
-  min-width: 80px;
-}
-
-.stat-number {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #3b82f6;
-}
-
-.stat-label {
-  font-size: 0.75rem;
-  color: #64748b;
-  font-weight: 500;
-}
-
-/* Form Section */
-.form-section {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 3rem;
-  align-items: start;
-}
-
-.form-container {
-  background: white;
-  border-radius: 1.5rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid #f1f5f9;
-  overflow: hidden;
-}
-
-.form-header {
-  background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-  padding: 2rem;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.form-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 0.5rem;
-}
-
-.form-description {
-  color: #64748b;
-  line-height: 1.6;
-}
-
-.contact-form {
-  padding: 2rem;
-}
-
-.form-group {
-  margin-bottom: 1.5rem;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-}
-
-.form-label {
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 0.5rem;
-}
-
-.form-label.required::after {
-  content: ' *';
-  color: #ef4444;
-}
-
-.form-input, .form-textarea, .form-select {
-  width: 100%;
-  padding: 0.875rem 1rem;
-  border: 2px solid #e5e7eb;
-  border-radius: 0.75rem;
-  font-size: 0.875rem;
-  background-color: white;
-  transition: all 0.2s ease;
-  font-family: inherit;
-}
-
-.form-input:focus, .form-textarea:focus, .form-select:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--color-primary-dark);
   transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
-.form-textarea {
-  resize: vertical;
-  min-height: 120px;
-  line-height: 1.6;
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
-.select-wrapper {
-  position: relative;
+.btn-secondary {
+  background-color: var(--color-white);
+  color: var(--color-gray-700);
+  border: 1px solid var(--color-gray-300);
 }
 
-.form-select {
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
-  background-position: right 0.75rem center;
-  background-repeat: no-repeat;
-  background-size: 1.5em 1.5em;
-  padding-right: 2.5rem;
+.btn-secondary:hover {
+  background-color: var(--color-gray-50);
+  border-color: var(--color-gray-400);
 }
 
-.form-help {
-  font-size: 0.75rem;
-  color: #6b7280;
-  margin-top: 0.25rem;
+/* Cores usando as variáveis do projeto */
+.text-primary {
+  color: var(--color-primary);
 }
 
-.textarea-counter {
-  font-size: 0.75rem;
-  color: #6b7280;
-  text-align: right;
-  margin-top: 0.25rem;
+.text-slate-900 {
+  color: var(--color-gray-900);
 }
 
-.conditional-field {
-  animation: slideDown 0.3s ease;
-  overflow: hidden;
+.text-slate-700 {
+  color: var(--color-gray-700);
 }
 
-@keyframes slideDown {
+.text-slate-600 {
+  color: var(--color-gray-600);
+}
+
+.text-slate-500 {
+  color: var(--color-gray-500);
+}
+
+.bg-blue-50 {
+  background-color: rgba(37, 99, 235, 0.05);
+}
+
+.bg-slate-100 {
+  background-color: var(--color-gray-100);
+}
+
+.border-blue-200 {
+  border-color: rgba(37, 99, 235, 0.2);
+}
+
+.border-primary {
+  border-color: var(--color-primary);
+}
+
+/* Animações e transições */
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
   from {
     opacity: 0;
-    max-height: 0;
     transform: translateY(-10px);
   }
   to {
     opacity: 1;
-    max-height: 200px;
     transform: translateY(0);
   }
 }
 
-/* Privacy Notice */
-.privacy-notice {
-  display: flex;
-  gap: 1rem;
-  padding: 1.5rem;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 1rem;
-  margin-bottom: 2rem;
+.transition-colors {
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-.privacy-icon {
-  flex-shrink: 0;
-  width: 2.5rem;
-  height: 2.5rem;
-  background: #dbeafe;
-  border-radius: 0.75rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.privacy-icon .icon {
-  width: 1.25rem;
-  height: 1.25rem;
-  color: #3b82f6;
-}
-
-.privacy-title {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #1e293b;
-  margin-bottom: 0.25rem;
-}
-
-.privacy-text {
-  font-size: 0.75rem;
-  color: #64748b;
-  line-height: 1.5;
-}
-
-/* Submit Button */
-.submit-button {
-  width: 100%;
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-  color: white;
-  border: none;
-  padding: 1rem 2rem;
-  border-radius: 0.75rem;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.submit-button:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
-}
-
-.submit-button:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-.submit-content, .submit-loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.submit-icon {
-  width: 1.25rem;
-  height: 1.25rem;
-}
-
-.loading-spinner {
-  width: 1.25rem;
-  height: 1.25rem;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top: 2px solid white;
-  border-radius: 50%;
+/* Spinner para loading */
+.animate-spin {
   animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* Info Sidebar */
-.info-sidebar {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.info-card, .stats-card, .contact-card {
-  background: white;
-  border-radius: 1rem;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-  border: 1px solid #f1f5f9;
-  overflow: hidden;
-}
-
-.info-header {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1.5rem;
-  background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.info-icon-wrapper {
-  width: 2.5rem;
-  height: 2.5rem;
-  background: #dbeafe;
-  border-radius: 0.75rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.info-icon {
-  width: 1.25rem;
-  height: 1.25rem;
-  color: #3b82f6;
-}
-
-.info-title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #1e293b;
-}
-
-.info-content {
-  padding: 1.5rem;
-}
-
-.info-item {
-  display: flex;
-  gap: 1rem;
-  align-items: flex-start;
-  margin-bottom: 1.5rem;
-}
-
-.info-item:last-child {
-  margin-bottom: 0;
-}
-
-.info-step {
-  width: 2rem;
-  height: 2rem;
-  background: #3b82f6;
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.75rem;
-  font-weight: 600;
-  flex-shrink: 0;
-}
-
-.info-item h4 {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #1e293b;
-  margin-bottom: 0.25rem;
-}
-
-.info-item p {
-  font-size: 0.75rem;
-  color: #64748b;
-  line-height: 1.4;
-}
-
-/* Stats Card */
-.stats-title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #1e293b;
-  padding: 1.5rem;
-  border-bottom: 1px solid #e2e8f0;
-  background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1px;
-  background: #e2e8f0;
-}
-
-.stat-box {
-  background: white;
-  padding: 1rem;
-  text-align: center;
-}
-
-.stat-value {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #3b82f6;
-  margin-bottom: 0.25rem;
-}
-
-.stat-label {
-  font-size: 0.75rem;
-  color: #64748b;
-  font-weight: 500;
-}
-
-/* Contact Card */
-.contact-title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #1e293b;
-  padding: 1.5rem;
-  border-bottom: 1px solid #e2e8f0;
-  background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-}
-
-.contact-options {
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.contact-option {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem;
-  border-radius: 0.5rem;
-  color: #3b82f6;
-  text-decoration: none;
-  transition: all 0.2s ease;
-  border: 1px solid #e2e8f0;
-}
-
-.contact-option:hover {
-  background: #f8fafc;
-  transform: translateX(5px);
-}
-
-.contact-icon {
-  width: 1rem;
-  height: 1rem;
-}
-
-/* Success State */
-.success-animation {
-  animation: fadeInUp 0.6s ease;
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
   to {
-    opacity: 1;
-    transform: translateY(0);
+    transform: rotate(360deg);
   }
 }
 
-.success-card {
-  background: white;
-  border-radius: 2rem;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-  border: 1px solid #f1f5f9;
-  overflow: hidden;
-  text-align: center;
-  padding: 3rem;
+/* Spacing utilities usando as variáveis do projeto */
+.space-y-2 > * + * {
+  margin-top: var(--space-2);
 }
 
-.success-icon-container {
-  position: relative;
-  display: inline-block;
-  margin-bottom: 2rem;
+.space-y-3 > * + * {
+  margin-top: var(--space-3);
 }
 
-.success-pulse {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 100px;
-  height: 100px;
-  background: rgba(34, 197, 94, 0.2);
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  animation: pulse 2s infinite;
+.space-y-4 > * + * {
+  margin-top: var(--space-4);
 }
 
-@keyframes pulse {
-  0% {
-    transform: translate(-50%, -50%) scale(0.8);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(1.4);
-    opacity: 0;
-  }
+.space-y-6 > * + * {
+  margin-top: var(--space-6);
 }
 
-.success-icon-wrapper {
-  position: relative;
-  width: 80px;
-  height: 80px;
-  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
+/* Utility classes seguindo o padrão */
+.w-full { width: 100%; }
+.w-4 { width: var(--space-4); }
+.w-5 { width: 1.25rem; }
+.w-6 { width: var(--space-6); }
+.h-4 { height: var(--space-4); }
+.h-5 { height: 1.25rem; }
+.h-6 { height: var(--space-6); }
+.h-12 { height: var(--space-12); }
+
+.flex { display: flex; }
+.grid { display: grid; }
+.items-center { align-items: center; }
+.items-start { align-items: flex-start; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+
+.gap-2 { gap: var(--space-2); }
+.gap-3 { gap: var(--space-3); }
+.gap-6 { gap: var(--space-6); }
+
+.mb-2 { margin-bottom: var(--space-2); }
+.mb-3 { margin-bottom: var(--space-3); }
+.mb-4 { margin-bottom: var(--space-4); }
+.mb-8 { margin-bottom: var(--space-8); }
+.mr-2 { margin-right: var(--space-2); }
+.mt-0\.5 { margin-top: 0.125rem; }
+
+.p-2 { padding: var(--space-2); }
+.p-4 { padding: var(--space-4); }
+.pt-4 { padding-top: var(--space-4); }
+.pt-6 { padding-top: var(--space-6); }
+.pb-3 { padding-bottom: var(--space-3); }
+
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+
+.text-xs { font-size: var(--font-size-xs); }
+.text-sm { font-size: var(--font-size-sm); }
+.text-base { font-size: var(--font-size-base); }
+.text-lg { font-size: var(--font-size-lg); }
+.text-2xl { font-size: var(--font-size-2xl); }
+.text-4xl { font-size: var(--font-size-4xl); }
+
+.font-bold { font-weight: 700; }
+.font-semibold { font-weight: 600; }
+.font-medium { font-weight: 500; }
+
+.rounded-lg { border-radius: var(--radius-lg); }
+.rounded-full { border-radius: var(--radius-full); }
+
+.border-b-2 { border-bottom-width: 2px; }
+.border-white { border-color: var(--color-white); }
+
+.flex-shrink-0 { flex-shrink: 0; }
+
+/* Grid responsivo */
+.grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+
+@media (min-width: 768px) {
+  .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
-.success-icon {
-  width: 2.5rem;
-  height: 2.5rem;
-  color: #22c55e;
+@media (min-width: 1024px) {
+  .lg\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .lg\:col-span-2 { grid-column: span 2 / span 2; }
 }
 
-.success-title {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 1rem;
-}
-
-.success-subtitle {
-  font-size: 1.125rem;
-  color: #64748b;
-  margin-bottom: 2rem;
-  max-width: 500px;
+/* Container responsivo seguindo o padrão */
+.container {
+  width: 100%;
   margin-left: auto;
   margin-right: auto;
+  padding-left: var(--space-4);
+  padding-right: var(--space-4);
 }
 
-.protocol-card {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 1rem;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-  max-width: 400px;
-  margin-left: auto;
-  margin-right: auto;
+@media (min-width: 640px) {
+  .container { max-width: var(--container-sm); }
+}
+@media (min-width: 768px) {
+  .container { max-width: var(--container-md); }
+}
+@media (min-width: 1024px) {
+  .container { max-width: var(--container-lg); }
+}
+@media (min-width: 1280px) {
+  .container { max-width: var(--container-xl); }
 }
 
-.protocol-header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
+.max-w-2xl { max-width: 42rem; }
+.max-w-4xl { max-width: 56rem; }
+.min-h-screen { min-height: 100vh; }
+.mx-auto { margin-left: auto; margin-right: auto; }
+.px-4 { padding-left: var(--space-4); padding-right: var(--space-4); }
+.py-8 { padding-top: var(--space-8); padding-bottom: var(--space-8); }
 
-.protocol-icon {
-  width: 1rem;
-  height: 1rem;
-  color: #3b82f6;
-}
+/* List styles */
+.list-decimal { list-style-type: decimal; }
+.list-inside { list-style-position: inside; }
 
-.protocol-label {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #64748b;
-}
-
-.protocol-number {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #3b82f6;
-  font-family: 'Courier New', monospace;
-  margin-bottom: 0.5rem;
-}
-
-.protocol-note {
-  font-size: 0.75rem;
-  color: #6b7280;
-  line-height: 1.4;
-}
-
-.steps-card {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 1rem;
-  padding: 2rem;
-  margin-bottom: 2rem;
-  text-align: left;
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.steps-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #1e293b;
-  margin-bottom: 1.5rem;
-  text-align: center;
-}
-
-.steps-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.step-item {
-  display: flex;
-  gap: 1rem;
-  align-items: flex-start;
-}
-
-.step-number {
-  width: 2rem;
-  height: 2rem;
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.875rem;
-  font-weight: 600;
-  flex-shrink: 0;
-}
-
-.step-content h4 {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #1e293b;
-  margin-bottom: 0.25rem;
-}
-
-.step-content p {
-  font-size: 0.75rem;
-  color: #64748b;
-  line-height: 1.4;
-}
-
-.success-actions {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  text-decoration: none;
-  transition: all 0.2s ease;
-  border: none;
-  cursor: pointer;
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-  color: white;
-}
-
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
-}
-
-.btn-secondary {
-  background: white;
-  color: #3b82f6;
-  border: 1px solid #3b82f6;
-}
-
-.btn-secondary:hover {
-  background: #3b82f6;
-  color: white;
-  transform: translateY(-2px);
-}
-
-.btn-lg {
-  padding: 1rem 2rem;
-  font-size: 1rem;
-}
-
-.btn-icon {
-  width: 1rem;
-  height: 1rem;
-}
-
-/* Responsive Design */
-@media (max-width: 1024px) {
-  .header-section,
-  .form-section {
-    grid-template-columns: 1fr;
-    gap: 2rem;
-  }
-  
-  .header-visual {
-    height: 200px;
-  }
-  
-  .header-title {
-    font-size: 2.5rem;
-  }
-}
-
-@media (max-width: 768px) {
-  .container {
-    padding: 0 0.75rem;
-  }
-  
-  .form-row {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-  
-  .features-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .success-actions {
-    flex-direction: column;
-  }
-  
-  .header-title {
-    font-size: 2rem;
-  }
-  
-  .header-subtitle {
-    font-size: 1rem;
-  }
-}
-
-@media (max-width: 640px) {
-  .form-container,
-  .success-card {
-    margin: 0 -0.75rem;
-    border-radius: 0;
-  }
-  
-  .contact-form,
-  .success-card {
-    padding: 1.5rem;
-  }
+/* Hover effects consistentes com o projeto */
+.hover\:bg-slate-50:hover {
+  background-color: var(--color-gray-50);
 }
 </style>
