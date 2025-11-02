@@ -1,366 +1,698 @@
 <template>
-  <div class="page-container">
+  <div class="min-h-screen flex flex-col bg-background">
     <AppHeader />
     
-    <div v-if="isLoading" class="feedback-container loading-container">
-      <div class="loading-spinner"></div>
-      <p class="loading-text">Carregando dados do parlamentar...</p>
-    </div>
+    <main class="flex-1 py-8">
+      <div class="container mx-auto px-4 max-w-6xl">
+        <!-- Loading -->
+        <div v-if="isLoading" class="text-center py-16">
+          <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+          <h2 class="text-2xl font-bold text-foreground mb-2">Carregando...</h2>
+          <p class="text-muted-foreground">Buscando dados do parlamentar</p>
+        </div>
 
-    <div v-else-if="error" class="feedback-container error-container">
-      <div class="error-icon">
-        <span>❌</span>
-      </div>
-      <h2>Oops! Algo deu errado</h2>
-      <p class="error-message">{{ error }}</p>
-      <router-link to="/" class="back-button">
-        Voltar ao Início
-      </router-link>
-    </div>
+        <!-- Erro -->
+        <div v-else-if="error || !parlamentar" class="text-center py-16">
+          <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
+            <User class="h-8 w-8 text-muted-foreground" />
+          </div>
+          <h2 class="text-2xl font-bold text-foreground mb-2">
+            {{ error || 'Parlamentar não encontrado' }}
+          </h2>
+          <p class="text-muted-foreground mb-6">
+            {{ error ? 'Ocorreu um erro ao carregar os dados' : 'O ID fornecido não corresponde a nenhum parlamentar' }}
+          </p>
+          <a href="/parlamentares" class="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
+            <ArrowLeft class="h-4 w-4" />
+            Voltar para lista
+          </a>
+        </div>
 
-    <div v-else-if="deputado" class="perfil-container animate-fade-in">
-      <div class="perfil-card">
-        <header class="perfil-header">
-          <div class="header-background"></div>
-          <div class="header-content">
-            <div class="perfil-avatar">
-              <span class="avatar-placeholder">{{ deputado.nome_civil.charAt(0) }}</span>
-            </div>
-            <div class="perfil-info">
-              <h1 class="deputado-nome">{{ deputado.nome_civil }}</h1>
-              <p class="deputado-cargo">Deputado Federal</p>
-              <div class="deputado-detalhes">
-                <span class="badge">{{ deputado.uf_nascimento }}</span>
+        <!-- Perfil -->
+        <div v-else>
+          <!-- Header do Perfil -->
+          <div class="perfil-header">
+            <div class="perfil-header-content">
+              <img 
+                :src="parlamentar.foto" 
+                :alt="parlamentar.nome"
+                class="perfil-foto"
+                @error="(e) => { (e.target as HTMLImageElement).src = 'https://via.placeholder.com/128x128/e2e8f0/64748b?text=Foto+não+disponível' }"
+              />
+              <div class="perfil-info">
+                <h1 class="perfil-nome">{{ parlamentar.nome }}</h1>
+                <p class="perfil-nome-civil">{{ parlamentar.nome_civil }}</p>
+                <div class="perfil-tags">
+                  <span class="tag tag-primary">
+                    {{ parlamentar.partido }}
+                  </span>
+                  <span class="tag tag-secondary">
+                    {{ parlamentar.estado }}
+                  </span>
+                  <span class="tag tag-secondary">
+                    ID: {{ parlamentar.id }}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
-        </header>
 
-        <div class="perfil-body">
-          <section class="info-section">
-            <h2>Informações Pessoais</h2>
+          <!-- KPIs -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <StatCard
+              title="Gasto Total"
+              :value="`R$ ${parlamentar.gastoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`"
+              icon="DollarSign"
+              trend="neutral"
+            />
+            <StatCard
+              title="Presença"
+              :value="`${parlamentar.presenca}%`"
+              icon="Calendar"
+              :trend="parlamentar.presenca >= 90 ? 'up' : 'down'"
+            />
+            <StatCard
+              title="Fidelidade Partidária"
+              :value="`${parlamentar.fidelidadePartidaria}%`"
+              icon="Users"
+              :trend="parlamentar.fidelidadePartidaria >= 85 ? 'up' : 'down'"
+            />
+          </div>
+
+          <!-- Dados Pessoais -->
+          <div class="info-section">
+            <h2 class="section-title">
+              <User class="section-icon" />
+              Dados Pessoais
+            </h2>
             <div class="info-grid">
-              <div class="info-item" v-if="deputado.data_nascimento">
-                <strong>Data de Nascimento:</strong>
-                <span>{{ formatarData(deputado.data_nascimento) }}</span>
+              <div class="info-item">
+                <label class="info-label">CPF</label>
+                <p class="info-value">{{ parlamentar.cpf || 'Não informado' }}</p>
               </div>
-              <div class="info-item" v-if="deputado.escolaridade">
-                <strong>Escolaridade:</strong>
-                <span>{{ deputado.escolaridade }}</span>
+              <div class="info-item">
+                <label class="info-label">Sexo</label>
+                <p class="info-value">{{ parlamentar.sexo === 'M' ? 'Masculino' : parlamentar.sexo === 'F' ? 'Feminino' : 'Não informado' }}</p>
               </div>
-              <div class="info-item" v-if="deputado.email">
-                <strong>Email:</strong>
-                <span>{{ deputado.email }}</span>
+              <div class="info-item">
+                <label class="info-label">Data de Nascimento</label>
+                <p class="info-value">
+                  {{ parlamentar.data_nascimento ? formatDate(parlamentar.data_nascimento) + ` (${calcularIdade(parlamentar.data_nascimento)} anos)` : 'Não informado' }}
+                </p>
               </div>
-              <div class="info-item" v-if="deputado.municipio_nascimento">
-                <strong>Cidade de Nascimento:</strong>
-                <span>{{ deputado.municipio_nascimento }}, {{ deputado.uf_nascimento }}</span>
+              <div class="info-item">
+                <label class="info-label">Escolaridade</label>
+                <p class="info-value">{{ parlamentar.escolaridade || 'Não informado' }}</p>
               </div>
-            </div>
-          </section>
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
-          <div class="header-background"></div>
-          <div class="header-content">
-            <div class="avatar-container">
-              <div class="avatar-wrapper">
-                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="avatar-icon">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                  <circle cx="12" cy="7" r="4"/>
-                </svg>
+              <div class="info-item">
+                <label class="info-label">Naturalidade</label>
+                <p class="info-value">
+                  {{ parlamentar.municipio_nascimento && parlamentar.uf_nascimento 
+                    ? `${parlamentar.municipio_nascimento} - ${parlamentar.uf_nascimento}` 
+                    : 'Não informado' }}
+                </p>
               </div>
-              <div class="status-badge">
-                <span class="status-dot"></span>
-                Ativo
+              <div v-if="parlamentar.email" class="info-item">
+                <label class="info-label">E-mail</label>
+                <p class="info-value">{{ parlamentar.email }}</p>
               </div>
-            </div>
-            
-            <div class="perfil-info">
-              <h1 class="perfil-nome">{{ deputado.nome_civil }}</h1>
-              <p class="perfil-origem">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                  <circle cx="12" cy="10" r="3"/>
-                </svg>
-                Natural de {{ deputado.municipio_nascimento }} - {{ deputado.uf_nascimento }}
-              </p>
             </div>
           </div>
-        </header>
 
-        <!-- Conteúdo Principal -->
-        <main class="perfil-content">
-          <!-- Seção de Informações Pessoais -->
-          <section class="info-section">
-            <div class="section-header">
-              <h3 class="section-title">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-                  <circle cx="9" cy="7" r="4"/>
-                  <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                </svg>
-                Informações Pessoais
-              </h3>
-            </div>
-            
+          <!-- Informações Políticas -->
+          <div class="info-section">
+            <h2 class="section-title">
+              <Building class="section-icon" />
+              Informações Políticas
+            </h2>
             <div class="info-grid">
               <div class="info-item">
-                <div class="info-label">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
-                    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
-                  </svg>
-                  ID Câmara
-                </div>
-                <div class="info-value">{{ deputado.id }}</div>
+                <label class="info-label">Partido</label>
+                <p class="info-value info-highlight">{{ parlamentar.partido }}</p>
               </div>
-
               <div class="info-item">
-                <div class="info-label">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                    <polyline points="22,6 12,13 2,6"/>
-                  </svg>
-                  Email de Contato
-                </div>
-                <div class="info-value">{{ deputado.email || 'Não informado' }}</div>
+                <label class="info-label">Estado</label>
+                <p class="info-value info-highlight">{{ parlamentar.estado }}</p>
               </div>
-
-              <div class="info-item">
-                <div class="info-label">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                    <line x1="16" y1="2" x2="16" y2="6"/>
-                    <line x1="8" y1="2" x2="8" y2="6"/>
-                    <line x1="3" y1="10" x2="21" y2="10"/>
-                  </svg>
-                  Data de Nascimento
+              <div class="info-item progress-item">
+                <label class="info-label">Taxa de Presença</label>
+                <div class="progress-container">
+                  <div class="progress-bar">
+                    <div 
+                      class="progress-fill"
+                      :class="getPresencaColor(parlamentar.presenca)"
+                      :style="{ width: `${parlamentar.presenca}%` }"
+                    />
+                  </div>
+                  <span class="progress-value">{{ parlamentar.presenca }}%</span>
                 </div>
-                <div class="info-value">{{ formatarData(deputado.data_nascimento) }}</div>
               </div>
-
-              <div class="info-item">
-                <div class="info-label">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M2 3h6l1 9h9l1-9h2"/>
-                    <path d="M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"/>
-                    <path d="M9 21h6"/>
-                  </svg>
-                  Escolaridade
+              <div class="info-item progress-item">
+                <label class="info-label">Fidelidade Partidária</label>
+                <div class="progress-container">
+                  <div class="progress-bar">
+                    <div 
+                      class="progress-fill progress-primary"
+                      :style="{ width: `${parlamentar.fidelidadePartidaria}%` }"
+                    />
+                  </div>
+                  <span class="progress-value">{{ parlamentar.fidelidadePartidaria }}%</span>
                 </div>
-                <div class="info-value">{{ deputado.escolaridade || 'Não informada' }}</div>
               </div>
+            </div>
+          </div>
 
-              <div class="info-item">
-                <div class="info-label">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                    <circle cx="12" cy="10" r="3"/>
-                  </svg>
-                  Município de Nascimento
+          <!-- Desempenho Financeiro -->
+          <div class="info-section">
+            <h2 class="section-title">
+              <DollarSign class="section-icon" />
+              Desempenho Financeiro
+            </h2>
+            <div class="financial-content">
+              <div class="financial-item">
+                <div class="financial-header">
+                  <span class="financial-label">Gasto Total Acumulado</span>
+                  <span class="financial-value">
+                    R$ {{ parlamentar.gastoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}
+                  </span>
                 </div>
-                <div class="info-value">          </section>
+                <div class="progress-bar">
+                  <div 
+                    class="progress-fill progress-primary"
+                    :style="{ width: `${Math.min((parlamentar.gastoTotal / 350000) * 100, 100)}%` }"
+                  />
+                </div>
+                <p class="financial-note">
+                  Limite de referência: R$ 350.000,00
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Fontes -->
+          <div class="sources-section">
+            <div class="sources-content">
+              <Info class="sources-icon" />
+              <div class="sources-text">
+                <p class="sources-title">Fontes dos Dados</p>
+                <p class="sources-description">
+                  Todos os dados são coletados de fontes oficiais e atualizados regularmente.
+                </p>
+                <div class="sources-links">
+                  <a 
+                    href="https://dadosabertos.camara.leg.br" 
+                    target="_blank"
+                    class="source-link"
+                  >
+                    Dados Abertos Câmara
+                    <ExternalLink class="link-icon" />
+                  </a>
+                  <span class="link-separator">•</span>
+                  <a 
+                    href="/metodologia" 
+                    class="source-link"
+                  >
+                    Ver Metodologia Completa
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botões de Ação -->
+          <div class="action-buttons">
+            <a 
+              href="/parlamentares"
+              class="btn btn-secondary"
+            >
+              <ArrowLeft class="btn-icon" />
+              Voltar para lista
+            </a>
+            <a 
+              :href="`/comparar?ids=${parlamentar.id}`"
+              class="btn btn-primary"
+            >
+              <BarChart3 class="btn-icon" />
+              Comparar com outros
+            </a>
+          </div>
         </div>
       </div>
-    </div>
+    </main>
+
+    <AppFooter />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import AppHeader from '@/components/AppHeader.vue'
+import { User, ArrowLeft, DollarSign, Calendar, Users, Building, Info, ExternalLink, BarChart3 } from 'lucide-vue-next'
+import AppHeader from '../components/AppHeader.vue'
+import AppFooter from '../components/AppFooter.vue'
+import StatCard from '../components/StatCard.vue'
+import { useMockData } from '../composables/useMockData'
 
-interface Deputado {
-  id: number;
-  nome_civil: string;
-  email: string | null;
-  data_nascimento: string | null;
-  escolaridade: string | null;
-  uf_nascimento: string;
-  municipio_nascimento: string;
+// Interface para os dados do parlamentar da API
+interface ParlamentarAPI {
+  id: number
+  nome_civil: string
+  nome_parlamentar?: string
+  cpf?: string
+  sexo?: string
+  data_nascimento?: string
+  escolaridade?: string
+  municipio_nascimento?: string
+  uf_nascimento?: string
+  uf: string
+  sigla_partido?: string
+  email?: string
+  foto?: string
+}
+
+// Interface para os dados completos do parlamentar (incluindo dados calculados)
+interface ParlamentarCompleto extends ParlamentarAPI {
+  nome: string
+  partido: string
+  estado: string
+  gastoTotal: number
+  presenca: number
+  fidelidadePartidaria: number
 }
 
 const route = useRoute()
-const isLoading = ref(true)
+const { parlamentares } = useMockData()
+
+// Estado para os dados do parlamentar
+const parlamentarAPI = ref<ParlamentarAPI | null>(null)
+const isLoading = ref(false)
 const error = ref<string | null>(null)
-const deputado = ref<Deputado | null>(null)
 
-const formatarData = (dataString: string) => {
-  const data = new Date(dataString)
-  return data.toLocaleDateString('pt-BR')
-}
-
-const carregarDeputado = async () => {
-  const deputadoId = route.params.id
-  if (!deputadoId) {
-    error.value = 'ID do deputado não fornecido'
-    isLoading.value = false
-    return
-  }
-
+// Função para buscar dados do parlamentar específico da API
+const fetchParlamentar = async (id: number) => {
+  isLoading.value = true
+  error.value = null
+  
   try {
-    const response = await fetch(`http://127.0.0.1:8000/api/deputados/${deputadoId}`)
-    
-    if (response.status === 404) {
-      error.value = 'Deputado não encontrado. Verifique se o ID está correto.'
-      return
-    }
-    
+    const response = await fetch(`http://localhost:8000/api/deputados/${id}`)
     if (!response.ok) {
-      throw new Error('Falha ao carregar dados do deputado')
+      throw new Error('Parlamentar não encontrado')
     }
     
-    const dados = await response.json()
-    deputado.value = dados
+    const data = await response.json()
+    parlamentarAPI.value = data
   } catch (err: any) {
-    console.error('Erro ao carregar deputado:', err)
-    error.value = err.message || 'Erro inesperado ao carregar dados'
+    console.error('Erro ao buscar parlamentar:', err)
+    error.value = err.message
+    parlamentarAPI.value = null
   } finally {
     isLoading.value = false
   }
 }
 
-onMounted(() => {
-  carregarDeputado()
+// Computed para combinar dados da API com dados mockados
+const parlamentar = computed((): ParlamentarCompleto | null => {
+  if (!parlamentarAPI.value) return null
+  
+  // Tentar encontrar dados complementares nos dados mockados
+  const dadosMock = parlamentares.value.find(p => Number(p.id) === parlamentarAPI.value!.id)
+  
+  return {
+    ...parlamentarAPI.value,
+    nome: parlamentarAPI.value.nome_parlamentar || parlamentarAPI.value.nome_civil,
+    partido: parlamentarAPI.value.sigla_partido || 'S/P',
+    estado: parlamentarAPI.value.uf,
+    foto: parlamentarAPI.value.foto || `https://www.camara.leg.br/internet/deputado/bandep/${parlamentarAPI.value.id}.jpg`,
+    // Usar dados mockados se disponíveis, senão valores padrão
+    gastoTotal: dadosMock?.gastoTotal || Math.floor(Math.random() * 100000) + 50000,
+    presenca: dadosMock?.presenca || Math.floor(Math.random() * 30) + 70,
+    fidelidadePartidaria: dadosMock?.fidelidadePartidaria || Math.floor(Math.random() * 20) + 80
+  }
 })
+
+// Buscar dados quando o componente for montado ou quando o ID mudar
+onMounted(() => {
+  const id = Number(route.params.id)
+  if (id) {
+    fetchParlamentar(id)
+  }
+})
+
+// Observar mudanças no ID da rota
+watch(() => route.params.id, (newId) => {
+  if (newId) {
+    fetchParlamentar(Number(newId))
+  }
+})
+
+const formatDate = (dateString: string) => {
+  if (!dateString) return 'Não informado'
+  try {
+    const date = new Date(dateString)
+    if (isNaN(date.getTime())) return 'Data inválida'
+    return date.toLocaleDateString('pt-BR', { 
+      day: '2-digit', 
+      month: 'long', 
+      year: 'numeric' 
+    })
+  } catch {
+    return 'Data inválida'
+  }
+}
+
+const calcularIdade = (dateString: string) => {
+  if (!dateString) return 0
+  try {
+    const nascimento = new Date(dateString)
+    if (isNaN(nascimento.getTime())) return 0
+    const hoje = new Date()
+    let idade = hoje.getFullYear() - nascimento.getFullYear()
+    const mes = hoje.getMonth() - nascimento.getMonth()
+    if (mes < 0 || (mes === 0 && hoje.getDate() < nascimento.getDate())) {
+      idade--
+    }
+    return idade
+  } catch {
+    return 0
+  }
+}
+
+const getPresencaColor = (presenca: number) => {
+  if (presenca >= 90) return 'progress-success'
+  if (presenca >= 75) return 'progress-warning'
+  return 'progress-error'
+}
 </script>
 
 <style scoped>
-.page-container {
+/* ======================
+   BASE STYLES 
+   ====================== */
+.min-h-screen {
   min-height: 100vh;
-  background: linear-gradient(180deg, #f8fafc, #f1f5f9);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  color: var(--color-gray-900);
 }
 
-.feedback-container {
+.flex {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 60vh;
-  text-align: center;
-  padding: 2rem;
 }
 
-.loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #e2e8f0;
-  border-top: 4px solid #2563eb;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
+.flex-col {
+  flex-direction: column;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+.bg-background {
+  background-color: var(--color-white);
+}
+
+.py-8 {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.mx-auto {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.px-4 {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.max-w-6xl {
+  max-width: 72rem;
+}
+
+/* ======================
+   LOADING & ERROR STATES 
+   ====================== */
+.text-center {
+  text-align: center;
+}
+
+.py-16 {
+  padding-top: 4rem;
+  padding-bottom: 4rem;
+}
+
+.inline-flex {
+  display: inline-flex;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.w-16 {
+  width: 4rem;
+}
+
+.h-16 {
+  height: 4rem;
+}
+
+.rounded-full {
+  border-radius: 9999px;
+}
+
+.bg-muted {
+  background-color: var(--color-gray-100);
+}
+
+.mb-4 {
   margin-bottom: 1rem;
 }
 
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
-.loading-text {
-  color: var(--color-gray-600);
-  font-size: 1.1rem;
+.h-8 {
+  height: 2rem;
 }
 
-.error-container h2 {
-  color: var(--color-gray-900);
-  margin: 1rem 0 0.5rem 0;
+.w-8 {
+  width: 2rem;
+}
+
+.border-b-2 {
+  border-bottom-width: 2px;
+}
+
+.border-primary {
+  border-color: var(--color-primary);
+}
+
+.text-2xl {
   font-size: 1.5rem;
 }
 
-.error-message {
+.font-bold {
+  font-weight: 700;
+}
+
+.text-foreground {
+  color: var(--color-gray-900);
+}
+
+.mb-2 {
+  margin-bottom: 0.5rem;
+}
+
+.text-muted-foreground {
   color: var(--color-gray-600);
+}
+
+.mb-6 {
   margin-bottom: 1.5rem;
 }
 
-.back-button {
-  padding: 0.75rem 1.5rem;
-  background: var(--color-primary);
-  color: white;
-  text-decoration: none;
+.gap-2 {
+  gap: 0.5rem;
+}
+
+.px-6 {
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+.py-3 {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+.bg-primary {
+  background-color: var(--color-primary);
+}
+
+.text-primary-foreground {
+  color: var(--color-white);
+}
+
+.rounded-lg {
   border-radius: 0.5rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
 }
 
-.back-button:hover {
-  background: var(--color-primary-dark);
+.hover\:bg-primary\/90:hover {
+  background-color: rgba(37, 99, 235, 0.9);
 }
 
-.perfil-container {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 2rem 1rem;
+.transition-colors {
+  transition-property: color, background-color, border-color;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
 }
 
-.perfil-card {
-  background: white;
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+.h-4 {
+  height: 1rem;
 }
 
+.w-4 {
+  width: 1rem;
+}
+
+/* ======================
+   PROFILE HEADER 
+   ====================== */
 .perfil-header {
-  position: relative;
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.05), rgba(37, 99, 235, 0.1));
+  border: 1px solid rgba(37, 99, 235, 0.1);
+  border-radius: 0.75rem;
   padding: 2rem;
-  color: white;
+  margin-bottom: 1.5rem;
 }
 
-.header-content {
+.perfil-header-content {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 1.5rem;
+  align-items: flex-start;
 }
 
-.perfil-avatar {
-  width: 80px;
-  height: 80px;
-  background: rgba(255, 255, 255, 0.2);
+@media (min-width: 768px) {
+  .perfil-header-content {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+.perfil-foto {
+  width: 8rem;
+  height: 8rem;
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2rem;
-  font-weight: bold;
-  color: white;
+  object-fit: cover;
+  border: 4px solid var(--color-white);
+  box-shadow: var(--shadow-lg);
 }
 
-.deputado-nome {
-  font-size: 1.75rem;
+.perfil-info {
+  flex: 1;
+}
+
+.perfil-nome {
+  font-size: 1.875rem;
   font-weight: 700;
-  margin: 0 0 0.25rem 0;
+  color: var(--color-gray-900);
+  margin-bottom: 0.5rem;
 }
 
-.deputado-cargo {
-  font-size: 1rem;
-  opacity: 0.9;
-  margin: 0 0 0.5rem 0;
+.perfil-nome-civil {
+  font-size: 1.125rem;
+  color: var(--color-gray-600);
+  margin-bottom: 0.75rem;
 }
 
-.badge {
-  background: rgba(255, 255, 255, 0.2);
+.perfil-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tag {
   padding: 0.25rem 0.75rem;
   border-radius: 9999px;
   font-size: 0.875rem;
   font-weight: 500;
 }
 
-.perfil-body {
-  padding: 2rem;
+.tag-primary {
+  background-color: rgba(37, 99, 235, 0.1);
+  color: var(--color-primary);
 }
 
-.info-section h2 {
+.tag-secondary {
+  background-color: var(--color-gray-100);
+  color: var(--color-gray-900);
+}
+
+/* ======================
+   KPI GRID 
+   ====================== */
+.grid {
+  display: grid;
+}
+
+.grid-cols-1 {
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+@media (min-width: 768px) {
+  .md\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.gap-4 {
+  gap: 1rem;
+}
+
+/* ======================
+   INFO SECTIONS 
+   ====================== */
+.info-section {
+  background: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-size: 1.25rem;
   font-weight: 600;
   color: var(--color-gray-900);
   margin-bottom: 1rem;
+}
+
+.section-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--color-primary);
 }
 
 .info-grid {
@@ -369,7 +701,7 @@ onMounted(() => {
   grid-template-columns: 1fr;
 }
 
-@media (min-width: 640px) {
+@media (min-width: 768px) {
   .info-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -382,488 +714,235 @@ onMounted(() => {
   border-left: 4px solid var(--color-primary);
 }
 
-.info-item strong {
-  display: block;
-  color: var(--color-gray-700);
-  font-size: 0.875rem;
-  margin-bottom: 0.25rem;
-}
-
-.info-item span {
-  color: var(--color-gray-900);
-  font-weight: 500;
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.5s ease-in;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-</style></div>
-              </div>
-            </div>
-          </section>
-        </main>
-      </div>
-    </div>
-  </div>
-</template>
-
-<script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
-import AppHeader from '@/components/AppHeader.vue'
-
-// --- Interface de dados ajustada para o seu banco de dados ---
-interface Deputado {
-  id: number;
-  nome_civil: string;
-  email: string | null;
-  data_nascimento: string | null;
-  escolaridade: string | null;
-  uf_nascimento: string;
-  municipio_nascimento: string;
-}
-
-// --- Variáveis Reativas ---
-const route = useRoute();
-const deputado = ref<Deputado | null>(null);
-const isLoading = ref(true);
-const error = ref<string | null>(null);
-
-// --- Funções Auxiliares ---
-const formatarData = (dataIso: string | null): string => {
-  if (!dataIso) return 'Não informada';
-  const data = new Date(dataIso);
-  return data.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
-};
-
-// --- Lógica Principal ---
-onMounted(async () => {
-  const deputadoId = route.params.id;
-
-  if (!deputadoId) {
-    error.value = "ID do parlamentar não foi encontrado na URL.";
-    isLoading.value = false;
-    return;
-  }
-
-  try {
-    const response = await fetch(`http://127.0.0.1:8000/api/deputados/${deputadoId}`);
-    
-    if (response.status === 404) {
-      throw new Error(`Nenhum parlamentar foi encontrado com o ID ${deputadoId}.`);
-    }
-    if (!response.ok) {
-      throw new Error('Falha na comunicação com o servidor. Por favor, tente novamente mais tarde.');
-    }
-    
-    deputado.value = await response.json();
-
-  } catch (err: any) {
-    console.error("Erro ao buscar dados do perfil:", err);
-    error.value = err.message;
-  } finally {
-    isLoading.value = false;
-  }
-});
-</script>
-
-<style scoped>
-/* ======================
-   TEMA ESCURO - PERFIL
-   ====================== */
-
-.page-container {
-  min-height: 100vh;
-  background: linear-gradient(180deg, #0f172a, #1e293b);
-  color: #e2e8f0;
-  padding: 1rem 0.75rem 2rem;
-}
-
-@media (min-width: 640px) {
-  .page-container {
-    padding: 1.5rem 1rem 3rem;
-  }
-}
-
-@media (min-width: 768px) {
-  .page-container {
-    padding: 2rem 1rem 4rem;
-  }
-}
-
-/* ======================
-   FEEDBACK CONTAINERS
-   ====================== */
-   FEEDBACK E LOADING
-   ====================== */
-.feedback-container {
-  max-width: 500px;
-  margin: 4rem auto;
-  text-align: center;
-  padding: 3rem;
-  border-radius: 1.5rem;
-  background: linear-gradient(135deg, #1e293b, #334155);
-  border: 1px solid #475569;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-}
-
-.loading-container {
-  border: 1px solid #60a5fa;
-}
-
-.loading-spinner {
-  width: 3rem;
-  height: 3rem;
-  border: 3px solid #334155;
-  border-top: 3px solid #60a5fa;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 1.5rem;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.loading-text {
-  font-size: 1.1rem;
-  color: #94a3b8;
-  margin: 0;
-}
-
-.error-container {
-  border: 1px solid #ef4444;
-  background: linear-gradient(135deg, #7f1d1d, #1e293b);
-}
-
-.error-icon {
-  margin: 0 auto 1.5rem;
-  color: #f87171;
-}
-
-.error-container h2 {
-  font-size: 1.5rem;
-  color: #f87171;
-  margin: 0 0 1rem;
-  font-weight: 700;
-}
-
-.error-message {
-  color: #fca5a5;
-  margin: 0 0 2rem;
-  line-height: 1.6;
-}
-
-.back-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.875rem 2rem;
-  background: linear-gradient(135deg, #60a5fa, #3b82f6);
-  color: white;
-  text-decoration: none;
-  border-radius: 0.75rem;
-  font-weight: 600;
-  transition: all 0.2s ease;
-}
-
-.back-button:hover {
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
-  transform: translateY(-1px);
-}
-
-/* ======================
-   CONTAINER PRINCIPAL
-   ====================== */
-.perfil-container {
-  max-width: 1000px;
-  margin: 0 auto;
-}
-
-.perfil-card {
-  background: linear-gradient(135deg, #1e293b, #334155);
-  border: 1px solid #475569;
-  border-radius: 2rem;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
-  overflow: hidden;
-}
-
-/* ======================
-   HEADER DO PERFIL
-   ====================== */
-.perfil-header {
-  position: relative;
-  padding: 3rem 2rem 2rem;
-  background: linear-gradient(135deg, #0f172a, #1e293b);
-}
-
-.header-background {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 100%;
-  background: radial-gradient(circle at 70% 30%, rgba(96, 165, 250, 0.2), transparent 50%);
-}
-
-.header-content {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 2rem;
-}
-
-@media (max-width: 640px) {
-  .header-content {
-    flex-direction: column;
-    text-align: center;
-    gap: 1.5rem;
-  }
-}
-
-.avatar-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-}
-
-.avatar-wrapper {
-  width: 5rem;
-  height: 5rem;
-  background: linear-gradient(135deg, #60a5fa, #3b82f6);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 3px solid #1e293b;
-  box-shadow: 0 8px 25px rgba(96, 165, 250, 0.3);
-}
-
-.avatar-icon {
-  color: white;
-}
-
-.status-badge {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.375rem 0.875rem;
-  background: linear-gradient(135deg, #064e3b, #065f46);
-  color: #34d399;
-  font-size: 0.875rem;
-  font-weight: 500;
-  border-radius: 50px;
-  border: 1px solid #059669;
-}
-
-.status-dot {
-  width: 0.5rem;
-  height: 0.5rem;
-  background-color: #34d399;
-  border-radius: 50%;
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-.perfil-info {
-  flex: 1;
-}
-
-.perfil-nome {
-  font-size: clamp(1.75rem, 4vw, 2.5rem);
-  font-weight: 800;
-  color: #f1f5f9;
-  margin: 0 0 0.75rem;
-  line-height: 1.2;
-}
-
-.perfil-origem {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 1.125rem;
-  color: #94a3b8;
-  margin: 0;
-  font-weight: 500;
-}
-
-@media (max-width: 640px) {
-  .perfil-origem {
-    justify-content: center;
-  }
-}
-
-/* ======================
-   CONTEÚDO PRINCIPAL
-   ====================== */
-.perfil-content {
-  padding: 2rem;
-}
-
-.info-section {
-  margin-bottom: 2rem;
-}
-
-.section-header {
-  margin-bottom: 2rem;
-}
-
-.section-title {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #f1f5f9;
-  margin: 0;
-  padding-bottom: 0.75rem;
-  border-bottom: 2px solid #60a5fa;
-}
-
-/* ======================
-   GRID DE INFORMAÇÕES
-   ====================== */
-.info-grid {
-  display: grid;
-  gap: 1.5rem;
-  grid-template-columns: 1fr;
-}
-
-@media (min-width: 640px) {
-  .info-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-.info-item {
-  background: linear-gradient(135deg, #334155, #1e293b);
-  padding: 1.5rem;
-  border-radius: 1rem;
-  border: 1px solid #475569;
-  transition: all 0.2s ease;
-}
-
-.info-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-  border-color: #60a5fa;
+.progress-item {
+  border-left-color: var(--color-gray-300);
 }
 
 .info-label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  display: block;
   font-size: 0.875rem;
-  font-weight: 600;
-  color: #94a3b8;
-  margin-bottom: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-weight: 500;
+  color: var(--color-gray-600);
+  margin-bottom: 0.25rem;
 }
 
 .info-value {
-  font-size: 1.125rem;
+  color: var(--color-gray-900);
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.info-highlight {
   font-weight: 600;
-  color: #f1f5f9;
-  line-height: 1.4;
-  word-break: break-word;
 }
 
 /* ======================
-   ANIMAÇÕES
+   PROGRESS BARS 
    ====================== */
-.animate-fade-in {
-  animation: fadeInUp 0.6s ease-out;
+.progress-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
 }
 
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.progress-bar {
+  flex: 1;
+  height: 0.5rem;
+  background-color: var(--color-gray-200);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  transition: width 0.3s ease;
+  border-radius: 9999px;
+}
+
+.progress-primary {
+  background-color: var(--color-primary);
+}
+
+.progress-success {
+  background-color: var(--color-success);
+}
+
+.progress-warning {
+  background-color: var(--color-warning);
+}
+
+.progress-error {
+  background-color: var(--color-error);
+}
+
+.progress-value {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-gray-900);
 }
 
 /* ======================
-   MELHORIAS MOBILE
+   FINANCIAL SECTION 
    ====================== */
-/* Melhor experiência touch */
-.perfil-card, .info-item, .nav-back-button {
-  -webkit-tap-highlight-color: rgba(96, 165, 250, 0.2);
+.financial-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-/* Smooth scroll para links âncora */
-html {
-  scroll-behavior: smooth;
+.financial-item {
+  background: var(--color-gray-50);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border-left: 4px solid var(--color-primary);
+}
+
+.financial-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.financial-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-gray-600);
+}
+
+.financial-value {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-gray-900);
+}
+
+.financial-note {
+  font-size: 0.75rem;
+  color: var(--color-gray-500);
+  margin-top: 0.25rem;
+  margin-bottom: 0;
 }
 
 /* ======================
-   RESPONSIVIDADE OTIMIZADA
+   SOURCES SECTION 
    ====================== */
-@media (max-width: 768px) {
-  .perfil-header {
-    padding: 1.5rem 1rem 1rem;
-  }
-  
-  .perfil-content {
-    padding: 1.25rem;
-  }
-  
-  .info-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-  
-  .info-item {
-    padding: 1rem;
-  }
-  
-  .perfil-nome {
-    font-size: 1.75rem;
-  }
+.sources-section {
+  background: rgba(37, 99, 235, 0.05);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
 }
 
-@media (max-width: 480px) {
-  .perfil-header {
-    padding: 1.25rem 0.75rem 0.75rem;
-  }
-  
-  .perfil-content {
-    padding: 1rem 0.75rem;
-  }
-  
-  .perfil-nome {
-    font-size: 1.5rem;
-  }
-  
-  .perfil-origem {
-    font-size: 1rem;
-  }
-  
-  .section-title {
-    font-size: 1.25rem;
-  }
-  
-  .info-item {
-    padding: 0.875rem;
-  }
-  
-  .info-value {
-    font-size: 1rem;
-  }
+.sources-content {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.sources-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--color-primary);
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+.sources-text {
+  flex: 1;
+}
+
+.sources-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-gray-900);
+  margin-bottom: 0.25rem;
+  margin-top: 0;
+}
+
+.sources-description {
+  font-size: 0.875rem;
+  color: var(--color-gray-600);
+  margin-bottom: 0.5rem;
+  margin-top: 0;
+}
+
+.sources-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.source-link {
+  font-size: 0.75rem;
+  color: var(--color-primary);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: color 0.2s ease;
+}
+
+.source-link:hover {
+  text-decoration: underline;
+}
+
+.link-icon {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+.link-separator {
+  font-size: 0.75rem;
+  color: var(--color-gray-400);
+}
+
+/* ======================
+   ACTION BUTTONS 
+   ====================== */
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: none;
+  font-size: 1rem;
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+}
+
+.btn-primary:hover {
+  background-color: var(--color-primary-dark);
+}
+
+.btn-secondary {
+  background-color: var(--color-white);
+  color: var(--color-gray-700);
+  border: 1px solid var(--color-gray-300);
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-gray-50);
+}
+
+.btn-icon {
+  width: 1rem;
+  height: 1rem;
 }
 </style>

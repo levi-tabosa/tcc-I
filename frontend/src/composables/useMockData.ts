@@ -35,7 +35,7 @@ export function useMockData() {
     error.value = null
     
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/deputados/')
+      const response = await fetch('http://localhost:8000/api/deputados/')
       if (!response.ok) {
         throw new Error('Falha ao carregar dados dos parlamentares')
       }

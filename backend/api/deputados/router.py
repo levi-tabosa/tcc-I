@@ -11,6 +11,8 @@ router = APIRouter(
     tags=["Deputados"]
 )
 
+
+
 @router.get("/buscar")
 def buscar_deputados(nome: str = Query(..., min_length=2)):
     conn = db.get_connect()
@@ -44,8 +46,8 @@ def buscar_perfil_por_id(deputado_id: int):
     try:
         with conn.cursor() as cursor:
             query = """
-                SELECT id, nome_civil, email, data_nascimento, escolaridade,
-                       uf_nascimento, municipio_nascimento 
+                SELECT id, nome_civil, cpf, sexo, email, data_nascimento, 
+                       escolaridade, uf_nascimento, municipio_nascimento, uf_nascimento
                 FROM deputados WHERE id = %s
             """
             cursor.execute(query, (deputado_id,))
@@ -54,13 +56,22 @@ def buscar_perfil_por_id(deputado_id: int):
             if not resultado:
                 raise HTTPException(status_code=404, detail=f"Deputado com ID {deputado_id} não encontrado.")
 
-            data_nasc = resultado[3]
+            data_nasc = resultado[6]
             data_nasc_iso = data_nasc.isoformat() if isinstance(data_nasc, date) else None
             
             return {
-                 "id": resultado[0], "nome_civil": resultado[1], "email": resultado[2],
-                 "data_nascimento": data_nasc_iso, "escolaridade": resultado[4],
-                 "uf_nascimento": resultado[5], "municipio_nascimento": resultado[6]
+                 "id": resultado[0], 
+                 "nome_civil": resultado[1], 
+                 "cpf": resultado[2],
+                 "sexo": resultado[3],
+                 "email": resultado[4],
+                 "data_nascimento": data_nasc_iso, 
+                 "escolaridade": resultado[6],
+                 "uf_nascimento": resultado[7], 
+                 "municipio_nascimento": resultado[8],
+                 "uf": resultado[9],
+                 "sigla_partido": None, 
+                 "foto": f"https://www.camara.leg.br/internet/deputado/bandep/{resultado[0]}.jpg"
             }
 
     except psycopg2.Error as e:
