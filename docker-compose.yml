@@ -1,47 +1,22 @@
 services:
-  postgres:
-    image: postgres:15
-    container_name: camara_postgres
-    environment:
-      POSTGRES_DB: camara_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      # A porta foi alterada de volta para o padrão 5432:5432
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - camara-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
   backend:
     build:
       context: .
       dockerfile: backend/Dockerfile
     container_name: camara_backend
     environment:
-      # Esta URL usa o nome do serviço 'postgres' e a porta interna '5432'
+      # Agora esta configuração está correta porque o nome do contêiner é 'postgres'
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/camara_db
-      # Estas variáveis garantem que seu código Python (db.py) se conecte corretamente
       - DB_HOST=postgres
       - DB_PORT=5432
     ports:
       - "8000:8000"
-    depends_on:
-      postgres:
-        condition: service_healthy
     volumes:
       - ./backend:/app
     networks:
       - camara-network
     command: >
-      sh -c "sleep 5 &&
-             python main.py"
+      sh -c "sleep 5 && python main.py"
 
   frontend:
     build:
@@ -60,9 +35,6 @@ services:
     environment:
       - VITE_API_URL=http://localhost:8000
 
-volumes:
-  postgres_data:
-
 networks:
   camara-network:
-    driver: bridge
+    external: true
