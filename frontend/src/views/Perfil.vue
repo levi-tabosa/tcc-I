@@ -60,24 +60,12 @@
           </div>
 
           <!-- KPIs -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div class="grid grid-cols-1 md:grid-cols-1 gap-4 mb-6">
             <StatCard
               title="Gasto Total"
               :value="`R$ ${parlamentar.gastoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`"
               icon="DollarSign"
               trend="neutral"
-            />
-            <StatCard
-              title="Presença"
-              :value="`${parlamentar.presenca}%`"
-              icon="Calendar"
-              :trend="parlamentar.presenca >= 90 ? 'up' : 'down'"
-            />
-            <StatCard
-              title="Fidelidade Partidária"
-              :value="`${parlamentar.fidelidadePartidaria}%`"
-              icon="Users"
-              :trend="parlamentar.fidelidadePartidaria >= 85 ? 'up' : 'down'"
             />
           </div>
 
@@ -135,58 +123,6 @@
               <div class="info-item">
                 <label class="info-label">Estado</label>
                 <p class="info-value info-highlight">{{ parlamentar.estado }}</p>
-              </div>
-              <div class="info-item progress-item">
-                <label class="info-label">Taxa de Presença</label>
-                <div class="progress-container">
-                  <div class="progress-bar">
-                    <div 
-                      class="progress-fill"
-                      :class="getPresencaColor(parlamentar.presenca)"
-                      :style="{ width: `${parlamentar.presenca}%` }"
-                    />
-                  </div>
-                  <span class="progress-value">{{ parlamentar.presenca }}%</span>
-                </div>
-              </div>
-              <div class="info-item progress-item">
-                <label class="info-label">Fidelidade Partidária</label>
-                <div class="progress-container">
-                  <div class="progress-bar">
-                    <div 
-                      class="progress-fill progress-primary"
-                      :style="{ width: `${parlamentar.fidelidadePartidaria}%` }"
-                    />
-                  </div>
-                  <span class="progress-value">{{ parlamentar.fidelidadePartidaria }}%</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Desempenho Financeiro -->
-          <div class="info-section">
-            <h2 class="section-title">
-              <DollarSign class="section-icon" />
-              Desempenho Financeiro
-            </h2>
-            <div class="financial-content">
-              <div class="financial-item">
-                <div class="financial-header">
-                  <span class="financial-label">Gasto Total Acumulado</span>
-                  <span class="financial-value">
-                    R$ {{ parlamentar.gastoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}
-                  </span>
-                </div>
-                <div class="progress-bar">
-                  <div 
-                    class="progress-fill progress-primary"
-                    :style="{ width: `${Math.min((parlamentar.gastoTotal / 350000) * 100, 100)}%` }"
-                  />
-                </div>
-                <p class="financial-note">
-                  Limite de referência: R$ 350.000,00
-                </p>
               </div>
             </div>
           </div>
@@ -249,7 +185,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { User, ArrowLeft, DollarSign, Calendar, Users, Building, Info, ExternalLink, BarChart3 } from 'lucide-vue-next'
+import { User, ArrowLeft, DollarSign, Building, Info, ExternalLink, BarChart3 } from 'lucide-vue-next'
 import AppHeader from '../components/AppHeader.vue'
 import AppFooter from '../components/AppFooter.vue'
 import StatCard from '../components/StatCard.vue'
@@ -278,8 +214,6 @@ interface ParlamentarCompleto extends ParlamentarAPI {
   partido: string
   estado: string
   gastoTotal: number
-  presenca: number
-  fidelidadePartidaria: number
 }
 
 const route = useRoute()
@@ -326,9 +260,7 @@ const parlamentar = computed((): ParlamentarCompleto | null => {
     estado: parlamentarAPI.value.uf,
     foto: parlamentarAPI.value.foto || `https://www.camara.leg.br/internet/deputado/bandep/${parlamentarAPI.value.id}.jpg`,
     // Usar dados mockados se disponíveis, senão valores padrão
-    gastoTotal: dadosMock?.gastoTotal || Math.floor(Math.random() * 100000) + 50000,
-    presenca: dadosMock?.presenca || Math.floor(Math.random() * 30) + 70,
-    fidelidadePartidaria: dadosMock?.fidelidadePartidaria || Math.floor(Math.random() * 20) + 80
+    gastoTotal: dadosMock?.gastoTotal || Math.floor(Math.random() * 100000) + 50000
   }
 })
 
@@ -377,12 +309,6 @@ const calcularIdade = (dateString: string) => {
   } catch {
     return 0
   }
-}
-
-const getPresencaColor = (presenca: number) => {
-  if (presenca >= 90) return 'progress-success'
-  if (presenca >= 75) return 'progress-warning'
-  return 'progress-error'
 }
 </script>
 
@@ -658,8 +584,8 @@ const getPresencaColor = (presenca: number) => {
 }
 
 @media (min-width: 768px) {
-  .md\:grid-cols-3 {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .md\:grid-cols-1 {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
   }
 }
 
@@ -714,10 +640,6 @@ const getPresencaColor = (presenca: number) => {
   border-left: 4px solid var(--color-primary);
 }
 
-.progress-item {
-  border-left-color: var(--color-gray-300);
-}
-
 .info-label {
   display: block;
   font-size: 0.875rem;
@@ -734,94 +656,6 @@ const getPresencaColor = (presenca: number) => {
 
 .info-highlight {
   font-weight: 600;
-}
-
-/* ======================
-   PROGRESS BARS 
-   ====================== */
-.progress-container {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-top: 0.5rem;
-}
-
-.progress-bar {
-  flex: 1;
-  height: 0.5rem;
-  background-color: var(--color-gray-200);
-  border-radius: 9999px;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  transition: width 0.3s ease;
-  border-radius: 9999px;
-}
-
-.progress-primary {
-  background-color: var(--color-primary);
-}
-
-.progress-success {
-  background-color: var(--color-success);
-}
-
-.progress-warning {
-  background-color: var(--color-warning);
-}
-
-.progress-error {
-  background-color: var(--color-error);
-}
-
-.progress-value {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--color-gray-900);
-}
-
-/* ======================
-   FINANCIAL SECTION 
-   ====================== */
-.financial-content {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.financial-item {
-  background: var(--color-gray-50);
-  padding: 1rem;
-  border-radius: 0.5rem;
-  border-left: 4px solid var(--color-primary);
-}
-
-.financial-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.5rem;
-}
-
-.financial-label {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--color-gray-600);
-}
-
-.financial-value {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: var(--color-gray-900);
-}
-
-.financial-note {
-  font-size: 0.75rem;
-  color: var(--color-gray-500);
-  margin-top: 0.25rem;
-  margin-bottom: 0;
 }
 
 /* ======================
