@@ -44,8 +44,9 @@
               </div>
 
               <!-- LISTA DE SUGESTÕES FLUTUANTE -->
-              <div v-if="showSuggestions" class="autocomplete-results">
+              <div v-if="showSuggestions || error" class="autocomplete-results">
                 <div v-if="isLoading" class="autocomplete-feedback">Carregando...</div>
+                <div v-else-if="error" class="autocomplete-feedback error-feedback">{{ error }}</div>
                 <ul v-else-if="searchResults.length > 0">
                   <li 
                     v-for="(deputado, index) in searchResults" 
@@ -249,7 +250,7 @@ const fetchSuggestions = async (q: string) => {
   }
 
   try {
-    const response = await fetch(`http://127.0.0.1:8000/api/deputados/buscar?nome=${encodeURIComponent(q)}`);
+    const response = await fetch(`http://localhost:8000/api/deputados/buscar?nome=${encodeURIComponent(q)}`);
     if (!response.ok) throw new Error('Falha ao comunicar com o servidor. A API está rodando?');
     const data = await response.json();
 
@@ -310,10 +311,12 @@ const handleSearch = async () => {
     const deputadoId = searchResults.value[0].id;
     router.push({ name: 'Perfil', params: { id: deputadoId } });
   } else if (searchResults.value.length > 1) {
-    // Se houver múltiplos resultados, pode implementar uma página de resultados
-    // Por enquanto, apenas redireciona para o primeiro
+    // Se houver múltiplos resultados, redireciona para o primeiro resultado
     const deputadoId = searchResults.value[0].id;
     router.push({ name: 'Perfil', params: { id: deputadoId } });
+  } else {
+    // Nenhum resultado encontrado
+    error.value = 'Nenhum deputado encontrado com esse nome.';
   }
 };
 
@@ -562,6 +565,14 @@ onUnmounted(() => {
   padding: 0.75rem 1rem;
   color: var(--color-gray-500);
   font-style: italic;
+}
+
+.error-feedback {
+  color: #dc2626;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.375rem;
+  margin: 0.5rem;
 }
 
 /* ======================
