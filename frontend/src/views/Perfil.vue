@@ -59,16 +59,6 @@
             </div>
           </div>
 
-          <!-- KPIs -->
-          <div class="grid grid-cols-1 md:grid-cols-1 gap-4 mb-6">
-            <StatCard
-              title="Gasto Total"
-              :value="`R$ ${parlamentar.gastoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`"
-              icon="DollarSign"
-              trend="neutral"
-            />
-          </div>
-
           <!-- Dados Pessoais -->
           <div class="info-section">
             <h2 class="section-title">
@@ -185,10 +175,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { User, ArrowLeft, DollarSign, Building, Info, ExternalLink, BarChart3 } from 'lucide-vue-next'
+import { User, ArrowLeft, Building, Info, ExternalLink, BarChart3 } from 'lucide-vue-next'
 import AppHeader from '../components/AppHeader.vue'
 import AppFooter from '../components/AppFooter.vue'
-import StatCard from '../components/StatCard.vue'
 import { useMockData } from '../composables/useMockData'
 
 // Interface para os dados do parlamentar da API
@@ -213,7 +202,6 @@ interface ParlamentarCompleto extends ParlamentarAPI {
   nome: string
   partido: string
   estado: string
-  gastoTotal: number
 }
 
 const route = useRoute()
@@ -258,9 +246,7 @@ const parlamentar = computed((): ParlamentarCompleto | null => {
     nome: parlamentarAPI.value.nome_parlamentar || parlamentarAPI.value.nome_civil,
     partido: parlamentarAPI.value.sigla_partido || 'S/P',
     estado: parlamentarAPI.value.uf,
-    foto: parlamentarAPI.value.foto || `https://www.camara.leg.br/internet/deputado/bandep/${parlamentarAPI.value.id}.jpg`,
-    // Usar dados mockados se disponíveis, senão valores padrão
-    gastoTotal: dadosMock?.gastoTotal || Math.floor(Math.random() * 100000) + 50000
+    foto: parlamentarAPI.value.foto || `https://www.camara.leg.br/internet/deputado/bandep/${parlamentarAPI.value.id}.jpg`
   }
 })
 
@@ -570,27 +556,6 @@ const calcularIdade = (dateString: string) => {
 .tag-secondary {
   background-color: var(--color-gray-100);
   color: var(--color-gray-900);
-}
-
-/* ======================
-   KPI GRID 
-   ====================== */
-.grid {
-  display: grid;
-}
-
-.grid-cols-1 {
-  grid-template-columns: repeat(1, minmax(0, 1fr));
-}
-
-@media (min-width: 768px) {
-  .md\:grid-cols-1 {
-    grid-template-columns: repeat(1, minmax(0, 1fr));
-  }
-}
-
-.gap-4 {
-  gap: 1rem;
 }
 
 /* ======================
