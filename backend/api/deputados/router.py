@@ -28,7 +28,6 @@ def buscar_deputados(nome: str = Query(..., min_length=2)):
             
             resultados = cursor.fetchall()
             
-            # A API retorna os dados no formato que o frontend espera: {"resultados": [...]}
             return {"resultados": [{"id": res[0], "nome_civil": res[1], "uf": res[2]} for res in resultados]}
 
     except psycopg2.Error as e:
@@ -36,6 +35,7 @@ def buscar_deputados(nome: str = Query(..., min_length=2)):
         raise HTTPException(status_code=500, detail="Erro interno ao processar a busca.")
     finally:
         if conn: conn.close()
+
 
 @router.get("/{deputado_id}")
 def buscar_perfil_por_id(deputado_id: int):
@@ -46,9 +46,14 @@ def buscar_perfil_por_id(deputado_id: int):
     try:
         with conn.cursor() as cursor:
             query = """
-                SELECT id, nome_civil, cpf, sexo, email, data_nascimento, 
-                       escolaridade, uf_nascimento, municipio_nascimento, uf_nascimento
-                FROM deputados WHERE id = %s
+                SELECT d.id, d.nome_civil, d.cpf, d.sexo, d.email, d.data_nascimento, 
+                       d.escolaridade, d.uf_nascimento, d.municipio_nascimento, 
+                       m.sigla_partido
+                FROM deputados d
+                LEFT JOIN deputados_mandatos m ON d.id = m.deputado_id
+                WHERE d.id = %s
+                ORDER BY m.id DESC
+                LIMIT 1
             """
             cursor.execute(query, (deputado_id,))
             resultado = cursor.fetchone()
@@ -56,7 +61,7 @@ def buscar_perfil_por_id(deputado_id: int):
             if not resultado:
                 raise HTTPException(status_code=404, detail=f"Deputado com ID {deputado_id} não encontrado.")
 
-            data_nasc = resultado[6]
+            data_nasc = resultado[5]
             data_nasc_iso = data_nasc.isoformat() if isinstance(data_nasc, date) else None
             
             return {
@@ -69,8 +74,7 @@ def buscar_perfil_por_id(deputado_id: int):
                  "escolaridade": resultado[6],
                  "uf_nascimento": resultado[7], 
                  "municipio_nascimento": resultado[8],
-                 "uf": resultado[9],
-                 "sigla_partido": None, 
+                 "sigla_partido": resultado[9], 
                  "foto": f"https://www.camara.leg.br/internet/deputado/bandep/{resultado[0]}.jpg"
             }
 
@@ -79,3 +83,49 @@ def buscar_perfil_por_id(deputado_id: int):
         raise HTTPException(status_code=500, detail="Erro interno ao buscar o perfil do deputado.")
     finally:
         if conn: conn.close()
+        
+        
+@router.get("/{deputado_id}/despesas")
+def buscar_despesas_deputado(deputado_id: int):
+    conn = db.get_connect()
+    if not conn:
+        raise HTTPException(status_code=503, detail="Serviço indisponível: Erro de conexão com o banco de dados.")
+    
+    try:
+        with conn.cursor() as cursor:
+            query = """
+                SELECT 
+                    desp.ano, 
+                    desp.mes, 
+                    desp.tipo_despesa, 
+                    desp.valor_documento, 
+                    desp.url_documento
+                FROM deputados_despesas AS desp
+                JOIN deputados_mandatos AS mand ON desp.mandato_id = mand.id
+                WHERE mand.deputado_id = %s
+                ORDER BY desp.ano DESC, desp.mes DESC;
+            """
+            cursor.execute(query, (deputado_id,))
+            despesas = cursor.fetchall()
+            
+            resultado_formatado = [
+                {
+                    "ano": d[0],
+                    "mes": d[1],
+                    "tipo_despesa": d[2],
+                    "valor": d[3],
+                    "url_documento": d[4]
+                }
+                for d in despesas
+            ]
+            
+            return {"despesas": resultado_formatado}
+
+    except psycopg2.Error as e:
+        logging.error(f"Erro na query de despesas: {e}")
+        raise HTTPException(status_code=500, detail="Erro interno ao buscar as despesas do deputado.")
+    finally:
+        if conn: conn.close()        
+        
+        
+        

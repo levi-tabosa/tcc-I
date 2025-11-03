@@ -117,6 +117,166 @@
             </div>
           </div>
 
+          <!-- Despesas Parlamentares -->
+          <div class="info-section">
+            <h2 class="section-title">
+              <DollarSign class="section-icon" />
+              Despesas Parlamentares
+            </h2>
+            
+            <!-- Loading de despesas -->
+            <div v-if="isLoadingDespesas" class="despesas-loading">
+              <div class="loading-spinner"></div>
+              <p>Carregando despesas...</p>
+            </div>
+            
+            <!-- Erro nas despesas -->
+            <div v-else-if="errorDespesas" class="despesas-error">
+              <p>Erro ao carregar despesas: {{ errorDespesas }}</p>
+            </div>
+            
+            <!-- Sem despesas -->
+            <div v-else-if="despesas.length === 0" class="despesas-empty">
+              <FileText class="empty-icon" />
+              <p>Nenhuma despesa encontrada para este parlamentar</p>
+            </div>
+            
+            <!-- Despesas carregadas -->
+            <div v-else class="despesas-content">
+              <!-- Resumo Estatístico -->
+              <div class="despesas-stats">
+                <div class="stat-card">
+                  <div class="stat-icon total">
+                    <DollarSign class="icon" />
+                  </div>
+                  <div class="stat-info">
+                    <p class="stat-label">Total Gasto</p>
+                    <p class="stat-value">{{ formatCurrency(totalDespesas) }}</p>
+                  </div>
+                </div>
+                
+                <div class="stat-card">
+                  <div class="stat-icon average">
+                    <TrendingUp class="icon" />
+                  </div>
+                  <div class="stat-info">
+                    <p class="stat-label">Média Mensal</p>
+                    <p class="stat-value">{{ formatCurrency(mediaGastoMensal) }}</p>
+                  </div>
+                </div>
+                
+                <div class="stat-card">
+                  <div class="stat-icon count">
+                    <FileText class="icon" />
+                  </div>
+                  <div class="stat-info">
+                    <p class="stat-label">Total de Despesas</p>
+                    <p class="stat-value">{{ despesas.length }}</p>
+                  </div>
+                </div>
+                
+                <div v-if="maiorDespesa" class="stat-card">
+                  <div class="stat-icon highest">
+                    <TrendingUp class="icon" />
+                  </div>
+                  <div class="stat-info">
+                    <p class="stat-label">Maior Despesa</p>
+                    <p class="stat-value">{{ formatCurrency(maiorDespesa.valor) }}</p>
+                    <p class="stat-detail">{{ maiorDespesa.tipo_despesa }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Despesas por Ano -->
+              <div class="despesas-section">
+                <h3 class="subsection-title">
+                  <Calendar class="subsection-icon" />
+                  Gastos por Ano
+                </h3>
+                <div class="year-grid">
+                  <div v-for="ano in despesasPorAno" :key="ano.ano" class="year-card">
+                    <div class="year-header">
+                      <span class="year-number">{{ ano.ano }}</span>
+                      <span class="year-total">{{ formatCurrency(ano.total) }}</span>
+                    </div>
+                    <div class="year-bar">
+                      <div 
+                        class="year-progress" 
+                        :style="{ width: `${(ano.total / totalDespesas) * 100}%` }"
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Despesas por Tipo -->
+              <div class="despesas-section">
+                <h3 class="subsection-title">
+                  <BarChart3 class="subsection-icon" />
+                  Despesas por Categoria
+                </h3>
+                <div class="tipo-grid">
+                  <div v-for="tipo in despesasPorTipo.slice(0, 8)" :key="tipo.tipo" class="tipo-card">
+                    <div class="tipo-header">
+                      <h4 class="tipo-name">{{ tipo.tipo }}</h4>
+                      <span class="tipo-total">{{ formatCurrency(tipo.total) }}</span>
+                    </div>
+                    <div class="tipo-details">
+                      <span class="tipo-count">{{ tipo.quantidade }} despesa{{ tipo.quantidade > 1 ? 's' : '' }}</span>
+                      <span class="tipo-average">Média: {{ formatCurrency(tipo.total / tipo.quantidade) }}</span>
+                    </div>
+                    <div class="tipo-bar">
+                      <div 
+                        class="tipo-progress" 
+                        :style="{ width: `${(tipo.total / totalDespesas) * 100}%` }"
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div v-if="despesasPorTipo.length > 8" class="show-more">
+                  <p class="show-more-text">
+                    E mais {{ despesasPorTipo.length - 8 }} categoria{{ despesasPorTipo.length - 8 > 1 ? 's' : '' }} de despesas
+                  </p>
+                </div>
+              </div>
+
+              <!-- Despesas Recentes -->
+              <div class="despesas-section">
+                <h3 class="subsection-title">
+                  <FileText class="subsection-icon" />
+                  Despesas Recentes
+                </h3>
+                <div class="despesas-list">
+                  <div v-for="despesa in despesas.slice(0, 10)" :key="`${despesa.ano}-${despesa.mes}-${despesa.tipo_despesa}-${despesa.valor}`" class="despesa-item">
+                    <div class="despesa-info">
+                      <h4 class="despesa-tipo">{{ despesa.tipo_despesa }}</h4>
+                      <p class="despesa-periodo">{{ formatMonth(despesa.mes) }} de {{ despesa.ano }}</p>
+                    </div>
+                    <div class="despesa-valor">
+                      <span class="valor">{{ formatCurrency(despesa.valor) }}</span>
+                      <a 
+                        v-if="despesa.url_documento" 
+                        :href="despesa.url_documento" 
+                        target="_blank"
+                        class="documento-link"
+                        title="Ver documento"
+                      >
+                        <ExternalLink class="link-icon" />
+                      </a>
+                    </div>
+                  </div>
+                </div>
+                
+                <div v-if="despesas.length > 10" class="show-more">
+                  <p class="show-more-text">
+                    E mais {{ despesas.length - 10 }} despesa{{ despesas.length - 10 > 1 ? 's' : '' }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Fontes -->
           <div class="sources-section">
             <div class="sources-content">
@@ -175,10 +335,18 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { User, ArrowLeft, Building, Info, ExternalLink, BarChart3 } from 'lucide-vue-next'
+import { User, ArrowLeft, Building, Info, ExternalLink, BarChart3, DollarSign, TrendingUp, Calendar, FileText } from 'lucide-vue-next'
 import AppHeader from '../components/AppHeader.vue'
 import AppFooter from '../components/AppFooter.vue'
-import { useMockData } from '../composables/useMockData'
+
+// Interface para as despesas do parlamentar
+interface DespesaParlamentar {
+  ano: number
+  mes: number
+  tipo_despesa: string
+  valor: number
+  url_documento?: string
+}
 
 // Interface para os dados do parlamentar da API
 interface ParlamentarAPI {
@@ -191,7 +359,6 @@ interface ParlamentarAPI {
   escolaridade?: string
   municipio_nascimento?: string
   uf_nascimento?: string
-  uf: string
   sigla_partido?: string
   email?: string
   foto?: string
@@ -205,12 +372,36 @@ interface ParlamentarCompleto extends ParlamentarAPI {
 }
 
 const route = useRoute()
-const { parlamentares } = useMockData()
 
 // Estado para os dados do parlamentar
 const parlamentarAPI = ref<ParlamentarAPI | null>(null)
+const despesas = ref<DespesaParlamentar[]>([])
 const isLoading = ref(false)
+const isLoadingDespesas = ref(false)
 const error = ref<string | null>(null)
+const errorDespesas = ref<string | null>(null)
+
+// Função para buscar despesas do parlamentar
+const fetchDespesas = async (id: number) => {
+  isLoadingDespesas.value = true
+  errorDespesas.value = null
+  
+  try {
+    const response = await fetch(`http://localhost:8000/api/deputados/${id}/despesas`)
+    if (!response.ok) {
+      throw new Error('Erro ao buscar despesas')
+    }
+    
+    const data = await response.json()
+    despesas.value = data.despesas || []
+  } catch (err: any) {
+    console.error('Erro ao buscar despesas:', err)
+    errorDespesas.value = err.message
+    despesas.value = []
+  } finally {
+    isLoadingDespesas.value = false
+  }
+}
 
 // Função para buscar dados do parlamentar específico da API
 const fetchParlamentar = async (id: number) => {
@@ -225,6 +416,9 @@ const fetchParlamentar = async (id: number) => {
     
     const data = await response.json()
     parlamentarAPI.value = data
+    
+    // Buscar despesas após carregar os dados do parlamentar
+    await fetchDespesas(id)
   } catch (err: any) {
     console.error('Erro ao buscar parlamentar:', err)
     error.value = err.message
@@ -234,20 +428,65 @@ const fetchParlamentar = async (id: number) => {
   }
 }
 
-// Computed para combinar dados da API com dados mockados
+// Computed para dados do parlamentar direto da API
 const parlamentar = computed((): ParlamentarCompleto | null => {
   if (!parlamentarAPI.value) return null
-  
-  // Tentar encontrar dados complementares nos dados mockados
-  const dadosMock = parlamentares.value.find(p => Number(p.id) === parlamentarAPI.value!.id)
   
   return {
     ...parlamentarAPI.value,
     nome: parlamentarAPI.value.nome_parlamentar || parlamentarAPI.value.nome_civil,
     partido: parlamentarAPI.value.sigla_partido || 'S/P',
-    estado: parlamentarAPI.value.uf,
+    estado: parlamentarAPI.value.uf_nascimento || 'N/A',
     foto: parlamentarAPI.value.foto || `https://www.camara.leg.br/internet/deputado/bandep/${parlamentarAPI.value.id}.jpg`
   }
+})
+
+// Computed para análise das despesas
+const totalDespesas = computed(() => {
+  return despesas.value.reduce((total, despesa) => total + despesa.valor, 0)
+})
+
+const despesasPorTipo = computed(() => {
+  const agrupadas = despesas.value.reduce((acc, despesa) => {
+    if (!acc[despesa.tipo_despesa]) {
+      acc[despesa.tipo_despesa] = { total: 0, quantidade: 0 }
+    }
+    acc[despesa.tipo_despesa].total += despesa.valor
+    acc[despesa.tipo_despesa].quantidade += 1
+    return acc
+  }, {} as Record<string, { total: number; quantidade: number }>)
+  
+  return Object.entries(agrupadas)
+    .map(([tipo, dados]) => ({ tipo, ...dados }))
+    .sort((a, b) => b.total - a.total)
+})
+
+const despesasPorAno = computed(() => {
+  const agrupadas = despesas.value.reduce((acc, despesa) => {
+    if (!acc[despesa.ano]) {
+      acc[despesa.ano] = 0
+    }
+    acc[despesa.ano] += despesa.valor
+    return acc
+  }, {} as Record<number, number>)
+  
+  return Object.entries(agrupadas)
+    .map(([ano, total]) => ({ ano: parseInt(ano), total }))
+    .sort((a, b) => b.ano - a.ano)
+})
+
+const mediaGastoMensal = computed(() => {
+  if (despesas.value.length === 0) return 0
+  
+  const mesesUnicos = new Set(despesas.value.map(d => `${d.ano}-${d.mes}`))
+  return totalDespesas.value / mesesUnicos.size
+})
+
+const maiorDespesa = computed(() => {
+  if (despesas.value.length === 0) return null
+  return despesas.value.reduce((maior, atual) => 
+    atual.valor > maior.valor ? atual : maior
+  )
 })
 
 // Buscar dados quando o componente for montado ou quando o ID mudar
@@ -278,6 +517,21 @@ const formatDate = (dateString: string) => {
   } catch {
     return 'Data inválida'
   }
+}
+
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  }).format(value)
+}
+
+const formatMonth = (mes: number) => {
+  const meses = [
+    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+  ]
+  return meses[mes - 1] || `Mês ${mes}`
 }
 
 const calcularIdade = (dateString: string) => {
@@ -743,5 +997,380 @@ const calcularIdade = (dateString: string) => {
 .btn-icon {
   width: 1rem;
   height: 1rem;
+}
+
+/* ======================
+   DESPESAS SECTION 
+   ====================== */
+.despesas-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 2rem;
+  color: var(--color-gray-600);
+}
+
+.loading-spinner {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 2px solid var(--color-gray-200);
+  border-top: 2px solid var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.despesas-error {
+  padding: 1rem;
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 0.5rem;
+  color: rgb(185, 28, 28);
+  text-align: center;
+}
+
+.despesas-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem;
+  color: var(--color-gray-600);
+}
+
+.empty-icon {
+  width: 3rem;
+  height: 3rem;
+  color: var(--color-gray-400);
+}
+
+.despesas-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Stats Cards */
+.despesas-stats {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .despesas-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .despesas-stats {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: 0.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.5rem;
+  flex-shrink: 0;
+}
+
+.stat-icon.total {
+  background-color: rgba(37, 99, 235, 0.1);
+  color: var(--color-primary);
+}
+
+.stat-icon.average {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: rgb(16, 185, 129);
+}
+
+.stat-icon.count {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: rgb(245, 158, 11);
+}
+
+.stat-icon.highest {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: rgb(239, 68, 68);
+}
+
+.stat-icon .icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.stat-info {
+  flex: 1;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: var(--color-gray-600);
+  margin-bottom: 0.25rem;
+  margin-top: 0;
+}
+
+.stat-value {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-gray-900);
+  margin: 0;
+}
+
+.stat-detail {
+  font-size: 0.75rem;
+  color: var(--color-gray-500);
+  margin-top: 0.25rem;
+  margin-bottom: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Subsections */
+.despesas-section {
+  margin-top: 1rem;
+}
+
+.subsection-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-gray-900);
+  margin-bottom: 1rem;
+}
+
+.subsection-icon {
+  width: 1rem;
+  height: 1rem;
+  color: var(--color-primary);
+}
+
+/* Year Grid */
+.year-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 768px) {
+  .year-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .year-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.year-card {
+  padding: 1rem;
+  background: var(--color-gray-50);
+  border: 1px solid var(--color-gray-200);
+  border-radius: 0.5rem;
+}
+
+.year-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.year-number {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-gray-900);
+}
+
+.year-total {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-primary);
+}
+
+.year-bar {
+  height: 0.25rem;
+  background-color: var(--color-gray-200);
+  border-radius: 0.125rem;
+  overflow: hidden;
+}
+
+.year-progress {
+  height: 100%;
+  background-color: var(--color-primary);
+  transition: width 0.3s ease;
+}
+
+/* Tipo Grid */
+.tipo-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 768px) {
+  .tipo-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.tipo-card {
+  padding: 1rem;
+  background: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: 0.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.tipo-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+  gap: 0.5rem;
+}
+
+.tipo-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-gray-900);
+  margin: 0;
+  flex: 1;
+  line-height: 1.25;
+}
+
+.tipo-total {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  white-space: nowrap;
+}
+
+.tipo-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.tipo-count,
+.tipo-average {
+  font-size: 0.75rem;
+  color: var(--color-gray-600);
+}
+
+.tipo-bar {
+  height: 0.25rem;
+  background-color: var(--color-gray-200);
+  border-radius: 0.125rem;
+  overflow: hidden;
+}
+
+.tipo-progress {
+  height: 100%;
+  background-color: var(--color-primary);
+  transition: width 0.3s ease;
+}
+
+/* Despesas List */
+.despesas-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.despesa-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: var(--color-gray-50);
+  border: 1px solid var(--color-gray-200);
+  border-radius: 0.5rem;
+  gap: 1rem;
+}
+
+.despesa-info {
+  flex: 1;
+}
+
+.despesa-tipo {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-gray-900);
+  margin: 0 0 0.25rem 0;
+  line-height: 1.25;
+}
+
+.despesa-periodo {
+  font-size: 0.75rem;
+  color: var(--color-gray-600);
+  margin: 0;
+}
+
+.despesa-valor {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.valor {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.documento-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--color-gray-500);
+  transition: color 0.2s ease;
+  text-decoration: none;
+}
+
+.documento-link:hover {
+  color: var(--color-primary);
+}
+
+.documento-link .link-icon {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+/* Show More */
+.show-more {
+  margin-top: 0.75rem;
+  text-align: center;
+}
+
+.show-more-text {
+  font-size: 0.875rem;
+  color: var(--color-gray-600);
+  margin: 0;
 }
 </style>
