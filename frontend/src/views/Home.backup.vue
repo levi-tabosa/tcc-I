@@ -122,17 +122,7 @@
               </p>
             </a>
 
-            <a href="/comparar" class="quick-link-card">
-              <div class="quick-link-header">
-                <div class="quick-link-icon">
-                  <GitCompare />
-                </div>
-                <h3>Comparar</h3>
-              </div>
-              <p class="quick-link-description">
-                Compare até 3 parlamentares lado a lado em diversos indicadores
-              </p>
-            </a>
+            <!-- link de comparar removido -->
 
             <a href="/anomalias" class="quick-link-card">
               <div class="quick-link-header">
@@ -181,7 +171,7 @@
 import { ref, watch, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { 
-  Search, DollarSign, Users, TrendingUp, BarChart3, GitCompare, AlertTriangle, FileText
+  Search, DollarSign, Users, TrendingUp, BarChart3, AlertTriangle, FileText
 } from 'lucide-vue-next'
 import AppHeader from '../components/AppHeader.vue'
 import AppFooter from '../components/AppFooter.vue'

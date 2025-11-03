@@ -316,13 +316,6 @@
               <ArrowLeft class="btn-icon" />
               Voltar para lista
             </a>
-            <a 
-              :href="`/comparar?ids=${parlamentar.id}`"
-              class="btn btn-primary"
-            >
-              <BarChart3 class="btn-icon" />
-              Comparar com outros
-            </a>
           </div>
         </div>
       </div>

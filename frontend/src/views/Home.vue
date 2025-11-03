@@ -123,17 +123,7 @@
               </p>
             </a>
 
-            <a href="/comparar" class="quick-link-card">
-              <div class="quick-link-header">
-                <div class="quick-link-icon">
-                  <GitCompare />
-                </div>
-                <h3>Comparar</h3>
-              </div>
-              <p class="quick-link-description">
-                Compare até 3 parlamentares lado a lado em diversos indicadores
-              </p>
-            </a>
+            <!-- link de comparar removido -->
 
             <a href="/anomalias" class="quick-link-card">
               <div class="quick-link-header">
@@ -181,7 +171,7 @@
 import { ref, watch, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { 
-  Search, DollarSign, Users, TrendingUp, BarChart3, GitCompare, AlertTriangle, FileText
+  Search, DollarSign, Users, TrendingUp, BarChart3, AlertTriangle, FileText
 } from 'lucide-vue-next'
 import AppHeader from '../components/AppHeader.vue'
 import AppFooter from '../components/AppFooter.vue'
@@ -615,22 +605,17 @@ onUnmounted(() => {
 
 .quick-links-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 1.5rem;
   max-width: 1200px;
   margin: 0 auto;
+  justify-items: center; /* centraliza os cards quando há menos colunas */
 }
 
-@media (min-width: 768px) {
-  .quick-links-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (min-width: 1024px) {
-  .quick-links-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
+/* garante que os cartões não estiquem demais e fiquem centrados */
+.quick-link-card {
+  width: 100%;
+  max-width: 360px;
 }
 
 .quick-link-card {

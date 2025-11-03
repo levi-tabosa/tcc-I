@@ -5,7 +5,7 @@
       <!-- Header -->
       <div class="mb-8">
         <h1 class="text-4xl font-bold text-foreground mb-2">Parlamentares</h1>
-        <p class="text-muted-foreground">Explore e compare dados de {{ mockData.parlamentares.length }} parlamentares</p>
+  <p class="text-muted-foreground">Explore dados de {{ mockData.parlamentares.length }} parlamentares</p>
       </div>
 
       <!-- Filters and Search -->
@@ -77,31 +77,7 @@
         </div>
       </div>
 
-      <!-- Comparison Bar -->
-      <div v-if="selectedForComparison.size > 0" class="card mb-6 border-primary">
-        <div class="card-content pt-6">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <Users class="h-5 w-5 text-primary" />
-              <span class="font-medium">
-                {{ selectedForComparison.size }} parlamentar(es) selecionado(s) para comparação
-              </span>
-            </div>
-            <div class="flex gap-2">
-              <button class="btn btn-outline btn-sm" @click="clearComparison">
-                Limpar
-              </button>
-              <button 
-                class="btn btn-primary btn-sm" 
-                :disabled="selectedForComparison.size < 2"
-                @click="compareSelected"
-              >
-                Comparar
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <!-- comparação removida -->
 
       <!-- Results Count -->
       <div class="mb-4">
@@ -128,13 +104,7 @@
                 </RouterLink>
                 <p class="text-sm text-muted-foreground">{{ parlamentar.cargo }}</p>
               </div>
-              <input
-                type="checkbox"
-                :checked="selectedForComparison.has(parlamentar.id)"
-                @change="toggleComparison(parlamentar.id)"
-                :disabled="!selectedForComparison.has(parlamentar.id) && selectedForComparison.size >= 3"
-                class="checkbox"
-              />
+              <!-- seleção para comparação removida -->
             </div>
 
             <div class="flex gap-2 mb-4">
@@ -199,7 +169,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { RouterLink } from 'vue-router'
-import { Search, TrendingUp, TrendingDown, Users } from 'lucide-vue-next'
+import { Search, TrendingUp, TrendingDown } from 'lucide-vue-next'
 import AppHeader from '../components/AppHeader.vue'
 import { useMockData } from '../composables/useMockData'
 
@@ -213,7 +183,7 @@ const partidoFilter = ref('Todos')
 const estadoFilter = ref('Todos')
 const sortField = ref<SortField>('nome')
 const sortOrder = ref<SortOrder>('asc')
-const selectedForComparison = ref(new Set<string>())
+/* comparação removida: seleção para comparar parlamentares */
 
 const filteredAndSorted = computed(() => {
   let result = [...mockData.parlamentares.value]
@@ -264,27 +234,7 @@ const toggleSort = (field: SortField) => {
   }
 }
 
-const toggleComparison = (id: string) => {
-  const newSet = new Set(selectedForComparison.value)
-  if (newSet.has(id)) {
-    newSet.delete(id)
-  } else {
-    if (newSet.size < 3) {
-      newSet.add(id)
-    }
-  }
-  selectedForComparison.value = newSet
-}
-
-const clearComparison = () => {
-  selectedForComparison.value = new Set()
-}
-
-const compareSelected = () => {
-  const ids = Array.from(selectedForComparison.value).join(',')
-  // Navigation logic for comparison page
-  console.log('Comparar parlamentares:', ids)
-}
+// Funções de comparação removidas (feature descartada)
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', {
