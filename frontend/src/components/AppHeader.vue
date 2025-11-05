@@ -1,58 +1,15 @@
 <template>
-  <header class="header">
+  <header class="mvp-header">
     <div class="container">
       <nav class="nav">
-        <RouterLink to="/" class="nav-brand">
-          <Shield class="nav-icon" />
-          <span class="nav-title">
-            Fiscaliza Brasil
-          </span>
+        <RouterLink to="/" class="brand">
+          Transparência BR
         </RouterLink>
         
-        <!-- Desktop Navigation -->
         <div class="nav-links">
-          <RouterLink to="/parlamentares" class="nav-link">
-            Parlamentares
-          </RouterLink>
-          <RouterLink to="/dashboard" class="nav-link">
-           Dashboard
-          </RouterLink>
-          <RouterLink to="/metodologia" class="nav-link">
-         Metodologia
-          </RouterLink>
-          <RouterLink to="/contato" class="nav-link">
-            Contato
-          </RouterLink>
-        </div>
-
-        <!-- Mobile Menu Button -->
-        <button 
-          class="mobile-menu-button"
-          @click="toggleMobileMenu"
-          aria-label="Menu de navegação"
-        >
-          <Menu class="menu-icon" />
-        </button>
-
-        <!-- Mobile Menu -->
-        <div 
-          v-if="isMobileMenuOpen"
-          class="mobile-menu"
-        >
-          <div class="mobile-menu-content">
-            <RouterLink to="/" class="mobile-nav-link" @click="closeMobileMenu">
-              Início
-            </RouterLink>
-            <RouterLink to="/parlamentares" class="mobile-nav-link" @click="closeMobileMenu">
-              Parlamentares
-            </RouterLink>
-            <RouterLink to="/dashboard" class="mobile-nav-link" @click="closeMobileMenu">
-              Dashboard
-            </RouterLink>
-            <RouterLink to="/sobre" class="mobile-nav-link" @click="closeMobileMenu">
-              Sobre
-            </RouterLink>
-          </div>
+          <RouterLink to="/" class="nav-link">Início</RouterLink>
+          <RouterLink to="/parlamentares" class="nav-link">Deputados</RouterLink>
+          <RouterLink to="/dashboard" class="nav-link">Dashboard</RouterLink>
         </div>
       </nav>
     </div>
@@ -60,146 +17,86 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { Shield, Menu } from 'lucide-vue-next'
-
-const isMobileMenuOpen = ref(false)
-
-const toggleMobileMenu = () => {
-  isMobileMenuOpen.value = !isMobileMenuOpen.value
-}
-
-const closeMobileMenu = () => {
-  isMobileMenuOpen.value = false
-}
+import { RouterLink } from 'vue-router'
 </script>
 
 <style scoped>
-.header {
+.mvp-header {
+  background: white;
+  border-bottom: 1px solid #eee;
   position: sticky;
   top: 0;
-  z-index: 50;
-  background: var(--color-white);
-  border-bottom: 1px solid var(--color-gray-200);
-  box-shadow: var(--shadow-sm);
+  z-index: 100;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
 }
 
 .nav {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  height: 4rem;
-}
-
-.nav-brand {
-  display: flex;
   align-items: center;
-  gap: 0.5rem;
-  text-decoration: none;
-  color: inherit;
-  transition: opacity 0.2s ease;
+  height: 60px;
 }
 
-.nav-brand:hover {
-  opacity: 0.8;
-}
-
-.nav-icon {
-  width: 1.5rem;
-  height: 1.5rem;
-  color: var(--color-primary);
-}
-
-.nav-title {
-  font-size: 1.25rem;
+.brand {
+  font-size: 1.3rem;
   font-weight: 700;
-  color: var(--color-gray-900);
+  color: #007bff;
+  text-decoration: none;
+}
+
+.brand:hover {
+  color: #0056b3;
 }
 
 .nav-links {
-  display: none;
-  gap: 2rem;
-}
-
-@media (min-width: 768px) {
-  .nav-links {
-    display: flex;
-  }
+  display: flex;
+  gap: 30px;
 }
 
 .nav-link {
-  color: var(--color-gray-600);
-  font-weight: 500;
+  color: #333;
   text-decoration: none;
-  transition: color 0.2s ease;
-  padding: 0.5rem;
+  font-weight: 500;
+  padding: 8px 0;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
 }
 
-.nav-link:hover,
+.nav-link:hover {
+  color: #007bff;
+  border-bottom-color: #007bff;
+}
+
 .nav-link.router-link-active {
-  color: var(--color-primary);
+  color: #007bff;
+  border-bottom-color: #007bff;
 }
 
-.mobile-menu-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-}
-
-@media (min-width: 768px) {
-  .mobile-menu-button {
-    display: none;
+@media (max-width: 768px) {
+  .nav-links {
+    gap: 20px;
+  }
+  
+  .nav-link {
+    font-size: 0.9rem;
   }
 }
 
-.menu-icon {
-  width: 1.5rem;
-  height: 1.5rem;
-  color: var(--color-gray-600);
-}
-
-.mobile-menu {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  background: var(--color-white);
-  border-bottom: 1px solid var(--color-gray-200);
-  box-shadow: var(--shadow-lg);
-}
-
-@media (min-width: 768px) {
-  .mobile-menu {
-    display: none;
+@media (max-width: 640px) {
+  .nav {
+    flex-direction: column;
+    height: auto;
+    padding: 15px 0;
   }
-}
-
-.mobile-menu-content {
-  display: flex;
-  flex-direction: column;
-  padding: 1rem;
-}
-
-.mobile-nav-link {
-  padding: 0.75rem 0;
-  color: var(--color-gray-600);
-  text-decoration: none;
-  font-weight: 500;
-  border-bottom: 1px solid var(--color-gray-100);
-}
-
-.mobile-nav-link:last-child {
-  border-bottom: none;
-}
-
-.mobile-nav-link:hover,
-.mobile-nav-link.router-link-active {
-  color: var(--color-primary);
+  
+  .nav-links {
+    margin-top: 10px;
+    gap: 15px;
+  }
 }
 </style>
