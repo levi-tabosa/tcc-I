@@ -3,6 +3,8 @@ import Home from '../views/Home.vue'
 import Perfil from '../views/Perfil.vue'
 import Parlamentares from '../views/Parlamentares.vue'
 import Dashboard from '../views/Dashboard.vue'
+import Metodologia from '../views/Metodologia.vue'
+import Contato from '../views/Contato.vue'
 
 const routes = [
   {
@@ -24,6 +26,16 @@ const routes = [
     path: '/dashboard',
     name: 'Dashboard',
     component: Dashboard
+  },
+  {
+    path: '/metodologia',
+    name: 'Metodologia',
+    component: Metodologia
+  },
+  {
+    path: '/contato',
+    name: 'Contato',
+    component: Contato
   }
 ]
 
