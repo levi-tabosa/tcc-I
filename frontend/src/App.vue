@@ -1,15 +1,9 @@
 <script setup lang="ts">
-// Não precisamos mais importar nenhum componente de página aqui!
-// O roteador cuidará disso.
+import AppHeader from '@/components/AppHeader.vue'
 </script>
 
 <template>
-  <!-- 
-    Pense no <router-view /> como um "espaço reservado" mágico.
-    O Vue Router irá automaticamente colocar o componente da rota atual aqui.
-    - Se a URL for "/", ele coloca <Home.vue> aqui.
-    - Se a URL for "/perfil/204554", ele coloca <Perfil.vue> aqui.
-  -->
+  <AppHeader />
   <router-view />
 </template>
 

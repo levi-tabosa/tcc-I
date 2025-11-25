@@ -4,7 +4,6 @@ Replace React/Next content with a Vue Single File Component implementing the sam
 
 <template>
   <div class="page-wrapper">
-    <AppHeader />
     
     <main class="main-content">
       <!-- Hero Section -->
@@ -316,7 +315,6 @@ Replace React/Next content with a Vue Single File Component implementing the sam
 */
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
-import AppHeader from '@/components/AppHeader.vue'
 import { Database, Shield, Code, Calendar, GitBranch, ExternalLink } from 'lucide-vue-next'
 
 const now = new Date()

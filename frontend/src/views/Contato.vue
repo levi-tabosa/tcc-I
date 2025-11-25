@@ -1,6 +1,5 @@
 <template>
   <div class="min-h-screen bg-gradient-to-b from-slate-50 to-white">
-    <AppHeader />
     
     <!-- Success State -->
     <div v-if="submitted" class="container mx-auto px-4 py-8 max-w-2xl">
@@ -270,7 +269,6 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { RouterLink } from 'vue-router'
-import AppHeader from '@/components/AppHeader.vue'
 import { CheckCircle, Mail, MessageSquare, AlertCircle } from 'lucide-vue-next'
 import { computed } from 'vue'
 

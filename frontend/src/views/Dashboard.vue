@@ -1,6 +1,5 @@
 <template>
   <div class="page-wrapper">
-    <AppHeader />
     
     <main class="main-content">
       <!-- Dashboard Header -->
@@ -177,9 +176,6 @@
               Acesse perfis individuais dos parlamentares ou explore outras análises detalhadas
             </p>
             <div class="cta-actions">
-              <router-link to="/parlamentares" class="btn btn-primary">
-                Ver Parlamentares
-              </router-link>
               <router-link to="/metodologia" class="btn btn-secondary">
                 Metodologia
               </router-link>
@@ -195,13 +191,12 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick } from 'vue'
-import { useMockData } from '@/composables/useMockData'
-import AppHeader from '@/components/AppHeader.vue'
 import AppFooter from '@/components/AppFooter.vue'
 import StatCard from '@/components/StatCard.vue'
 import { BarChart3, TrendingUp, Users, DollarSign } from 'lucide-vue-next'
 
-const { parlamentares, isLoading, error } = useMockData()
+// Minimal reactive list of parlamentares (keep for computed values)
+const parlamentares = ref<any[]>([])
 
 // Chart refs
 const gastosCategoria = ref<HTMLElement>()
@@ -331,8 +326,13 @@ const initCoesaoPartidaria = () => {
   // Chart rendered with CSS bars
 }
 
-onMounted(async () => {
-  // No chart initialization needed
+onMounted(() => {
+  // Inicializar gráficos locais (mock data)
+  initGastosCategoriaChart()
+  initGastosMensaisChart()
+  initTopGastadoresChart()
+  initGastosEstadoChart()
+  initCoesaoPartidaria()
 })
 </script>
 

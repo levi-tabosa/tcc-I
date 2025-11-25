@@ -22,7 +22,7 @@
             <RouterLink to="/" class="footer-link">
               Início
             </RouterLink>
-            <RouterLink to="/parlamentares" class="footer-link">
+            <RouterLink to="/" class="footer-link">
               Parlamentares
             </RouterLink>
             <RouterLink to="/dashboard" class="footer-link">

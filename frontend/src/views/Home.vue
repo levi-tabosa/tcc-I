@@ -1,6 +1,5 @@
 <template>
   <div class="page-wrapper">
-    <AppHeader />
     
     <main class="main-content">
       <!-- Hero Section -->
@@ -99,7 +98,7 @@
         <div class="container">
           <h2 class="section-title">Acesso Rápido</h2>
           <div class="quick-links-grid">
-            <a href="/parlamentares" class="quick-link-card">
+            <a href="/dashboard" class="quick-link-card">
               <div class="quick-link-header">
                 <div class="quick-link-icon">
                   <Users />
@@ -173,16 +172,26 @@ import { useRouter } from 'vue-router'
 import { 
   Search, DollarSign, Users, TrendingUp, BarChart3, AlertTriangle, FileText
 } from 'lucide-vue-next'
-import AppHeader from '../components/AppHeader.vue'
 import AppFooter from '../components/AppFooter.vue'
 import StatCard from '../components/StatCard.vue'
-import { useMockData } from '../composables/useMockData'
-
 // --- Interface para Tipagem dos Resultados da Busca ---
 interface SearchResult {
   id: number;
   nome_civil: string;
   uf: string;
+}
+
+// Interface para Parlamentar
+interface Parlamentar {
+  id: string
+  nome: string
+  cargo: string
+  uf: string
+  estado: string
+  partido: string
+  gastoTotal: number
+  presenca: number
+  fidelidadePartidaria: number
 }
 
 // --- Variáveis Reativas ---
@@ -202,8 +211,56 @@ const showSuggestions = computed(() => {
   return searchQuery.value.length >= 2 && (isLoading.value || searchResults.value.length > 0);
 });
 
-// Dados dos parlamentares do backend
-const { parlamentares } = useMockData()
+// Estados reativos para dados dos parlamentares
+const parlamentares = ref<Parlamentar[]>([])
+const parlamentaresLoading = ref(false)
+const parlamentaresError = ref<string | null>(null)
+
+// Lista de partidos brasileiros
+const partidos = [
+  'Todos', 'PT', 'PSDB', 'PL', 'PP', 'MDB', 'PSD', 'REPUBLICANOS', 'UNIÃO', 'PSB', 
+  'PDT', 'PSOL', 'PODE', 'AVANTE', 'PCdoB', 'CIDADANIA', 'PSC', 'PATRIOTA', 'PROS', 'SOLIDARIEDADE'
+]
+
+// Lista de estados brasileiros
+const estados = [
+  'Todos', 'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 
+  'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
+]
+
+// Função para buscar dados reais do backend
+const fetchParlamentares = async () => {
+  parlamentaresLoading.value = true
+  parlamentaresError.value = null
+  
+  try {
+    const response = await fetch('http://localhost:8000/api/deputados/')
+    if (!response.ok) {
+      throw new Error('Falha ao carregar dados dos parlamentares')
+    }
+    
+    const data = await response.json()
+    
+    // Transformar os dados do backend para o formato esperado
+    parlamentares.value = data.map((deputado: any) => ({
+      id: deputado.id.toString(),
+      nome: deputado.nome_civil,
+      cargo: 'Deputado Federal',
+      uf: deputado.uf,
+      estado: deputado.uf,
+      partido: deputado.sigla_partido || 'S/P',
+      gastoTotal: 0,
+      presenca: 0,
+      fidelidadePartidaria: 0
+    }))
+  } catch (err: any) {
+    console.error('Erro ao carregar parlamentares:', err)
+    parlamentaresError.value = err.message
+    parlamentares.value = []
+  } finally {
+    parlamentaresLoading.value = false
+  }
+}
 
 // Cálculos dos indicadores
 const totalGastos = computed(() => {
@@ -352,8 +409,10 @@ const handleClickOutside = (event: MouseEvent) => {
   }
 };
 
-onMounted(() => {
+onMounted(async () => {
   document.addEventListener('click', handleClickOutside);
+  // Carregar dados dos parlamentares
+  await fetchParlamentares();
 });
 
 onUnmounted(() => {

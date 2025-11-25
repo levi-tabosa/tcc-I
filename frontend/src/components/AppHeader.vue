@@ -11,9 +11,6 @@
         
         <!-- Desktop Navigation -->
         <div class="nav-links">
-          <RouterLink to="/parlamentares" class="nav-link">
-            Parlamentares
-          </RouterLink>
           <RouterLink to="/dashboard" class="nav-link">
            Dashboard
           </RouterLink>
@@ -42,9 +39,6 @@
           <div class="mobile-menu-content">
             <RouterLink to="/" class="mobile-nav-link" @click="closeMobileMenu">
               Início
-            </RouterLink>
-            <RouterLink to="/parlamentares" class="mobile-nav-link" @click="closeMobileMenu">
-              Parlamentares
             </RouterLink>
             <RouterLink to="/dashboard" class="mobile-nav-link" @click="closeMobileMenu">
               Dashboard

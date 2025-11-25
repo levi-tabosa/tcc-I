@@ -1,6 +1,5 @@
 <template>
   <div class="min-h-screen flex flex-col bg-background">
-    <AppHeader />
     
     <main class="flex-1 py-8">
       <div class="container mx-auto px-4 max-w-6xl">
@@ -24,7 +23,7 @@
           <p class="text-muted-foreground mb-6">
             {{ error ? 'Ocorreu um erro ao carregar os dados' : 'O ID fornecido não corresponde a nenhum parlamentar' }}
           </p>
-          <a href="/parlamentares" class="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
+          <a href="/" class="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
             <ArrowLeft class="h-4 w-4" />
             Voltar para lista
           </a>
@@ -310,7 +309,7 @@
           <!-- Botões de Ação -->
           <div class="action-buttons">
             <a 
-              href="/parlamentares"
+              href="/"
               class="btn btn-secondary"
             >
               <ArrowLeft class="btn-icon" />
@@ -329,7 +328,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { User, ArrowLeft, Building, Info, ExternalLink, BarChart3, DollarSign, TrendingUp, Calendar, FileText } from 'lucide-vue-next'
-import AppHeader from '../components/AppHeader.vue'
+// AppHeader agora é importado globalmente em App.vue
 import AppFooter from '../components/AppFooter.vue'
 
 // Interface para as despesas do parlamentar

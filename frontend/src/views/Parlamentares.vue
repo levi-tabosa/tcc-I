@@ -1,6 +1,5 @@
 ﻿<template>
   <div class="page-wrapper">
-    <AppHeader />
     
     <main class="main-content">
       <!-- Header Section -->
@@ -94,21 +93,82 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import { Search, Users } from 'lucide-vue-next'
-import AppHeader from '../components/AppHeader.vue'
-import { useMockData } from '../composables/useMockData'
 
-const mockData = useMockData()
+// Interface para Parlamentar
+interface Parlamentar {
+  id: string
+  nome: string
+  cargo: string
+  uf: string
+  estado: string
+  partido: string
+  gastoTotal: number
+  presenca: number
+  fidelidadePartidaria: number
+}
+
+// Estados reativos para dados dos parlamentares
+const parlamentares = ref<Parlamentar[]>([])
+const isLoading = ref(false)
+const error = ref<string | null>(null)
+
+// Lista de partidos brasileiros
+const partidos = [
+  'Todos', 'PT', 'PSDB', 'PL', 'PP', 'MDB', 'PSD', 'REPUBLICANOS', 'UNIÃO', 'PSB', 
+  'PDT', 'PSOL', 'PODE', 'AVANTE', 'PCdoB', 'CIDADANIA', 'PSC', 'PATRIOTA', 'PROS', 'SOLIDARIEDADE'
+]
+
+// Lista de estados brasileiros
+const estados = [
+  'Todos', 'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 
+  'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
+]
+
+// Função para buscar dados reais do backend
+const fetchParlamentares = async () => {
+  isLoading.value = true
+  error.value = null
+  
+  try {
+    const response = await fetch('http://localhost:8000/api/deputados/')
+    if (!response.ok) {
+      throw new Error('Falha ao carregar dados dos parlamentares')
+    }
+    
+    const data = await response.json()
+    
+    // Transformar os dados do backend para o formato esperado
+    parlamentares.value = data.map((deputado: any) => ({
+      id: deputado.id.toString(),
+      nome: deputado.nome_civil,
+      cargo: 'Deputado Federal',
+      uf: deputado.uf,
+      estado: deputado.uf,
+      partido: deputado.sigla_partido || 'S/P',
+      gastoTotal: 0,
+      presenca: 0,
+      fidelidadePartidaria: 0
+    }))
+  } catch (err: any) {
+    console.error('Erro ao carregar parlamentares:', err)
+    error.value = err.message
+    parlamentares.value = []
+  } finally {
+    isLoading.value = false
+  }
+}
+
 const searchTerm = ref('')
 
 const filteredParlamentares = computed(() => {
   if (!searchTerm.value) {
-    return mockData.parlamentares.value
+    return parlamentares.value
   }
   
-  return mockData.parlamentares.value.filter((p) => 
+  return parlamentares.value.filter((p) => 
     p.nome.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
     p.partido.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
     p.estado.toLowerCase().includes(searchTerm.value.toLowerCase())
@@ -123,6 +183,11 @@ const formatCurrency = (value: number) => {
     maximumFractionDigits: 0
   }).format(value)
 }
+
+// Carregar dados automaticamente quando o componente for montado
+onMounted(async () => {
+  await fetchParlamentares()
+})
 </script>
 
 <style scoped>

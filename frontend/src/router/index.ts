@@ -1,7 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Home from '../views/Home.vue'
 import Perfil from '../views/Perfil.vue'
-import Parlamentares from '../views/Parlamentares.vue'
 import Dashboard from '../views/Dashboard.vue'
 import Metodologia from '../views/Metodologia.vue'
 import Contato from '../views/Contato.vue'
@@ -16,11 +15,6 @@ const routes = [
     path: '/perfil/:id',
     name: 'Perfil',
     component: Perfil
-  },
-  {
-    path: '/parlamentares',
-    name: 'Parlamentares',
-    component: Parlamentares
   },
   {
     path: '/dashboard',
