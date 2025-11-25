@@ -7,7 +7,7 @@
           <div class="footer-brand-header">
             <Shield class="footer-icon" />
             <span class="footer-brand-name">
-              Fiscaliza Brasil
+              De Olho no Congresso
             </span>
           </div>
           <p class="footer-brand-description">
@@ -53,7 +53,7 @@
 
       <div class="footer-bottom">
         <p class="footer-copyright">
-          © {{ new Date().getFullYear() }} Fiscaliza Brasil. Dados oficiais da Câmara dos Deputados e Senado Federal.
+          © {{ new Date().getFullYear() }} De Olho no Congresso. Dados oficiais da Câmara dos Deputados e Senado Federal.
         </p>
       </div>
     </div>
