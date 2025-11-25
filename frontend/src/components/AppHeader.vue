@@ -5,7 +5,7 @@
         <RouterLink to="/" class="nav-brand">
           <Shield class="nav-icon" />
           <span class="nav-title">
-            Fiscaliza Brasil
+            De Olho no Congresso
           </span>
         </RouterLink>
         
