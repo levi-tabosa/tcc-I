@@ -1,6 +1,5 @@
 <template>
   <div class="page-wrapper">
-    
     <main class="main-content">
       <!-- Dashboard Header -->
       <section class="dashboard-header-section">
@@ -15,7 +14,9 @@
       <!-- KPI Section -->
       <section class="kpis-section">
         <div class="container">
-          <div v-if="loading" class="text-center py-4">Carregando indicadores...</div>
+          <!-- Estado de Carregamento nos KPIs -->
+          <div v-if="loading" class="text-center py-4">Sincronizando indicadores...</div>
+          
           <div v-else class="stats-grid">
             <StatCard 
               title="Gastos Totais" 
@@ -50,8 +51,8 @@
         <div class="container">
           <div class="section-title">
             <h2>Análises Detalhadas</h2>
-            <p v-if="loading">Sincronizando dados oficiais...</p>
-            <p v-else>Visualizações baseadas em dados reais da Câmara</p>
+            <p v-if="loading">Buscando dados oficiais na base de dados...</p>
+            <p v-else>Visualizações baseadas em dados reais processados</p>
           </div>
           
           <div v-if="!loading" class="charts-grid">
@@ -59,7 +60,7 @@
             <div class="chart-card full-width">
               <div class="chart-header">
                 <h3 class="chart-title">Gastos por Categoria</h3>
-                <p class="chart-description">Distribuição das despesas parlamentares</p>
+                <p class="chart-description">Distribuição das despesas por tipo de serviço</p>
               </div>
               <div class="chart-content">
                 <div class="simple-chart">
@@ -77,11 +78,11 @@
               </div>
             </div>
 
-            <!-- Evolução Mensal -->
+            <!-- Evolução Mensal (Baseado na sua imagem de 12 meses) -->
             <div class="chart-card full-width">
               <div class="chart-header">
                 <h3 class="chart-title">Evolução Mensal de Gastos</h3>
-                <p class="chart-description">Série temporal dos últimos 12 meses</p>
+                <p class="chart-description">Série temporal dos últimos 12 meses registrados</p>
               </div>
               <div class="chart-content">
                 <div class="simple-chart">
@@ -103,7 +104,7 @@
             <div class="chart-card full-width">
               <div class="chart-header">
                 <h3 class="chart-title">Gastos por Estado</h3>
-                <p class="chart-description">Estados com maiores despesas acumuladas</p>
+                <p class="chart-description">Ranking de despesas acumuladas por UF</p>
               </div>
               <div class="chart-content">
                 <div class="simple-chart">
@@ -124,7 +125,7 @@
         </div>
       </section>
 
-      <!-- Call to Action Section -->
+      <!-- Call to Action -->
       <section class="cta-section">
         <div class="container">
           <div class="cta-content">
@@ -142,7 +143,6 @@
         </div>
       </section>
     </main>
-    
     <AppFooter />
   </div>
 </template>
@@ -157,71 +157,74 @@ import { BarChart3, TrendingUp, Users, DollarSign, Award } from 'lucide-vue-next
 const loading = ref(true)
 const totalGastos = ref(0)
 const totalParlamentares = ref(0)
-const presencaMedia = ref(0) // Você pode adicionar essa query no backend depois
-const fidelidadeMedia = ref(0) // Você pode adicionar essa query no backend depois
+const presencaMedia = ref(0)
+const fidelidadeMedia = ref(0)
 
 const gastosPorCategoria = ref<any[]>([])
 const gastosMensais = ref<any[]>([])
 const gastosPorEstado = ref<any[]>([])
 
-// --- LÓGICA DE BUSCA ---
-const fetchStats = async () => {
+// --- LÓGICA DE BUSCA DE DADOS ---
+const fetchDashboardData = async () => {
   loading.value = true
   try {
     const response = await fetch('http://localhost:8000/api/deputados/estatisticas/geral')
+    if (!response.ok) throw new Error('Falha ao buscar dados')
+    
     const data = await response.json()
 
-    // Mapeando KPIs
+    // 1. Preenchendo KPIs
     totalGastos.value = data.total_gastos
     totalParlamentares.value = data.total_parlamentares
-    
-    // Se o seu backend ainda não calcula presença/fidelidade global, mantemos um valor base ou 0
-    presencaMedia.value = 75.0 
-    fidelidadeMedia.value = 82.3
+    presencaMedia.value = data.presenca_media || 0
+    fidelidadeMedia.value = data.fidelidade_media || 0
 
-    // Mapeando Gráficos
+    // 2. Gráfico de Categorias
     gastosPorCategoria.value = data.gastos_por_categoria
+
+    // 3. Gráfico de Estados
     gastosPorEstado.value = data.gastos_por_estado
-    
-    // Formatando Gastos Mensais para exibição (Ex: 01/2024)
+
+    // 4. Evolução Mensal (Tratando a imagem que você mandou)
     const mesesNomes = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+    
+    // Invertemos a ordem (reverse) para que o mês 10/2024 apareça antes do mês 09/2025
     gastosMensais.value = data.gastos_por_mes.map((item: any) => ({
       label: `${mesesNomes[item.mes - 1]}/${item.ano}`,
       valor: item.valor
-    })).reverse() // Inverter para ordem cronológica (Jan -> Dez)
+    })).reverse()
 
   } catch (error) {
-    console.error("Erro ao carregar estatísticas:", error)
+    console.error("Erro na integração com backend:", error)
   } finally {
     loading.value = false
   }
 }
 
-// --- CÁLCULOS PARA AS BARRAS (WIDTH %) ---
+// --- CÁLCULOS DE PROPORÇÃO PARA AS BARRAS ---
 const maxGastosCategoria = computed(() => 
-  Math.max(...gastosPorCategoria.value.map(item => item.valor), 1)
+  Math.max(...gastosPorCategoria.value.map(i => i.valor), 1)
 )
 
 const maxGastosMensal = computed(() => 
-  Math.max(...gastosMensais.value.map(item => item.valor), 1)
+  Math.max(...gastosMensais.value.map(i => i.valor), 1)
 )
 
 const maxGastosEstado = computed(() => 
-  Math.max(...gastosPorEstado.value.map(item => item.valor), 1)
+  Math.max(...gastosPorEstado.value.map(i => i.valor), 1)
 )
 
-// --- UTILITÁRIOS ---
+// --- FORMATAÇÃO ---
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
-    minimumFractionDigits: 0,
     maximumFractionDigits: 0
   }).format(value)
 }
 
 onMounted(() => {
-  fetchStats()
+  fetchDashboardData()
 })
 </script>
 
@@ -581,3 +584,4 @@ onMounted(() => {
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 </style>
+```
