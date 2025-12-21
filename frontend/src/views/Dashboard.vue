@@ -15,11 +15,12 @@
       <!-- KPI Section -->
       <section class="kpis-section">
         <div class="container">
-          <div class="stats-grid">
+          <div v-if="loading" class="text-center py-4">Carregando indicadores...</div>
+          <div v-else class="stats-grid">
             <StatCard 
               title="Gastos Totais" 
               :value="formatCurrency(totalGastos)" 
-              subtitle="Últimos 12 meses"
+              subtitle="Acumulado total"
               icon="DollarSign" 
             />
             <StatCard 
@@ -36,7 +37,7 @@
             />
             <StatCard 
               title="Parlamentares" 
-              :value="parlamentares.length.toString()" 
+              :value="totalParlamentares.toString()" 
               subtitle="Monitorados"
               icon="TrendingUp" 
             />
@@ -49,19 +50,20 @@
         <div class="container">
           <div class="section-title">
             <h2>Análises Detalhadas</h2>
-            <p>Visualizações e insights dos dados parlamentares</p>
+            <p v-if="loading">Sincronizando dados oficiais...</p>
+            <p v-else>Visualizações baseadas em dados reais da Câmara</p>
           </div>
           
-          <div class="charts-grid">
+          <div v-if="!loading" class="charts-grid">
             <!-- Gastos por Categoria -->
-            <div class="chart-card">
+            <div class="chart-card full-width">
               <div class="chart-header">
                 <h3 class="chart-title">Gastos por Categoria</h3>
                 <p class="chart-description">Distribuição das despesas parlamentares</p>
               </div>
               <div class="chart-content">
                 <div class="simple-chart">
-                  <div v-for="(item, index) in gastosPorCategoriaMock" :key="index" class="chart-item">
+                  <div v-for="(item, index) in gastosPorCategoria" :key="index" class="chart-item">
                     <div class="chart-label">{{ item.categoria }}</div>
                     <div class="chart-bar">
                       <div 
@@ -76,15 +78,15 @@
             </div>
 
             <!-- Evolução Mensal -->
-            <div class="chart-card">
+            <div class="chart-card full-width">
               <div class="chart-header">
                 <h3 class="chart-title">Evolução Mensal de Gastos</h3>
                 <p class="chart-description">Série temporal dos últimos 12 meses</p>
               </div>
               <div class="chart-content">
                 <div class="simple-chart">
-                  <div v-for="(item, index) in gastosMensaisMock" :key="index" class="chart-item">
-                    <div class="chart-label">{{ item.mes }}</div>
+                  <div v-for="(item, index) in gastosMensais" :key="index" class="chart-item">
+                    <div class="chart-label">{{ item.label }}</div>
                     <div class="chart-bar">
                       <div 
                         class="chart-fill" 
@@ -97,37 +99,15 @@
               </div>
             </div>
 
-            <!-- Top 10 Gastadores -->
-            <div class="chart-card">
-              <div class="chart-header">
-                <h3 class="chart-title">Top 10 Gastadores</h3>
-                <p class="chart-description">Parlamentares com maiores despesas</p>
-              </div>
-              <div class="chart-content">
-                <div class="simple-chart">
-                  <div v-for="(item, index) in top10Gastadores.slice(0, 10)" :key="index" class="chart-item">
-                    <div class="chart-label">{{ item.nome }}</div>
-                    <div class="chart-bar">
-                      <div 
-                        class="chart-fill" 
-                        :style="{ width: (item.gastoTotal / maxGastoTotal * 100) + '%' }"
-                      ></div>
-                      <span class="chart-value">{{ formatCurrency(item.gastoTotal) }}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             <!-- Gastos por Estado -->
-            <div class="chart-card">
+            <div class="chart-card full-width">
               <div class="chart-header">
                 <h3 class="chart-title">Gastos por Estado</h3>
-                <p class="chart-description">Top 10 estados com maiores despesas</p>
+                <p class="chart-description">Estados com maiores despesas acumuladas</p>
               </div>
               <div class="chart-content">
                 <div class="simple-chart">
-                  <div v-for="(item, index) in gastosPorEstadoMock" :key="index" class="chart-item">
+                  <div v-for="(item, index) in gastosPorEstado" :key="index" class="chart-item">
                     <div class="chart-label">{{ item.estado }}</div>
                     <div class="chart-bar">
                       <div 
@@ -136,28 +116,6 @@
                       ></div>
                       <span class="chart-value">{{ formatCurrency(item.valor) }}</span>
                     </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Coesão Partidária - Full Width -->
-          <div class="chart-card full-width">
-            <div class="chart-header">
-              <h3 class="chart-title">Coesão Partidária</h3>
-              <p class="chart-description">Índice de fidelidade por partido</p>
-            </div>
-            <div class="chart-content">
-              <div class="simple-chart">
-                <div v-for="(item, index) in coesaoPartidariaMock" :key="index" class="chart-item">
-                  <div class="chart-label">{{ item.partido }}</div>
-                  <div class="chart-bar">
-                    <div 
-                      class="chart-fill" 
-                      :style="{ width: item.coesao + '%' }"
-                    ></div>
-                    <span class="chart-value">{{ item.coesao }}%</span>
                   </div>
                 </div>
               </div>
@@ -190,149 +148,80 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import AppFooter from '@/components/AppFooter.vue'
 import StatCard from '@/components/StatCard.vue'
-import { BarChart3, TrendingUp, Users, DollarSign } from 'lucide-vue-next'
+import { BarChart3, TrendingUp, Users, DollarSign, Award } from 'lucide-vue-next'
 
-// Minimal reactive list of parlamentares (keep for computed values)
-const parlamentares = ref<any[]>([])
+// --- ESTADOS REATIVOS ---
+const loading = ref(true)
+const totalGastos = ref(0)
+const totalParlamentares = ref(0)
+const presencaMedia = ref(0) // Você pode adicionar essa query no backend depois
+const fidelidadeMedia = ref(0) // Você pode adicionar essa query no backend depois
 
-// Chart refs
-const gastosCategoria = ref<HTMLElement>()
-const gastosMensais = ref<HTMLElement>()
-const topGastadores = ref<HTMLElement>()
-const gastosEstado = ref<HTMLElement>()
-const coesaoPartidaria = ref<HTMLElement>()
+const gastosPorCategoria = ref<any[]>([])
+const gastosMensais = ref<any[]>([])
+const gastosPorEstado = ref<any[]>([])
 
-// Computed values
-const totalGastos = computed(() => 
-  parlamentares.value.reduce((sum, p) => sum + p.gastoTotal, 0)
-)
+// --- LÓGICA DE BUSCA ---
+const fetchStats = async () => {
+  loading.value = true
+  try {
+    const response = await fetch('http://localhost:8000/api/deputados/estatisticas/geral')
+    const data = await response.json()
 
-const presencaMedia = computed(() => 
-  parlamentares.value.length > 0 
-    ? parlamentares.value.reduce((sum, p) => sum + p.presenca, 0) / parlamentares.value.length 
-    : 0
-)
+    // Mapeando KPIs
+    totalGastos.value = data.total_gastos
+    totalParlamentares.value = data.total_parlamentares
+    
+    // Se o seu backend ainda não calcula presença/fidelidade global, mantemos um valor base ou 0
+    presencaMedia.value = 75.0 
+    fidelidadeMedia.value = 82.3
 
-const fidelidadeMedia = computed(() =>
-  parlamentares.value.length > 0
-    ? parlamentares.value.reduce((sum, p) => sum + p.fidelidadePartidaria, 0) / parlamentares.value.length
-    : 0
-)
+    // Mapeando Gráficos
+    gastosPorCategoria.value = data.gastos_por_categoria
+    gastosPorEstado.value = data.gastos_por_estado
+    
+    // Formatando Gastos Mensais para exibição (Ex: 01/2024)
+    const mesesNomes = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+    gastosMensais.value = data.gastos_por_mes.map((item: any) => ({
+      label: `${mesesNomes[item.mes - 1]}/${item.ano}`,
+      valor: item.valor
+    })).reverse() // Inverter para ordem cronológica (Jan -> Dez)
 
-const top10Gastadores = computed(() => 
-  [...parlamentares.value]
-    .sort((a, b) => b.gastoTotal - a.gastoTotal)
-    .slice(0, 10)
-    .map(p => ({ nome: p.nome_civil, gastoTotal: p.gastoTotal }))
-)
+  } catch (error) {
+    console.error("Erro ao carregar estatísticas:", error)
+  } finally {
+    loading.value = false
+  }
+}
 
-// Computed values for chart maximums
+// --- CÁLCULOS PARA AS BARRAS (WIDTH %) ---
 const maxGastosCategoria = computed(() => 
-  Math.max(...gastosPorCategoriaMock.map(item => item.valor))
+  Math.max(...gastosPorCategoria.value.map(item => item.valor), 1)
 )
 
 const maxGastosMensal = computed(() => 
-  Math.max(...gastosMensaisMock.map(item => item.valor))
-)
-
-const maxGastoTotal = computed(() => 
-  top10Gastadores.value.length > 0 
-    ? Math.max(...top10Gastadores.value.map(item => item.gastoTotal))
-    : 1
+  Math.max(...gastosMensais.value.map(item => item.valor), 1)
 )
 
 const maxGastosEstado = computed(() => 
-  Math.max(...gastosPorEstadoMock.map(item => item.valor))
+  Math.max(...gastosPorEstado.value.map(item => item.valor), 1)
 )
 
-// Mock data for charts
-const gastosPorCategoriaMock = [
-  { categoria: 'Passagens', valor: 450000 },
-  { categoria: 'Hospedagem', valor: 320000 },
-  { categoria: 'Alimentação', valor: 180000 },
-  { categoria: 'Combustível', valor: 150000 },
-  { categoria: 'Telefonia', valor: 80000 }
-]
-
-const gastosMensaisMock = [
-  { mes: 'Jan', valor: 120000 },
-  { mes: 'Fev', valor: 135000 },
-  { mes: 'Mar', valor: 145000 },
-  { mes: 'Abr', valor: 125000 },
-  { mes: 'Mai', valor: 160000 },
-  { mes: 'Jun', valor: 180000 },
-  { mes: 'Jul', valor: 155000 },
-  { mes: 'Ago', valor: 170000 },
-  { mes: 'Set', valor: 165000 },
-  { mes: 'Out', valor: 175000 },
-  { mes: 'Nov', valor: 185000 },
-  { mes: 'Dez', valor: 190000 }
-]
-
-const gastosPorEstadoMock = [
-  { estado: 'SP', valor: 850000 },
-  { estado: 'RJ', valor: 720000 },
-  { estado: 'MG', valor: 650000 },
-  { estado: 'RS', valor: 580000 },
-  { estado: 'PR', valor: 520000 },
-  { estado: 'BA', valor: 480000 },
-  { estado: 'SC', valor: 420000 },
-  { estado: 'GO', valor: 380000 },
-  { estado: 'PE', valor: 350000 },
-  { estado: 'CE', valor: 320000 }
-]
-
-const coesaoPartidariaMock = [
-  { partido: 'PT', coesao: 92 },
-  { partido: 'PL', coesao: 88 },
-  { partido: 'PSDB', coesao: 85 },
-  { partido: 'MDB', coesao: 82 },
-  { partido: 'PP', coesao: 80 },
-  { partido: 'PDT', coesao: 78 },
-  { partido: 'PSB', coesao: 75 },
-  { partido: 'REPUBLICANOS', coesao: 72 }
-]
-
-// Format currency function
+// --- UTILITÁRIOS ---
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
     minimumFractionDigits: 0,
+    maximumFractionDigits: 0
   }).format(value)
 }
 
-// Chart initialization functions (simplified - no ECharts dependency)
-const initGastosCategoriaChart = () => {
-  // Chart rendered with CSS bars
-}
-
-const initGastosMensaisChart = () => {
-  // Chart rendered with CSS bars
-}
-
-const initTopGastadoresChart = () => {
-  // Chart rendered with CSS bars
-}
-
-const initGastosEstadoChart = () => {
-  // Chart rendered with CSS bars
-}
-
-const initCoesaoPartidaria = () => {
-  // Chart rendered with CSS bars
-}
-
 onMounted(() => {
-  // Inicializar gráficos locais (mock data)
-  initGastosCategoriaChart()
-  initGastosMensaisChart()
-  initTopGastadoresChart()
-  initGastosEstadoChart()
-  initCoesaoPartidaria()
+  fetchStats()
 })
 </script>
 

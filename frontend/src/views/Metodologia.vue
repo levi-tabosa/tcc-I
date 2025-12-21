@@ -83,25 +83,6 @@ Replace React/Next content with a Vue Single File Component implementing the sam
                     </a>
                   </div>
                 </div>
-
-                <div class="source-item">
-                  <h3 class="source-title">Tribunal Superior Eleitoral (TSE)</h3>
-                  <p class="source-description">
-                    Informações sobre filiação partidária e histórico eleitoral
-                  </p>
-                  <div class="source-links">
-                    <span class="source-badge">Dados Públicos</span>
-                    <a
-                      href="https://www.tse.jus.br/eleicoes/estatisticas/repositorio-de-dados-eleitorais"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="external-link"
-                    >
-                      Portal TSE
-                      <ExternalLink class="external-icon" />
-                    </a>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
@@ -263,31 +244,7 @@ Replace React/Next content with a Vue Single File Component implementing the sam
             </div>
           </div>
 
-          <!-- Limitations -->
-          <div class="info-card limitations-card">
-            <div class="info-card-header">
-              <div class="card-header-content">
-                <h2 class="card-title">Limitações e Avisos</h2>
-              </div>
-            </div>
-            
-            <div class="info-card-content">
-              <div class="limitations-list">
-                <div class="limitation-item">
-                  <strong class="limitation-label">Dados em tempo real:</strong>
-                  <span class="limitation-text">Existe um delay de até 24 horas entre a publicação oficial e a disponibilização nesta plataforma.</span>
-                </div>
-                <div class="limitation-item">
-                  <strong class="limitation-label">Responsabilidade:</strong>
-                  <span class="limitation-text">Nos esforçamos para garantir a precisão dos dados, mas erros podem ocorrer. Sempre consulte as fontes oficiais para decisões importantes.</span>
-                </div>
-                <div class="limitation-item">
-                  <strong class="limitation-label">Interpretação:</strong>
-                  <span class="limitation-text">As métricas apresentadas são calculadas automaticamente e não substituem análise contextual aprofundada.</span>
-                </div>
-              </div>
-            </div>
-          </div>
+
 
           <!-- CTA -->
           <div class="info-card cta-card">
@@ -497,12 +454,8 @@ const lastUpdate = computed(() =>
 @media (min-width: 768px) {
   .sources-grid {
     grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (min-width: 1024px) {
-  .sources-grid {
-    grid-template-columns: repeat(3, 1fr);
+    max-width: 800px;
+    margin: 0 auto;
   }
 }
 
@@ -706,41 +659,7 @@ const lastUpdate = computed(() =>
   height: 1rem;
 }
 
-/* ======================
-   LIMITAÇÕES 
-   ====================== */
-.limitations-card {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.02), var(--color-white));
-  border-color: rgba(245, 158, 11, 0.2);
-}
 
-.limitations-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.limitation-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 1rem;
-  background: var(--color-gray-50);
-  border-radius: 0.5rem;
-  border-left: 4px solid #f59e0b;
-}
-
-.limitation-label {
-  font-weight: 600;
-  color: var(--color-gray-900);
-  font-size: 0.95rem;
-}
-
-.limitation-text {
-  color: var(--color-gray-600);
-  line-height: 1.5;
-  font-size: 0.9rem;
-}
 
 /* ======================
    CTA FINAL 

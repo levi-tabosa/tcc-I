@@ -127,5 +127,71 @@ def buscar_despesas_deputado(deputado_id: int):
     finally:
         if conn: conn.close()        
         
-        
-        
+
+@router.get("/estatisticas/geral")
+def buscar_estatisticas_geral():    
+    conn = db.get_connect()
+    if not conn:
+        raise HTTPException(status_code=503, detail="Serviço indisponível: Erro de conexão com o banco de dados.")
+
+    try:
+        with conn.cursor() as cursor:
+            # 1. Gastos por Categoria (Global)
+            cursor.execute(
+                """
+                SELECT 
+                    desp.tipo_despesa,
+                    SUM(desp.valor_documento) AS total
+                FROM deputados_despesas AS desp
+                GROUP BY desp.tipo_despesa
+                ORDER BY total DESC;
+                """
+            )
+            gastos_categoria = [{"categoria": r[0], "valor": float(r[1])} for r in cursor.fetchall()]
+
+            # 2. Evolução Mensal (Global - Últimos 12 meses)
+            cursor.execute(
+                """
+                SELECT ano, mes, SUM(valor_documento) as total
+                FROM deputados_despesas
+                GROUP BY ano, mes
+                ORDER BY ano DESC, mes DESC
+                LIMIT 12;
+                """
+            )
+
+            gastos_mensais = [{"ano": r[0], "mes": r[1], "valor": float(r[2])} for r in cursor.fetchall()]
+            
+            # 3. Gastos por Estado (Precisa de JOIN com a tabela de deputados)
+            cursor.execute("""
+                SELECT d.uf_nascimento, SUM(desp.valor_documento) as total
+                FROM deputados d
+                JOIN deputados_mandatos m ON d.id = m.deputado_id
+                JOIN deputados_despesas desp ON m.id = desp.mandato_id
+                WHERE d.uf_nascimento IS NOT NULL
+                GROUP BY d.uf_nascimento
+                ORDER BY total DESC
+                LIMIT 10;
+            """)
+            gastos_estado = [{"estado": r[0], "valor": float(r[1])} for r in cursor.fetchall()]
+
+            cursor.execute("SELECT SUM(valor_documento) from deputados_despesas")
+            total_geral = cursor.fetchone()[0] or 0
+
+            cursor.execute("SELECT COUNT(*) from deputados")
+            total_deputados = cursor.fetchone()[0] or 0
+
+            return{
+                "total_gastos": float(total_geral),
+                "total_parlamentares": total_deputados,
+                "gastos_por_categoria": gastos_categoria,
+                "gastos_por_mes": gastos_mensais,
+                "gastos_por_estado": gastos_estado
+            }
+         
+    except psycopg2.Error as e:
+        logging.error(f"Erro na query de estatísticas: {e}")
+        raise HTTPException(status_code=500, detail="Erro interno ao buscar as estatísticas.")
+    finally:
+        conn.close()
+    
