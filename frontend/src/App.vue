@@ -1,5 +1,10 @@
 <script setup lang="ts">
 import AppHeader from '@/components/AppHeader.vue'
+import { useTheme } from '@/composables/useTheme'
+
+// Inicializa o tema quando a aplicação carrega
+const { initTheme } = useTheme()
+initTheme()
 </script>
 
 <template>

@@ -22,25 +22,25 @@
               title="Gastos Totais" 
               :value="formatCurrency(totalGastos)" 
               subtitle="Acumulado total"
-              icon="DollarSign" 
+              :icon="DollarSign" 
             />
             <StatCard 
               title="Presença Média" 
               :value="`${presencaMedia.toFixed(1)}%`" 
               subtitle="Sessões plenárias"
-              icon="Users" 
+              :icon="Users" 
             />
             <StatCard 
               title="Fidelidade Média" 
               :value="`${fidelidadeMedia.toFixed(1)}%`" 
               subtitle="Alinhamento partidário"
-              icon="Award" 
+              :icon="Award" 
             />
             <StatCard 
               title="Parlamentares" 
               :value="totalParlamentares.toString()" 
               subtitle="Monitorados"
-              icon="TrendingUp" 
+              :icon="TrendingUp" 
             />
           </div>
         </div>
@@ -230,43 +230,30 @@ onMounted(() => {
 
 <style scoped>
 /* ======================
-   ESTRUTURA GERAL 
+   ESTRUTURA GERAL
    ====================== */
 .page-wrapper {
   min-height: 100vh;
-  background: linear-gradient(180deg, #f8fafc, #f1f5f9);
+  background: var(--bg-secondary);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  color: var(--color-gray-900);
+  color: var(--text-primary);
 }
 
 .main-content {
   margin: 0 auto;
 }
 
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 1rem;
-}
-
-@media (min-width: 640px) {
-  .container {
-    padding: 0 1.5rem;
-  }
-}
-
-@media (min-width: 1024px) {
-  .container {
-    padding: 0 2rem;
-  }
-}
-
 /* ======================
-   NAVIGATION HEADER 
+   DASHBOARD HEADER
    ====================== */
 .dashboard-header-section {
+  position: relative;
+  padding: 3rem 0 2rem;
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, transparent 100%);
-  padding: 3rem 0;
+}
+
+.dark .dashboard-header-section {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.05) 50%, transparent 100%);
 }
 
 .dashboard-header {
@@ -278,8 +265,8 @@ onMounted(() => {
 .dashboard-title {
   font-size: 2.5rem;
   font-weight: 900;
-  color: var(--color-gray-900);
-  margin-bottom: 1rem;
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
   line-height: 1.2;
   letter-spacing: -0.025em;
 }
@@ -292,17 +279,17 @@ onMounted(() => {
 
 .dashboard-subtitle {
   font-size: 1.125rem;
-  color: var(--color-gray-600);
+  color: var(--text-secondary);
   margin: 0;
   line-height: 1.6;
 }
 
 /* ======================
-   SEÇÃO KPIS 
+   SEÇÃO DE KPIs
    ====================== */
 .kpis-section {
   padding: 3rem 0;
-  background-color: var(--color-white);
+  background-color: var(--bg-secondary);
 }
 
 .stats-grid {
@@ -325,12 +312,25 @@ onMounted(() => {
   }
 }
 
+.text-center {
+  text-align: center;
+}
+
+.py-4 {
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+}
+
 /* ======================
-   SEÇÃO CHARTS 
+   SEÇÃO DE GRÁFICOS
    ====================== */
 .charts-section {
-  padding: 4rem 0;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, transparent 100%);
+  padding: 3rem 0 4rem;
+  background-color: var(--surface-primary);
+}
+
+.dark .charts-section {
+  background-color: var(--bg-secondary);
 }
 
 .section-title {
@@ -341,39 +341,38 @@ onMounted(() => {
 .section-title h2 {
   font-size: 2rem;
   font-weight: 700;
-  color: var(--color-gray-900);
-  margin-bottom: 0.75rem;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
 }
 
 .section-title p {
-  color: var(--color-gray-600);
-  font-size: 1.125rem;
+  font-size: 1rem;
+  color: var(--text-secondary);
+  margin: 0;
 }
 
 .charts-grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 2rem;
-  margin-bottom: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-@media (min-width: 768px) {
-  .charts-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
+/* ======================
+   CARDS DE GRÁFICOS
+   ====================== */
 .chart-card {
-  background: var(--color-white);
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  border: 1px solid var(--color-gray-200);
-  overflow: hidden;
-  transition: all 0.2s ease;
+  background: var(--chart-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
 }
 
 .chart-card:hover {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-lg);
   transform: translateY(-2px);
 }
 
@@ -382,43 +381,117 @@ onMounted(() => {
 }
 
 .chart-header {
-  padding: 1.5rem 1.5rem 0 1.5rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--card-border);
 }
 
 .chart-title {
   font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--color-gray-900);
+  font-weight: 700;
+  color: var(--text-primary);
   margin: 0 0 0.5rem 0;
 }
 
 .chart-description {
-  color: var(--color-gray-600);
   font-size: 0.875rem;
+  color: var(--text-secondary);
   margin: 0;
 }
 
 .chart-content {
-  padding: 1rem 1.5rem 1.5rem 1.5rem;
-}
-
-.chart-container {
-  width: 100%;
-  height: 300px;
+  padding: 0.5rem 0;
 }
 
 /* ======================
-   SEÇÃO CTA 
+   GRÁFICOS SIMPLES
+   ====================== */
+.simple-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.chart-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.chart-label {
+  min-width: 100px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--chart-label);
+  flex-shrink: 0;
+}
+
+@media (min-width: 640px) {
+  .chart-label {
+    min-width: 150px;
+  }
+}
+
+.chart-bar {
+  position: relative;
+  flex: 1;
+  height: 2rem;
+  background-color: var(--bg-secondary);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.dark .chart-bar {
+  background-color: var(--bg-secondary);
+}
+
+.chart-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    var(--chart-fill-gradient-start),
+    var(--chart-fill-gradient-end)
+  );
+  border-radius: 0.5rem;
+  transition: width 0.6s ease-out;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.dark .chart-fill {
+  box-shadow: 0 2px 4px rgba(96, 165, 250, 0.3);
+}
+
+.chart-value {
+  position: relative;
+  z-index: 1;
+  padding: 0 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--chart-text);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* ======================
+   CTA SECTION
    ====================== */
 .cta-section {
   padding: 4rem 0;
-  background-color: var(--color-white);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, transparent 100%);
+}
+
+.dark .cta-section {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(59, 130, 246, 0.05) 50%, transparent 100%);
 }
 
 .cta-content {
-  text-align: center;
-  max-width: 600px;
+  max-width: 800px;
   margin: 0 auto;
+  text-align: center;
 }
 
 .cta-icon {
@@ -431,13 +504,13 @@ onMounted(() => {
 .cta-title {
   font-size: 2rem;
   font-weight: 700;
-  color: var(--color-gray-900);
+  color: var(--text-primary);
   margin-bottom: 1rem;
 }
 
 .cta-description {
   font-size: 1.125rem;
-  color: var(--color-gray-600);
+  color: var(--text-secondary);
   margin-bottom: 2rem;
   line-height: 1.6;
 }
@@ -456,9 +529,6 @@ onMounted(() => {
   }
 }
 
-/* ======================
-   BOTÕES 
-   ====================== */
 .btn {
   padding: 0.75rem 1.5rem;
   border-radius: 0.5rem;
@@ -468,120 +538,17 @@ onMounted(() => {
   cursor: pointer;
   border: none;
   font-size: 1rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.btn-primary {
-  background-color: var(--color-primary);
-  color: var(--color-white);
-}
-
-.btn-primary:hover {
-  background-color: var(--color-primary-dark);
+  display: inline-block;
 }
 
 .btn-secondary {
-  background-color: var(--color-white);
-  color: var(--color-gray-700);
-  border: 1px solid var(--color-gray-300);
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--card-border);
 }
 
 .btn-secondary:hover {
-  background-color: var(--color-gray-50);
-}
-
-/* ======================
-   SIMPLE CHARTS STYLES 
-   ====================== */
-.simple-chart {
-  padding: 1rem;
-}
-
-.chart-item {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 1rem;
-}
-
-.chart-label {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--color-gray-700);
-  margin-bottom: 0.5rem;
-}
-
-.chart-bar {
-  position: relative;
-  background-color: var(--color-gray-200);
-  border-radius: 0.5rem;
-  height: 2rem;
-  display: flex;
-  align-items: center;
-  overflow: hidden;
-}
-
-.chart-fill {
-  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
-  height: 100%;
-  border-radius: 0.5rem;
-  transition: width 0.5s ease;
-  min-width: 2px;
-}
-
-.chart-value {
-  position: absolute;
-  right: 0.75rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--color-gray-700);
-  background-color: rgba(255, 255, 255, 0.9);
-  padding: 0.125rem 0.5rem;
-  border-radius: 0.25rem;
-  backdrop-filter: blur(4px);
-}
-
-/* ======================
-   RESPONSIVIDADE 
-   ====================== */
-@media (max-width: 640px) {
-  .dashboard-title {
-    font-size: 2rem;
-  }
-  
-  .dashboard-header-section {
-    padding: 2rem 0;
-  }
-  
-  .charts-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .chart-container {
-    height: 250px;
-  }
-}
-
-@media (max-width: 768px) {
-  .charts-section {
-    padding: 2rem 0;
-  }
-  
-  .kpis-section {
-    padding: 2rem 0;
-  }
-  
-  .cta-section {
-    padding: 2rem 0;
-  }
-}
-
-/* ======================
-   THEME VARIABLES OVERRIDE
-   ====================== */
-.chart-card {
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  background-color: var(--card-hover-bg);
+  border-color: var(--color-primary);
 }
 </style>
-```

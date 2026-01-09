@@ -91,9 +91,10 @@
             />
           </div>
         </div>
-      </section>
+    </section>
 
-      <!-- Quick Links -->
+
+    <!-- Quick Links -->
       <section class="quick-links-section">
         <div class="container">
           <h2 class="section-title">Acesso Rápido</h2>
@@ -194,6 +195,7 @@ interface Parlamentar {
   fidelidadePartidaria: number
 }
 
+
 // --- Variáveis Reativas ---
 const searchQuery = ref('');
 const originalQuery = ref('');
@@ -216,6 +218,7 @@ const parlamentares = ref<Parlamentar[]>([])
 const parlamentaresLoading = ref(false)
 const parlamentaresError = ref<string | null>(null)
 
+
 // Lista de partidos brasileiros
 const partidos = [
   'Todos', 'PT', 'PSDB', 'PL', 'PP', 'MDB', 'PSD', 'REPUBLICANOS', 'UNIÃO', 'PSB', 
@@ -227,6 +230,7 @@ const estados = [
   'Todos', 'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 
   'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
 ]
+
 
 // Função para buscar dados reais do backend
 const fetchParlamentares = async () => {
@@ -278,6 +282,7 @@ const fidelidadeMedia = computed(() => {
   const total = parlamentares.value.reduce((sum, p) => sum + p.fidelidadePartidaria, 0)
   return Math.round(total / parlamentares.value.length)
 })
+
 
 // --- Busca com debounce e filtro por prefixo (nome começa com) ---
 let debounceTimer: number | null = null;
@@ -412,7 +417,9 @@ const handleClickOutside = (event: MouseEvent) => {
 onMounted(async () => {
   document.addEventListener('click', handleClickOutside);
   // Carregar dados dos parlamentares
-  await fetchParlamentares();
+  await Promise.all([
+    fetchParlamentares()
+  ]);
 });
 
 onUnmounted(() => {
@@ -426,9 +433,9 @@ onUnmounted(() => {
    ====================== */
 .page-wrapper {
   min-height: 100vh;
-  background: linear-gradient(180deg, #f8fafc, #f1f5f9);
+  background: var(--bg-secondary);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .main-content {
@@ -446,6 +453,10 @@ onUnmounted(() => {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, transparent 100%);
 }
 
+.dark .hero-section {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.05) 50%, rgba(3, 7, 18, 0) 100%);
+}
+
 .hero-content {
   position: relative;
   max-width: 800px;
@@ -457,7 +468,7 @@ onUnmounted(() => {
 .hero-title {
   font-size: 2.5rem;
   font-weight: 900;
-  color: var(--color-gray-900);
+  color: var(--text-primary);
   margin-bottom: 1.5rem;
   line-height: 1.2;
   letter-spacing: -0.025em;
@@ -472,7 +483,7 @@ onUnmounted(() => {
 
 .hero-description {
   font-size: 1.125rem;
-  color: var(--color-gray-600);
+  color: var(--text-secondary);
   margin-bottom: 3rem;
   line-height: 1.6;
   max-width: 700px;
@@ -497,11 +508,11 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  background: var(--color-white);
+  background: var(--surface-primary);
   padding: 1rem;
   border-radius: 0.75rem;
   box-shadow: var(--shadow-lg);
-  border: 1px solid var(--color-gray-200);
+  border: 1px solid var(--border-primary);
 }
 
 @media (min-width: 640px) {
@@ -523,7 +534,7 @@ onUnmounted(() => {
   transform: translateY(-50%);
   width: 1.25rem;
   height: 1.25rem;
-  color: var(--color-gray-400);
+  color: var(--text-tertiary);
 }
 
 .search-input {
@@ -532,11 +543,11 @@ onUnmounted(() => {
   padding-left: 3rem;
   padding-right: 1rem;
   border-radius: 0.5rem;
-  border: 1px solid var(--color-gray-300);
-  color: var(--color-gray-900);
+  border: 1px solid var(--border-primary);
+  color: var(--text-primary);
   font-size: 1rem;
   transition: all 0.2s ease;
-  background-color: var(--color-white);
+  background-color: var(--surface-primary);
 }
 
 .search-input:focus {
@@ -572,8 +583,8 @@ onUnmounted(() => {
   top: calc(100% - 0.5rem);
   left: 1rem;
   right: 1rem;
-  background: var(--color-white);
-  border: 1px solid var(--color-gray-200);
+  background: var(--surface-primary);
+  border: 1px solid var(--border-primary);
   border-top: none;
   border-radius: 0 0 0.75rem 0.75rem;
   box-shadow: var(--shadow-lg);
@@ -596,8 +607,8 @@ onUnmounted(() => {
   padding: 0.75rem 1rem;
   cursor: pointer;
   transition: background-color 0.2s ease;
-  border-bottom: 1px solid var(--color-gray-100);
-  color: var(--color-gray-700);
+  border-bottom: 1px solid var(--border-primary);
+  color: var(--text-secondary);
 }
 
 .autocomplete-results li:last-child {
@@ -612,14 +623,14 @@ onUnmounted(() => {
 
 .autocomplete-feedback {
   padding: 0.75rem 1rem;
-  color: var(--color-gray-500);
+  color: var(--text-tertiary);
   font-style: italic;
 }
 
 .error-feedback {
-  color: #dc2626;
-  background-color: #fef2f2;
-  border: 1px solid #fecaca;
+  color: var(--color-error);
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid var(--color-error);
   border-radius: 0.375rem;
   margin: 0.5rem;
 }
@@ -629,7 +640,7 @@ onUnmounted(() => {
    ====================== */
 .kpis-section {
   padding: 4rem 0;
-  background-color: var(--color-white);
+  background-color: var(--bg-secondary);
 }
 
 .section-title {
@@ -659,7 +670,7 @@ onUnmounted(() => {
    ====================== */
 .quick-links-section {
   padding: 4rem 0;
-  background-color: var(--color-gray-50);
+  background-color: var(--bg-primary);
 }
 
 .quick-links-grid {
@@ -678,8 +689,8 @@ onUnmounted(() => {
 }
 
 .quick-link-card {
-  background: var(--color-white);
-  border: 1px solid var(--color-gray-200);
+  background: var(--surface-primary);
+  border: 1px solid var(--border-primary);
   border-radius: 0.75rem;
   padding: 1.5rem;
   text-decoration: none;
@@ -730,7 +741,7 @@ onUnmounted(() => {
    ====================== */
 .info-section {
   padding: 4rem 0;
-  background-color: var(--color-white);
+  background-color: var(--surface-primary);
 }
 
 .info-content {

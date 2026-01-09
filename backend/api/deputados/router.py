@@ -128,6 +128,8 @@ def buscar_despesas_deputado(deputado_id: int):
         if conn: conn.close()        
         
 
+
+
 @router.get("/estatisticas/geral")
 def buscar_estatisticas_geral():    
     conn = db.get_connect()
@@ -162,23 +164,21 @@ def buscar_estatisticas_geral():
 
             gastos_mensais = [{"ano": r[0], "mes": r[1], "valor": float(r[2])} for r in cursor.fetchall()]
             
-            # 3. Gastos por Estado (Precisa de JOIN com a tabela de deputados)
+            # 3. Gastos por Estado do Mandato (UF representada)
             cursor.execute("""
-                SELECT d.uf_nascimento, SUM(desp.valor_documento) as total
-                FROM deputados d
-                JOIN deputados_mandatos m ON d.id = m.deputado_id
+                SELECT m.sigla_uf, SUM(desp.valor_documento) as total
+                FROM deputados_mandatos m
                 JOIN deputados_despesas desp ON m.id = desp.mandato_id
-                WHERE d.uf_nascimento IS NOT NULL
-                GROUP BY d.uf_nascimento
-                ORDER BY total DESC
-                LIMIT 10;
+                WHERE m.sigla_uf IS NOT NULL
+                GROUP BY m.sigla_uf
+                ORDER BY total DESC;
             """)
             gastos_estado = [{"estado": r[0], "valor": float(r[1])} for r in cursor.fetchall()]
 
             cursor.execute("SELECT SUM(valor_documento) from deputados_despesas")
             total_geral = cursor.fetchone()[0] or 0
 
-            cursor.execute("SELECT COUNT(*) from deputados")
+            cursor.execute("SELECT COUNT(DISTINCT deputado_id) from deputados_mandatos")
             total_deputados = cursor.fetchone()[0] or 0
 
             return{

@@ -8,7 +8,7 @@
           <div class="page-header">
             <h1 class="page-title">Parlamentares</h1>
             <p class="page-subtitle">
-              Acompanhe a atuação de {{ mockData.parlamentares.length }} deputados federais
+              Acompanhe a atuação de {{ parlamentares.length }} deputados federais
             </p>
           </div>
         </div>

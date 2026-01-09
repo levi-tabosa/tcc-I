@@ -2,10 +2,7 @@
   <div class="stat-card">
     <div class="stat-card-header">
       <div class="stat-card-icon">
-        <DollarSign v-if="icon === 'DollarSign'" />
-        <Users v-else-if="icon === 'Users'" />
-        <Award v-else-if="icon === 'Award'" />
-        <TrendingUp v-else-if="icon === 'TrendingUp'" />
+        <component :is="icon" />
       </div>
       <h3 class="stat-card-title">{{ title }}</h3>
     </div>
@@ -20,15 +17,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { DollarSign, Users, Award, TrendingUp } from 'lucide-vue-next'
+import { computed, type Component } from 'vue'
 
 interface Props {
   title: string
   value: string | number
   format?: 'currency' | 'percentage' | 'number'
   subtitle?: string
-  icon: string
+  icon: Component
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -61,8 +57,8 @@ const formattedValue = computed(() => {
 
 <style scoped>
 .stat-card {
-  background: var(--color-white);
-  border: 1px solid var(--color-gray-200);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
   border-radius: 0.75rem;
   padding: 1.5rem;
   transition: all 0.2s ease;
@@ -71,6 +67,7 @@ const formattedValue = computed(() => {
 .stat-card:hover {
   box-shadow: var(--shadow-lg);
   transform: translateY(-2px);
+  background: var(--card-hover-bg);
 }
 
 .stat-card-header {
@@ -82,9 +79,13 @@ const formattedValue = computed(() => {
 
 .stat-card-icon {
   padding: 0.5rem;
-  background-color: rgba(59, 130, 246, 0.1);
+  background-color: var(--bg-secondary);
   border-radius: 0.5rem;
   color: var(--color-primary);
+}
+
+.dark .stat-card-icon {
+  background-color: var(--surface-secondary);
 }
 
 .stat-card-icon svg {
@@ -94,27 +95,25 @@ const formattedValue = computed(() => {
 
 .stat-card-title {
   font-weight: 600;
-  color: var(--color-gray-900);
+  color: var(--text-primary);
   margin: 0;
   font-size: 1rem;
 }
 
 .stat-card-content {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  text-align: left;
 }
 
 .stat-card-value {
-  font-size: 1.875rem;
+  font-size: 2rem;
   font-weight: 700;
-  color: var(--color-gray-900);
-  line-height: 1;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
 }
 
 .stat-card-subtitle {
   font-size: 0.875rem;
-  color: var(--color-gray-600);
+  color: var(--text-secondary);
   margin: 0;
 }
 </style>
