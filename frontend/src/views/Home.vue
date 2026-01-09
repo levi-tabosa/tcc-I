@@ -449,12 +449,35 @@ onUnmounted(() => {
   position: relative;
   overflow: hidden;
   width: 100%;
-  padding: 4rem 0 6rem;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, transparent 100%);
+  padding: 6rem 0 8rem;
+  background-image: 
+    linear-gradient(135deg, rgba(255, 255, 255, 0.65) 0%, rgba(255, 255, 255, 0.55) 100%),
+    url('/imagem-padrao.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .dark .hero-section {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.05) 50%, rgba(3, 7, 18, 0) 100%);
+  background-image: 
+    linear-gradient(135deg, rgba(15, 23, 42, 0.70) 0%, rgba(15, 23, 42, 0.60) 100%),
+    url('/imagem-padrao.jpg');
+}
+
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.3) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.dark .hero-section::before {
+  background: linear-gradient(180deg, transparent 0%, rgba(15, 23, 42, 0.5) 100%);
 }
 
 .hero-content {
@@ -463,6 +486,7 @@ onUnmounted(() => {
   margin: 0 auto;
   padding: 0 1rem;
   text-align: center;
+  z-index: 2;
 }
 
 .hero-title {
@@ -472,6 +496,7 @@ onUnmounted(() => {
   margin-bottom: 1.5rem;
   line-height: 1.2;
   letter-spacing: -0.025em;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.3), 0 4px 20px rgba(255, 255, 255, 0.8);
 }
 
 @media (min-width: 768px) {
@@ -489,6 +514,7 @@ onUnmounted(() => {
   max-width: 700px;
   margin-left: auto;
   margin-right: auto;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3), 0 2px 12px rgba(255, 255, 255, 0.7);
 }
 
 /* ======================

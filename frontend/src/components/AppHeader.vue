@@ -12,7 +12,7 @@
         <!-- Desktop Navigation -->
         <div class="nav-links">
           <RouterLink to="/comparativo" class="nav-link">
-            Comparativo de Deputados
+            Comparação
           </RouterLink>  
           <RouterLink to="/dashboard" class="nav-link">
            Dashboard
@@ -46,7 +46,7 @@
               Início
             </RouterLink>
             <RouterLink to="/comparativo" class="mobile-nav-link" @click="closeMobileMenu">
-              Comparativo de Deputados
+              Comparação
             </RouterLink>
             <RouterLink to="/dashboard" class="mobile-nav-link" @click="closeMobileMenu">
               Dashboard

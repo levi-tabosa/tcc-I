@@ -20,19 +20,16 @@
       <section class="selection-section">
         <div class="container">
           <div class="selection-grid">
-            
-            <!-- VS Badge -->
-            <div class="vs-container">
-              <div class="vs-badge">VS</div>
-            </div>
 
             <!-- Parlamentar A -->
             <div class="selector-card" :class="{ 'has-selection': deputado1 }">
+              <div class="selector-label">Deputado 1</div>
+              
               <div v-if="!deputado1" class="search-mode">
                 <div class="selector-icon-wrapper">
                   <UserPlus class="selector-icon" />
                 </div>
-                <h3 class="selector-title">Parlamentar A</h3>
+                <p class="selector-instruction">Busque e selecione o primeiro parlamentar</p>
                 <div class="search-wrapper">
                   <div class="search-input-group">
                     <Search class="search-icon-input" />
@@ -40,7 +37,7 @@
                       v-model="termoBusca1"
                       @input="buscar(1)"
                       type="text" 
-                      placeholder="Busque por nome..." 
+                      placeholder="Digite o nome do deputado..." 
                       class="search-input"
                     />
                   </div>
@@ -82,11 +79,13 @@
 
             <!-- Parlamentar B -->
             <div class="selector-card" :class="{ 'has-selection': deputado2 }">
+              <div class="selector-label">Deputado 2</div>
+              
               <div v-if="!deputado2" class="search-mode">
                 <div class="selector-icon-wrapper">
                   <UserPlus class="selector-icon" />
                 </div>
-                <h3 class="selector-title">Parlamentar B</h3>
+                <p class="selector-instruction">Busque e selecione o segundo parlamentar</p>
                 <div class="search-wrapper">
                   <div class="search-input-group">
                     <Search class="search-icon-input" />
@@ -94,7 +93,7 @@
                       v-model="termoBusca2"
                       @input="buscar(2)"
                       type="text" 
-                      placeholder="Busque por nome..." 
+                      placeholder="Digite o nome do deputado..." 
                       class="search-input"
                     />
                   </div>
@@ -316,9 +315,9 @@
             <div class="empty-state-icon-wrapper">
               <Users class="empty-state-icon" />
             </div>
-            <h3 class="empty-state-title">Selecione Dois Parlamentares</h3>
+            <h3 class="empty-state-title">Selecione dois deputados para comparar</h3>
             <p class="empty-state-description">
-              Escolha dois deputados federais acima para visualizar uma comparação detalhada de seus gastos, médias e categorias de despesas.
+              Use os seletores acima para escolher dois deputados federais e visualizar uma comparação detalhada de seus gastos, médias mensais e categorias de despesas.
             </p>
           </div>
         </div>
@@ -547,7 +546,7 @@ const formatCurrency = (val: number) => {
 .selection-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 3rem;
+  gap: 2rem;
   position: relative;
 }
 
@@ -558,65 +557,52 @@ const formatCurrency = (val: number) => {
   }
 }
 
-/* VS Badge */
-.vs-container {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 20;
-}
-
-.vs-badge {
-  background: var(--color-primary);
-  color: white;
-  font-size: 1.75rem;
-  font-weight: 900;
-  width: 80px;
-  height: 80px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  border: 6px solid var(--bg-primary);
-  box-shadow: var(--shadow-xl);
-  font-style: italic;
-}
-
-@media (max-width: 768px) {
-  .vs-container {
-    display: none;
-  }
-}
-
 /* Selector Cards */
 .selector-card {
   background: var(--card-bg);
-  border: 2px dashed var(--border-primary);
-  border-radius: var(--radius-2xl);
-  min-height: 400px;
+  border: 2px solid var(--border-primary);
+  border-radius: var(--radius-xl);
+  min-height: 420px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 3rem 2rem;
+  justify-content: flex-start;
+  padding: 2rem;
   position: relative;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow-sm);
+}
+
+.selector-label {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-primary);
+  color: white;
+  padding: 0.35rem 1.25rem;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  box-shadow: var(--shadow-md);
+  z-index: 10;
 }
 
 .selector-card.has-selection {
-  border: 2px solid var(--color-primary);
+  border-color: var(--color-primary);
   box-shadow: var(--shadow-xl);
   background: var(--card-hover-bg);
 }
 
 .selector-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 .selector-card.has-selection:hover {
-  box-shadow: 0 20px 40px -10px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 20px 40px -10px rgba(37, 99, 235, 0.15);
 }
 
 /* Search Mode */
@@ -625,31 +611,33 @@ const formatCurrency = (val: number) => {
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding-top: 1rem;
 }
 
 .selector-icon-wrapper {
-  width: 80px;
-  height: 80px;
+  width: 64px;
+  height: 64px;
   background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary));
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-2xl);
-  margin-bottom: var(--space-6);
-  box-shadow: var(--shadow-lg);
+  border-radius: var(--radius-xl);
+  margin-bottom: var(--space-4);
+  box-shadow: var(--shadow-md);
 }
 
 .selector-icon {
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   color: white;
 }
 
-.selector-title {
-  font-size: var(--font-size-xl);
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: var(--space-8);
+.selector-instruction {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-6);
+  text-align: center;
+  line-height: 1.5;
 }
 
 .search-wrapper {
@@ -787,6 +775,7 @@ const formatCurrency = (val: number) => {
   flex-direction: column;
   align-items: center;
   animation: fadeInUp 0.4s ease;
+  padding-top: 1rem;
 }
 
 @keyframes fadeInUp {
@@ -802,12 +791,12 @@ const formatCurrency = (val: number) => {
 
 .remove-button {
   position: absolute;
-  top: 1.5rem;
-  right: 1.5rem;
+  top: 1rem;
+  right: 1rem;
   background: var(--color-error);
   color: white;
-  width: 44px;
-  height: 44px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -816,6 +805,7 @@ const formatCurrency = (val: number) => {
   border: none;
   transition: all 0.2s ease;
   box-shadow: var(--shadow-md);
+  z-index: 10;
 }
 
 .remove-button:hover {
@@ -824,35 +814,36 @@ const formatCurrency = (val: number) => {
 }
 
 .remove-icon {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
 }
 
 .selected-avatar-container {
   position: relative;
-  padding: 6px;
+  padding: 5px;
   background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary));
   border-radius: 50%;
-  box-shadow: var(--shadow-xl);
-  margin-bottom: var(--space-6);
+  box-shadow: var(--shadow-lg);
+  margin-bottom: var(--space-4);
 }
 
 .selected-avatar {
-  width: 140px;
-  height: 140px;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
   object-fit: cover;
-  border: 4px solid white;
+  border: 3px solid white;
   display: block;
 }
 
 .selected-name {
-  font-size: var(--font-size-2xl);
+  font-size: var(--font-size-xl);
   font-weight: 800;
   color: var(--text-primary);
   text-align: center;
   line-height: 1.3;
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-3);
+  padding: 0 1rem;
 }
 
 .selected-tags {
@@ -1305,7 +1296,7 @@ const formatCurrency = (val: number) => {
 
   .selector-card {
     padding: 2rem 1.5rem;
-    min-height: 350px;
+    min-height: 380px;
   }
 
   .stat-comparison-wrapper {
@@ -1349,6 +1340,19 @@ const formatCurrency = (val: number) => {
 
   .dual-progress-bar {
     height: 36px;
+  }
+
+  .selector-card {
+    min-height: 350px;
+  }
+
+  .selected-avatar {
+    width: 100px;
+    height: 100px;
+  }
+
+  .selected-name {
+    font-size: var(--font-size-lg);
   }
 }
 </style>
