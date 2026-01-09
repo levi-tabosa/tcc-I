@@ -7,7 +7,7 @@
           <div class="footer-brand-header">
             <Shield class="footer-icon" />
             <span class="footer-brand-name">
-              De Olho no Congresso
+              Fiscaliza Brasil
             </span>
           </div>
           <p class="footer-brand-description">
@@ -53,7 +53,7 @@
 
       <div class="footer-bottom">
         <p class="footer-copyright">
-          © {{ new Date().getFullYear() }} De Olho no Congresso. Dados oficiais da Câmara dos Deputados e Senado Federal.
+          © {{ new Date().getFullYear() }} Fiscaliza Brasil. Dados oficiais da Câmara dos Deputados e Senado Federal.
         </p>
       </div>
     </div>
@@ -66,9 +66,9 @@ import { Shield } from 'lucide-vue-next'
 
 <style scoped>
 .footer {
-  background-color: var(--color-gray-50);
+  background-color: var(--footer-bg);
   padding: 3rem 0 1.5rem;
-  border-top: 1px solid var(--color-gray-200);
+  border-top: 1px solid var(--border-primary);
 }
 
 .footer-grid {
@@ -100,11 +100,11 @@ import { Shield } from 'lucide-vue-next'
 .footer-brand-name {
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--color-gray-900);
+  color: var(--text-primary);
 }
 
 .footer-brand-description {
-  color: var(--color-gray-600);
+  color: var(--text-secondary);
   font-size: 0.875rem;
   line-height: 1.5;
   margin: 0;
@@ -112,7 +112,7 @@ import { Shield } from 'lucide-vue-next'
 
 .footer-section-title {
   font-weight: 600;
-  color: var(--color-gray-900);
+  color: var(--text-primary);
   margin-bottom: 1rem;
   font-size: 1rem;
 }
@@ -124,7 +124,7 @@ import { Shield } from 'lucide-vue-next'
 }
 
 .footer-link {
-  color: var(--color-gray-600);
+  color: var(--text-secondary);
   text-decoration: none;
   font-size: 0.875rem;
   transition: color 0.2s ease;
@@ -135,13 +135,13 @@ import { Shield } from 'lucide-vue-next'
 }
 
 .footer-bottom {
-  border-top: 1px solid var(--color-gray-200);
+  border-top: 1px solid var(--border-primary);
   padding-top: 1.5rem;
   text-align: center;
 }
 
 .footer-copyright {
-  color: var(--color-gray-500);
+  color: var(--text-tertiary);
   font-size: 0.875rem;
   margin: 0;
 }

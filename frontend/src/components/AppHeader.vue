@@ -11,15 +11,20 @@
         
         <!-- Desktop Navigation -->
         <div class="nav-links">
+          <RouterLink to="/comparativo" class="nav-link">
+            Comparativo de Deputados
+          </RouterLink>  
           <RouterLink to="/dashboard" class="nav-link">
            Dashboard
           </RouterLink>
+
           <RouterLink to="/metodologia" class="nav-link">
          Metodologia
           </RouterLink>
           <RouterLink to="/contato" class="nav-link">
             Contato
           </RouterLink>
+                  
         </div>
 
         <!-- Mobile Menu Button -->
@@ -40,6 +45,9 @@
             <RouterLink to="/" class="mobile-nav-link" @click="closeMobileMenu">
               Início
             </RouterLink>
+            <RouterLink to="/comparativo" class="mobile-nav-link" @click="closeMobileMenu">
+              Comparativo de Deputados
+            </RouterLink>
             <RouterLink to="/dashboard" class="mobile-nav-link" @click="closeMobileMenu">
               Dashboard
             </RouterLink>
@@ -49,6 +57,7 @@
             <RouterLink to="/contato" class="mobile-nav-link" @click="closeMobileMenu">
               Contato
             </RouterLink>
+            <!-- No theme toggle here anymore -->
           </div>
         </div>
       </nav>
@@ -59,8 +68,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { Shield, Menu } from 'lucide-vue-next'
+import { useTheme } from '@/composables/useTheme'
 
 const isMobileMenuOpen = ref(false)
+const { theme, toggleTheme } = useTheme()
 
 const toggleMobileMenu = () => {
   isMobileMenuOpen.value = !isMobileMenuOpen.value
@@ -76,8 +87,10 @@ const closeMobileMenu = () => {
   position: sticky;
   top: 0;
   z-index: 50;
-  background: var(--color-white);
-  border-bottom: 1px solid var(--color-gray-200);
+  background: var(--header-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border-primary);
   box-shadow: var(--shadow-sm);
 }
 
@@ -110,7 +123,7 @@ const closeMobileMenu = () => {
 .nav-title {
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--color-gray-900);
+  color: var(--text-primary);
 }
 
 .nav-links {
@@ -158,7 +171,7 @@ const closeMobileMenu = () => {
 .menu-icon {
   width: 1.5rem;
   height: 1.5rem;
-  color: var(--color-gray-600);
+  color: var(--text-secondary);
 }
 
 .mobile-menu {
@@ -166,8 +179,8 @@ const closeMobileMenu = () => {
   top: 100%;
   left: 0;
   right: 0;
-  background: var(--color-white);
-  border-bottom: 1px solid var(--color-gray-200);
+  background: var(--surface-primary);
+  border-bottom: 1px solid var(--border-primary);
   box-shadow: var(--shadow-lg);
 }
 
@@ -199,4 +212,5 @@ const closeMobileMenu = () => {
 .mobile-nav-link.router-link-active {
   color: var(--color-primary);
 }
+
 </style>

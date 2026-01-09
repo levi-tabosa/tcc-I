@@ -215,7 +215,7 @@
                   Despesas por Categoria
                 </h3>
                 <div class="tipo-grid">
-                  <div v-for="tipo in despesasPorTipo.slice(0, 8)" :key="tipo.tipo" class="tipo-card">
+                  <div v-for="tipo in mostrarTodasCategorias ? despesasPorTipo : despesasPorTipo.slice(0, 8)" :key="tipo.tipo" class="tipo-card">
                     <div class="tipo-header">
                       <h4 class="tipo-name">{{ tipo.tipo }}</h4>
                       <span class="tipo-total">{{ formatCurrency(tipo.total) }}</span>
@@ -234,9 +234,17 @@
                 </div>
                 
                 <div v-if="despesasPorTipo.length > 8" class="show-more">
-                  <p class="show-more-text">
-                    E mais {{ despesasPorTipo.length - 8 }} categoria{{ despesasPorTipo.length - 8 > 1 ? 's' : '' }} de despesas
-                  </p>
+                  <button 
+                    @click="mostrarTodasCategorias = !mostrarTodasCategorias" 
+                    class="show-more-button"
+                  >
+                    <span v-if="!mostrarTodasCategorias">
+                      Ver todas as {{ despesasPorTipo.length }} categorias
+                    </span>
+                    <span v-else>
+                      Mostrar menos
+                    </span>
+                  </button>
                 </div>
               </div>
 
@@ -247,7 +255,7 @@
                   Despesas Recentes
                 </h3>
                 <div class="despesas-list">
-                  <div v-for="despesa in despesas.slice(0, 10)" :key="`${despesa.ano}-${despesa.mes}-${despesa.tipo_despesa}-${despesa.valor}`" class="despesa-item">
+                  <div v-for="despesa in mostrarTodasDespesas ? despesas : despesas.slice(0, 10)" :key="`${despesa.ano}-${despesa.mes}-${despesa.tipo_despesa}-${despesa.valor}`" class="despesa-item">
                     <div class="despesa-info">
                       <h4 class="despesa-tipo">{{ despesa.tipo_despesa }}</h4>
                       <p class="despesa-periodo">{{ formatMonth(despesa.mes) }} de {{ despesa.ano }}</p>
@@ -268,9 +276,17 @@
                 </div>
                 
                 <div v-if="despesas.length > 10" class="show-more">
-                  <p class="show-more-text">
-                    E mais {{ despesas.length - 10 }} despesa{{ despesas.length - 10 > 1 ? 's' : '' }}
-                  </p>
+                  <button 
+                    @click="mostrarTodasDespesas = !mostrarTodasDespesas" 
+                    class="show-more-button"
+                  >
+                    <span v-if="!mostrarTodasDespesas">
+                      Ver todas as {{ despesas.length }} despesas
+                    </span>
+                    <span v-else>
+                      Mostrar menos
+                    </span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -372,6 +388,10 @@ const isLoading = ref(false)
 const isLoadingDespesas = ref(false)
 const error = ref<string | null>(null)
 const errorDespesas = ref<string | null>(null)
+
+// Estados para controlar exibição expandida
+const mostrarTodasCategorias = ref(false)
+const mostrarTodasDespesas = ref(false)
 
 // Função para buscar despesas do parlamentar
 const fetchDespesas = async (id: number) => {
@@ -493,6 +513,9 @@ onMounted(() => {
 watch(() => route.params.id, (newId) => {
   if (newId) {
     fetchParlamentar(Number(newId))
+    // Reset estados de expansão ao mudar de parlamentar
+    mostrarTodasCategorias.value = false
+    mostrarTodasDespesas.value = false
   }
 })
 
@@ -543,7 +566,6 @@ const calcularIdade = (dateString: string) => {
   }
 }
 </script>
-
 <style scoped>
 /* ======================
    BASE STYLES 

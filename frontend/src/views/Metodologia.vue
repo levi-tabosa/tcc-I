@@ -83,25 +83,6 @@ Replace React/Next content with a Vue Single File Component implementing the sam
                     </a>
                   </div>
                 </div>
-
-                <div class="source-item">
-                  <h3 class="source-title">Tribunal Superior Eleitoral (TSE)</h3>
-                  <p class="source-description">
-                    Informações sobre filiação partidária e histórico eleitoral
-                  </p>
-                  <div class="source-links">
-                    <span class="source-badge">Dados Públicos</span>
-                    <a
-                      href="https://www.tse.jus.br/eleicoes/estatisticas/repositorio-de-dados-eleitorais"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="external-link"
-                    >
-                      Portal TSE
-                      <ExternalLink class="external-icon" />
-                    </a>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
@@ -263,31 +244,7 @@ Replace React/Next content with a Vue Single File Component implementing the sam
             </div>
           </div>
 
-          <!-- Limitations -->
-          <div class="info-card limitations-card">
-            <div class="info-card-header">
-              <div class="card-header-content">
-                <h2 class="card-title">Limitações e Avisos</h2>
-              </div>
-            </div>
-            
-            <div class="info-card-content">
-              <div class="limitations-list">
-                <div class="limitation-item">
-                  <strong class="limitation-label">Dados em tempo real:</strong>
-                  <span class="limitation-text">Existe um delay de até 24 horas entre a publicação oficial e a disponibilização nesta plataforma.</span>
-                </div>
-                <div class="limitation-item">
-                  <strong class="limitation-label">Responsabilidade:</strong>
-                  <span class="limitation-text">Nos esforçamos para garantir a precisão dos dados, mas erros podem ocorrer. Sempre consulte as fontes oficiais para decisões importantes.</span>
-                </div>
-                <div class="limitation-item">
-                  <strong class="limitation-label">Interpretação:</strong>
-                  <span class="limitation-text">As métricas apresentadas são calculadas automaticamente e não substituem análise contextual aprofundada.</span>
-                </div>
-              </div>
-            </div>
-          </div>
+
 
           <!-- CTA -->
           <div class="info-card cta-card">
@@ -335,9 +292,9 @@ const lastUpdate = computed(() =>
    ====================== */
 .page-wrapper {
   min-height: 100vh;
-  background: linear-gradient(180deg, #f8fafc, #f1f5f9);
+  background: var(--bg-secondary);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .main-content {
@@ -361,6 +318,10 @@ const lastUpdate = computed(() =>
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, transparent 100%);
 }
 
+.dark .hero-section {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.1) 0%, rgba(15, 23, 42, 0) 100%);
+}
+
 .hero-content {
   position: relative;
   max-width: 800px;
@@ -372,7 +333,7 @@ const lastUpdate = computed(() =>
 .hero-title {
   font-size: 2.5rem;
   font-weight: 900;
-  color: var(--color-gray-900);
+  color: var(--text-primary);
   margin-bottom: 1.5rem;
   line-height: 1.2;
   letter-spacing: -0.025em;
@@ -387,7 +348,7 @@ const lastUpdate = computed(() =>
 
 .hero-description {
   font-size: 1.125rem;
-  color: var(--color-gray-600);
+  color: var(--text-secondary);
   margin-bottom: 3rem;
   line-height: 1.6;
   max-width: 700px;
@@ -406,8 +367,8 @@ const lastUpdate = computed(() =>
 }
 
 .info-card {
-  background: var(--color-white);
-  border: 1px solid var(--color-gray-200);
+  background: var(--surface-primary);
+  border: 1px solid var(--border-primary);
   border-radius: 1rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   margin-bottom: 2rem;
@@ -421,7 +382,7 @@ const lastUpdate = computed(() =>
 
 .info-card-header {
   padding: 2rem 2rem 1rem;
-  border-bottom: 1px solid var(--color-gray-100);
+  border-bottom: 1px solid var(--border-primary);
 }
 
 .card-header-content {
@@ -440,13 +401,13 @@ const lastUpdate = computed(() =>
 .card-title {
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--color-gray-900);
+  color: var(--text-primary);
   margin: 0;
 }
 
 .card-subtitle {
   font-size: 1rem;
-  color: var(--color-gray-600);
+  color: var(--text-secondary);
   margin: 0;
   line-height: 1.5;
 }
@@ -459,8 +420,8 @@ const lastUpdate = computed(() =>
    CARD DE ATUALIZAÇÃO 
    ====================== */
 .update-card {
-  border-color: rgba(59, 130, 246, 0.3);
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.02), var(--color-white));
+  border-color: var(--color-primary-light);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.02), var(--surface-primary));
 }
 
 .update-info {
@@ -478,11 +439,11 @@ const lastUpdate = computed(() =>
 
 .update-label {
   font-weight: 600;
-  color: var(--color-gray-900);
+  color: var(--text-primary);
 }
 
 .update-date {
-  color: var(--color-gray-600);
+  color: var(--text-secondary);
 }
 
 /* ======================
@@ -497,20 +458,16 @@ const lastUpdate = computed(() =>
 @media (min-width: 768px) {
   .sources-grid {
     grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (min-width: 1024px) {
-  .sources-grid {
-    grid-template-columns: repeat(3, 1fr);
+    max-width: 800px;
+    margin: 0 auto;
   }
 }
 
 .source-item {
   padding: 1.5rem;
-  border: 1px solid var(--color-gray-200);
+  border: 1px solid var(--border-primary);
   border-radius: 0.75rem;
-  background: var(--color-gray-50);
+  background: var(--surface-secondary);
   border-left: 4px solid var(--color-primary);
   transition: all 0.2s ease;
 }
@@ -524,13 +481,13 @@ const lastUpdate = computed(() =>
 .source-title {
   font-size: 1.125rem;
   font-weight: 600;
-  color: var(--color-gray-900);
+  color: var(--text-primary);
   margin-bottom: 0.75rem;
 }
 
 .source-description {
   font-size: 0.9rem;
-  color: var(--color-gray-600);
+  color: var(--text-secondary);
   line-height: 1.5;
   margin-bottom: 1rem;
 }
@@ -547,7 +504,7 @@ const lastUpdate = computed(() =>
   padding: 0.375rem 0.75rem;
   background: rgba(59, 130, 246, 0.1);
   color: var(--color-primary);
-  border: 1px solid rgba(59, 130, 246, 0.2);
+  border: 1px solid var(--color-primary-light);
   border-radius: 0.5rem;
   font-size: 0.8rem;
   font-weight: 500;
@@ -610,12 +567,12 @@ const lastUpdate = computed(() =>
 .step-title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--color-gray-900);
+  color: var(--text-primary);
   margin-bottom: 0.75rem;
 }
 
 .step-description {
-  color: var(--color-gray-600);
+  color: var(--text-secondary);
   line-height: 1.6;
   font-size: 0.95rem;
 }
@@ -637,9 +594,9 @@ const lastUpdate = computed(() =>
 
 .legal-item {
   padding: 1.5rem;
-  border: 1px solid var(--color-gray-200);
+  border: 1px solid var(--border-primary);
   border-radius: 0.75rem;
-  background: var(--color-gray-50);
+  background: var(--surface-secondary);
   transition: all 0.2s ease;
 }
 
@@ -648,19 +605,19 @@ const lastUpdate = computed(() =>
 }
 
 .legal-item:hover {
-  background: var(--color-white);
+  background: var(--surface-primary);
   border-color: var(--color-primary);
 }
 
 .legal-title {
   font-size: 1.125rem;
   font-weight: 600;
-  color: var(--color-gray-900);
+  color: var(--text-primary);
   margin-bottom: 0.75rem;
 }
 
 .legal-description {
-  color: var(--color-gray-600);
+  color: var(--text-secondary);
   line-height: 1.6;
   font-size: 0.95rem;
   margin-bottom: 1rem;
@@ -670,7 +627,7 @@ const lastUpdate = computed(() =>
    OPEN SOURCE 
    ====================== */
 .opensource-description {
-  color: var(--color-gray-600);
+  color: var(--text-secondary);
   line-height: 1.6;
   margin-bottom: 1.5rem;
   font-size: 0.95rem;
@@ -706,47 +663,13 @@ const lastUpdate = computed(() =>
   height: 1rem;
 }
 
-/* ======================
-   LIMITAÇÕES 
-   ====================== */
-.limitations-card {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.02), var(--color-white));
-  border-color: rgba(245, 158, 11, 0.2);
-}
 
-.limitations-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.limitation-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 1rem;
-  background: var(--color-gray-50);
-  border-radius: 0.5rem;
-  border-left: 4px solid #f59e0b;
-}
-
-.limitation-label {
-  font-weight: 600;
-  color: var(--color-gray-900);
-  font-size: 0.95rem;
-}
-
-.limitation-text {
-  color: var(--color-gray-600);
-  line-height: 1.5;
-  font-size: 0.9rem;
-}
 
 /* ======================
    CTA FINAL 
    ====================== */
 .cta-card {
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.02), var(--color-white));
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.02), var(--surface-primary));
   border-color: rgba(34, 197, 94, 0.2);
 }
 
@@ -773,12 +696,12 @@ const lastUpdate = computed(() =>
 .cta-title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--color-gray-900);
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
 }
 
 .cta-description {
-  color: var(--color-gray-600);
+  color: var(--text-secondary);
   margin: 0;
   font-size: 0.95rem;
 }

@@ -4,6 +4,7 @@ import Perfil from '../views/Perfil.vue'
 import Dashboard from '../views/Dashboard.vue'
 import Metodologia from '../views/Metodologia.vue'
 import Contato from '../views/Contato.vue'
+import Comparativo from '../views/Comparativo.vue'
 
 const routes = [
   {
@@ -30,6 +31,11 @@ const routes = [
     path: '/contato',
     name: 'Contato',
     component: Contato
+  },
+  {
+    path: '/comparativo',
+    name: 'Comparativo',
+    component: Comparativo
   }
 ]
 
