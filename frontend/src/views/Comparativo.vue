@@ -1,191 +1,305 @@
 <template>
-  <div class="min-h-screen flex flex-col bg-background text-foreground">
-    <main class="flex-1 py-8">
-      <div class="container mx-auto px-4 max-w-6xl">
-        
-        <div class="header-section text-center mb-10">
-          <h1 class="text-3xl font-bold text-primary mb-2">Comparativo de Parlamentares</h1>
-          <p class="text-secondary">Selecione dois deputados para comparar gastos e indicadores lado a lado</p>
-        </div>
-
-        <!-- Área de Seleção -->
-        <div class="selection-area grid md:grid-cols-2 gap-8 mb-12 relative">
-          
-          <!-- VS Badge no meio -->
-          <div class="vs-badge">VS</div>
-
-          <!-- Slot 1 -->
-          <div class="selector-card">
-            <div v-if="!deputado1" class="search-mode">
-              <div class="icon-circle mb-4">
-                <UserPlus class="w-8 h-8 text-primary" />
-              </div>
-              <h3 class="font-semibold mb-4 text-primary">Selecionar Parlamentar A</h3>
-              <div class="relative w-full">
-                <input 
-                  v-model="termoBusca1"
-                  @input="buscar(1)"
-                  type="text" 
-                  placeholder="Digite o nome..." 
-                  class="search-input"
-                />
-                <!-- Lista de Resultados 1 -->
-                <div v-if="resultados1.length > 0" class="search-results">
-                  <div 
-                    v-for="dep in resultados1" 
-                    :key="dep.id"
-                    @click="selecionarDeputado(1, dep)"
-                    class="search-item"
-                  >
-                    <span class="font-medium text-primary">{{ dep.nome_civil }}</span>
-                    <span class="text-xs text-secondary">{{ dep.uf }}</span>
-                  </div>
-                </div>
-              </div>
+  <div class="page-wrapper">
+    <main class="main-content">
+      <!-- Header Section -->
+      <section class="comparison-header-section">
+        <div class="container">
+          <div class="comparison-header">
+            <div class="header-icon-wrapper">
+              <BarChart3 class="header-icon" />
             </div>
-
-            <div v-else class="selected-mode">
-              <button @click="removerDeputado(1)" class="remove-btn">
-                <X class="w-4 h-4" />
-              </button>
-              <img :src="deputado1.foto" class="selected-foto" />
-              <h2 class="text-xl font-bold mt-2 text-primary">{{ deputado1.nome }}</h2>
-              <div class="flex gap-2 mt-2">
-                <span class="tag tag-primary">{{ deputado1.partido }}</span>
-                <span class="tag tag-secondary">{{ deputado1.estado }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Slot 2 -->
-          <div class="selector-card">
-            <div v-if="!deputado2" class="search-mode">
-              <div class="icon-circle mb-4">
-                <UserPlus class="w-8 h-8 text-primary" />
-              </div>
-              <h3 class="font-semibold mb-4 text-primary">Selecionar Parlamentar B</h3>
-              <div class="relative w-full">
-                <input 
-                  v-model="termoBusca2"
-                  @input="buscar(2)"
-                  type="text" 
-                  placeholder="Digite o nome..." 
-                  class="search-input"
-                />
-                <!-- Lista de Resultados 2 -->
-                <div v-if="resultados2.length > 0" class="search-results">
-                  <div 
-                    v-for="dep in resultados2" 
-                    :key="dep.id"
-                    @click="selecionarDeputado(2, dep)"
-                    class="search-item"
-                  >
-                    <span class="font-medium text-primary">{{ dep.nome_civil }}</span>
-                    <span class="text-xs text-secondary">{{ dep.uf }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div v-else class="selected-mode">
-              <button @click="removerDeputado(2)" class="remove-btn">
-                <X class="w-4 h-4" />
-              </button>
-              <img :src="deputado2.foto" class="selected-foto" />
-              <h2 class="text-xl font-bold mt-2 text-primary">{{ deputado2.nome }}</h2>
-              <div class="flex gap-2 mt-2">
-                <span class="tag tag-primary">{{ deputado2.partido }}</span>
-                <span class="tag tag-secondary">{{ deputado2.estado }}</span>
-              </div>
-            </div>
+            <h1 class="comparison-title">Comparativo de Parlamentares</h1>
+            <p class="comparison-subtitle">
+              Analise e compare gastos, média mensal e categorias de despesas entre dois deputados federais de forma intuitiva.
+            </p>
           </div>
         </div>
+      </section>
 
-        <!-- Conteúdo da Comparação (Só aparece se tiver os 2) -->
-        <div v-if="deputado1 && deputado2" class="comparison-content space-y-8 fade-in">
-          
-          <!-- 1. Indicadores Financeiros -->
-          <div class="section-card">
-            <h3 class="section-title mb-6 flex items-center justify-center gap-2 text-primary font-bold"><DollarSign class="w-5 h-5" /> Indicadores Financeiros</h3>
+      <!-- Selection Section -->
+      <section class="selection-section">
+        <div class="container">
+          <div class="selection-grid">
             
-            <!-- Total Gasto -->
-            <div class="metric-row">
-              <div class="text-center mb-2 font-medium text-secondary">Total Gasto (Legislatura)</div>
-              <div class="flex items-center justify-between gap-4">
-                
-                <!-- Barra Esq -->
-                <div class="flex-1 flex flex-col items-end">
-                  <span class="text-lg font-bold" :class="{'text-blue-600': dadosDep1.total > dadosDep2.total, 'text-foreground': dadosDep1.total <= dadosDep2.total}">
-                    {{ formatCurrency(dadosDep1.total) }}
-                  </span>
-                  <div class="bar-container w-full flex justify-end">
-                    <div class="bar-fill left" :style="{ width: getPorcentagem(dadosDep1.total) + '%' }"></div>
-                  </div>
+            <!-- VS Badge -->
+            <div class="vs-container">
+              <div class="vs-badge">VS</div>
+            </div>
+
+            <!-- Parlamentar A -->
+            <div class="selector-card" :class="{ 'has-selection': deputado1 }">
+              <div v-if="!deputado1" class="search-mode">
+                <div class="selector-icon-wrapper">
+                  <UserPlus class="selector-icon" />
                 </div>
-
-                <div class="text-xs text-tertiary font-bold">VS</div>
-
-                <!-- Barra Dir -->
-                <div class="flex-1 flex flex-col items-start">
-                  <span class="text-lg font-bold" :class="{'text-blue-600': dadosDep2.total > dadosDep1.total, 'text-foreground': dadosDep2.total <= dadosDep1.total}">
-                    {{ formatCurrency(dadosDep2.total) }}
-                  </span>
-                  <div class="bar-container w-full flex justify-start">
-                    <div class="bar-fill right" :style="{ width: getPorcentagem(dadosDep2.total) + '%' }"></div>
+                <h3 class="selector-title">Parlamentar A</h3>
+                <div class="search-wrapper">
+                  <div class="search-input-group">
+                    <Search class="search-icon-input" />
+                    <input 
+                      v-model="termoBusca1"
+                      @input="buscar(1)"
+                      type="text" 
+                      placeholder="Busque por nome..." 
+                      class="search-input"
+                    />
                   </div>
+                  <!-- Resultados da Busca -->
+                  <transition name="fade-dropdown">
+                    <div v-if="resultados1.length > 0" class="search-results">
+                      <div 
+                        v-for="dep in resultados1" 
+                        :key="dep.id"
+                        @click="selecionarDeputado(1, dep)"
+                        class="search-result-item"
+                      >
+                        <img :src="getFotoUrl(dep.id)" class="result-avatar" @error="handleImgError" />
+                        <div class="result-info">
+                          <div class="result-name">{{ dep.nome_civil }}</div>
+                          <div class="result-state">{{ dep.uf }}</div>
+                        </div>
+                        <ChevronRight class="result-arrow" />
+                      </div>
+                    </div>
+                  </transition>
                 </div>
+              </div>
 
+              <div v-else class="selected-mode">
+                <button @click="removerDeputado(1)" class="remove-button" title="Remover">
+                  <X class="remove-icon" />
+                </button>
+                <div class="selected-avatar-container">
+                  <img :src="deputado1.foto" class="selected-avatar" @error="handleImgError" />
+                </div>
+                <h2 class="selected-name">{{ deputado1.nome }}</h2>
+                <div class="selected-tags">
+                  <span class="info-tag tag-partido">{{ deputado1.partido }}</span>
+                  <span class="info-tag tag-estado">{{ deputado1.estado }}</span>
+                </div>
               </div>
             </div>
 
-            <!-- Média Mensal -->
-            <div class="metric-row mt-6 pt-6 border-t border-border">
-              <div class="text-center mb-2 font-medium text-secondary">Média Mensal</div>
-              <div class="flex justify-between text-lg px-4">
-                <span class="font-semibold text-foreground">{{ formatCurrency(dadosDep1.media) }}</span>
-                <span class="font-semibold text-foreground">{{ formatCurrency(dadosDep2.media) }}</span>
+            <!-- Parlamentar B -->
+            <div class="selector-card" :class="{ 'has-selection': deputado2 }">
+              <div v-if="!deputado2" class="search-mode">
+                <div class="selector-icon-wrapper">
+                  <UserPlus class="selector-icon" />
+                </div>
+                <h3 class="selector-title">Parlamentar B</h3>
+                <div class="search-wrapper">
+                  <div class="search-input-group">
+                    <Search class="search-icon-input" />
+                    <input 
+                      v-model="termoBusca2"
+                      @input="buscar(2)"
+                      type="text" 
+                      placeholder="Busque por nome..." 
+                      class="search-input"
+                    />
+                  </div>
+                  <!-- Resultados da Busca -->
+                  <transition name="fade-dropdown">
+                    <div v-if="resultados2.length > 0" class="search-results">
+                      <div 
+                        v-for="dep in resultados2" 
+                        :key="dep.id"
+                        @click="selecionarDeputado(2, dep)"
+                        class="search-result-item"
+                      >
+                        <img :src="getFotoUrl(dep.id)" class="result-avatar" @error="handleImgError" />
+                        <div class="result-info">
+                          <div class="result-name">{{ dep.nome_civil }}</div>
+                          <div class="result-state">{{ dep.uf }}</div>
+                        </div>
+                        <ChevronRight class="result-arrow" />
+                      </div>
+                    </div>
+                  </transition>
+                </div>
               </div>
+
+              <div v-else class="selected-mode">
+                <button @click="removerDeputado(2)" class="remove-button" title="Remover">
+                  <X class="remove-icon" />
+                </button>
+                <div class="selected-avatar-container">
+                  <img :src="deputado2.foto" class="selected-avatar" @error="handleImgError" />
+                </div>
+                <h2 class="selected-name">{{ deputado2.nome }}</h2>
+                <div class="selected-tags">
+                  <span class="info-tag tag-partido">{{ deputado2.partido }}</span>
+                  <span class="info-tag tag-estado">{{ deputado2.estado }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Comparison Content -->
+      <section v-if="deputado1 && deputado2" class="comparison-section">
+        <div class="container">
+          
+          <!-- Stats Overview -->
+          <div class="stats-overview-grid">
+            <div class="comparison-stat-card">
+              <div class="stat-card-icon-wrapper">
+                <DollarSign class="stat-card-icon" />
+              </div>
+              <div class="stat-card-content">
+                <p class="stat-card-label">Total Gasto</p>
+                <div class="stat-comparison-wrapper">
+                  <div class="stat-value-group">
+                    <span class="stat-value">{{ formatCurrency(dadosDep1.total) }}</span>
+                    <span class="stat-deputy-label">Parlamentar A</span>
+                  </div>
+                  <div class="stat-divider"></div>
+                  <div class="stat-value-group">
+                    <span class="stat-value">{{ formatCurrency(dadosDep2.total) }}</span>
+                    <span class="stat-deputy-label">Parlamentar B</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="comparison-stat-card">
+              <div class="stat-card-icon-wrapper">
+                <TrendingUp class="stat-card-icon" />
+              </div>
+              <div class="stat-card-content">
+                <p class="stat-card-label">Média Mensal</p>
+                <div class="stat-comparison-wrapper">
+                  <div class="stat-value-group">
+                    <span class="stat-value">{{ formatCurrency(dadosDep1.media) }}</span>
+                    <span class="stat-deputy-label">Parlamentar A</span>
+                  </div>
+                  <div class="stat-divider"></div>
+                  <div class="stat-value-group">
+                    <span class="stat-value">{{ formatCurrency(dadosDep2.media) }}</span>
+                    <span class="stat-deputy-label">Parlamentar B</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="comparison-stat-card">
+              <div class="stat-card-icon-wrapper">
+                <FileText class="stat-card-icon" />
+              </div>
+              <div class="stat-card-content">
+                <p class="stat-card-label">Notas Fiscais</p>
+                <div class="stat-comparison-wrapper">
+                  <div class="stat-value-group">
+                    <span class="stat-value">{{ dadosDep1.qtd }}</span>
+                    <span class="stat-deputy-label">Parlamentar A</span>
+                  </div>
+                  <div class="stat-divider"></div>
+                  <div class="stat-value-group">
+                    <span class="stat-value">{{ dadosDep2.qtd }}</span>
+                    <span class="stat-deputy-label">Parlamentar B</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Visual Comparison Bars -->
+          <div class="comparison-bars-container">
+            <div class="section-header-divider">
+              <span class="divider-line"></span>
+              <h3 class="section-divider-title">Comparação Visual</h3>
+              <span class="divider-line"></span>
             </div>
             
-             <!-- Quantidade de Despesas -->
-            <div class="metric-row mt-4">
-               <div class="text-center mb-2 font-medium text-secondary">Qtd. Notas Fiscais</div>
-               <div class="flex justify-between text-lg px-4">
-                 <span class="text-foreground">{{ dadosDep1.qtd }} notas</span>
-                 <span class="text-foreground">{{ dadosDep2.qtd }} notas</span>
-               </div>
+            <div class="comparison-bars-content">
+              <!-- Total Gasto -->
+              <div class="comparison-bar-wrapper">
+                <div class="comparison-bar-header">
+                  <div class="bar-deputy-info">
+                    <span class="deputy-label">{{ deputado1.nome }}</span>
+                    <span class="deputy-value">{{ formatCurrency(dadosDep1.total) }}</span>
+                  </div>
+                  <div class="bar-metric-label">
+                    <span>GASTOS TOTAIS</span>
+                  </div>
+                  <div class="bar-deputy-info text-right">
+                    <span class="deputy-label">{{ deputado2.nome }}</span>
+                    <span class="deputy-value">{{ formatCurrency(dadosDep2.total) }}</span>
+                  </div>
+                </div>
+                <div class="dual-progress-bar">
+                  <div class="progress-half progress-left">
+                    <div class="progress-fill progress-blue" :style="{ width: getPorcentagem(dadosDep1.total) + '%' }"></div>
+                  </div>
+                  <div class="progress-half progress-right">
+                    <div class="progress-fill progress-green" :style="{ width: getPorcentagem(dadosDep2.total) + '%' }"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Média Mensal -->
+              <div class="comparison-bar-wrapper">
+                <div class="comparison-bar-header">
+                  <div class="bar-deputy-info">
+                    <span class="deputy-value">{{ formatCurrency(dadosDep1.media) }}</span>
+                  </div>
+                  <div class="bar-metric-label">
+                    <span>MÉDIA MENSAL</span>
+                  </div>
+                  <div class="bar-deputy-info text-right">
+                    <span class="deputy-value">{{ formatCurrency(dadosDep2.media) }}</span>
+                  </div>
+                </div>
+                <div class="dual-progress-bar">
+                  <div class="progress-half progress-left">
+                    <div class="progress-fill progress-blue" :style="{ width: getPorcentagemMedia(dadosDep1.media) + '%' }"></div>
+                  </div>
+                  <div class="progress-half progress-right">
+                    <div class="progress-fill progress-green" :style="{ width: getPorcentagemMedia(dadosDep2.media) + '%' }"></div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
-          <!-- 2. Comparativo de Categorias (Top 3) -->
-          <div class="grid md:grid-cols-2 gap-8">
-            <!-- Dep 1 Categorias -->
-            <div class="section-card">
-              <h4 class="font-semibold text-primary mb-4 text-center">Top Gastos: {{ deputado1.nome }}</h4>
-              <div class="space-y-4">
-                <div v-for="cat in dadosDep1.topCategorias" :key="cat.tipo" class="relative">
-                  <div class="flex justify-between text-sm mb-1">
-                    <span class="truncate pr-2 text-foreground">{{ cat.tipo }}</span>
-                    <span class="font-medium text-foreground">{{ formatCurrency(cat.total) }}</span>
+          <!-- Categories Comparison -->
+          <div class="categories-comparison-grid">
+            <!-- Deputado 1 Categories -->
+            <div class="category-comparison-card">
+              <div class="category-card-accent accent-blue"></div>
+              <div class="category-card-header">
+                <Award class="category-icon" />
+                <h4 class="category-title">Principais Categorias</h4>
+              </div>
+              <div class="category-list">
+                <div v-for="cat in dadosDep1.topCategorias" :key="cat.tipo" class="category-list-item">
+                  <div class="category-item-header">
+                    <span class="category-name">{{ cat.tipo }}</span>
+                    <span class="category-value">{{ formatCurrency(cat.total) }}</span>
                   </div>
-                  <div class="h-2 bg-surface-secondary rounded-full overflow-hidden">
-                    <div class="h-full bg-blue-500" :style="{ width: (cat.total / dadosDep1.total * 100) + '%' }"></div>
+                  <div class="category-progress-track">
+                    <div class="category-progress-fill category-blue" :style="{ width: (cat.total / dadosDep1.total * 100) + '%' }"></div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Dep 2 Categorias -->
-            <div class="section-card">
-              <h4 class="font-semibold text-primary mb-4 text-center">Top Gastos: {{ deputado2.nome }}</h4>
-              <div class="space-y-4">
-                <div v-for="cat in dadosDep2.topCategorias" :key="cat.tipo" class="relative">
-                  <div class="flex justify-between text-sm mb-1">
-                    <span class="truncate pr-2 text-foreground">{{ cat.tipo }}</span>
-                    <span class="font-medium text-foreground">{{ formatCurrency(cat.total) }}</span>
+            <!-- Deputado 2 Categories -->
+            <div class="category-comparison-card">
+              <div class="category-card-accent accent-green"></div>
+              <div class="category-card-header">
+                <Award class="category-icon" />
+                <h4 class="category-title">Principais Categorias</h4>
+              </div>
+              <div class="category-list">
+                <div v-for="cat in dadosDep2.topCategorias" :key="cat.tipo" class="category-list-item">
+                  <div class="category-item-header">
+                    <span class="category-name">{{ cat.tipo }}</span>
+                    <span class="category-value">{{ formatCurrency(cat.total) }}</span>
                   </div>
-                  <div class="h-2 bg-surface-secondary rounded-full overflow-hidden">
-                    <div class="h-full bg-green-500" :style="{ width: (cat.total / dadosDep2.total * 100) + '%' }"></div>
+                  <div class="category-progress-track">
+                    <div class="category-progress-fill category-green" :style="{ width: (cat.total / dadosDep2.total * 100) + '%' }"></div>
                   </div>
                 </div>
               </div>
@@ -193,20 +307,34 @@
           </div>
 
         </div>
+      </section>
 
-        <div v-else class="text-center py-12 text-tertiary">
-          <p>Selecione dois parlamentares acima para gerar o relatório comparativo.</p>
+      <!-- Empty State -->
+      <section v-else class="empty-state-section">
+        <div class="container">
+          <div class="empty-state-content">
+            <div class="empty-state-icon-wrapper">
+              <Users class="empty-state-icon" />
+            </div>
+            <h3 class="empty-state-title">Selecione Dois Parlamentares</h3>
+            <p class="empty-state-description">
+              Escolha dois deputados federais acima para visualizar uma comparação detalhada de seus gastos, médias e categorias de despesas.
+            </p>
+          </div>
         </div>
+      </section>
 
-      </div>
     </main>
     <AppFooter />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { UserPlus, X, DollarSign } from 'lucide-vue-next'
+import { ref } from 'vue'
+import { 
+  UserPlus, X, DollarSign, BarChart3, Search, 
+  ChevronRight, TrendingUp, FileText, Award, Users 
+} from 'lucide-vue-next'
 import AppFooter from '@/components/AppFooter.vue'
 
 // --- Interfaces ---
@@ -236,6 +364,12 @@ const deputado2 = ref<DeputadoCompleto | null>(null)
 // Dados processados das despesas
 const dadosDep1 = ref({ total: 0, media: 0, qtd: 0, topCategorias: [] as any[] })
 const dadosDep2 = ref({ total: 0, media: 0, qtd: 0, topCategorias: [] as any[] })
+
+const getFotoUrl = (id: number) => `https://www.camara.leg.br/internet/deputado/bandep/${id}.jpg`
+
+const handleImgError = (e: Event) => {
+  (e.target as HTMLImageElement).src = 'https://via.placeholder.com/150/f1f5f9/94a3b8?text=Foto'
+}
 
 // --- Funções de Busca ---
 const buscar = async (slot: number) => {
@@ -270,7 +404,7 @@ const selecionarDeputado = async (slot: number, depBasic: DeputadoBusca) => {
     const objDeputado = {
       id: perfil.id,
       nome: perfil.nome_civil,
-      foto: perfil.foto,
+      foto: perfil.foto || getFotoUrl(perfil.id),
       partido: perfil.sigla_partido,
       estado: perfil.uf_nascimento
     }
@@ -325,169 +459,896 @@ const removerDeputado = (slot: number) => {
 
 // --- Utilitários de Visualização ---
 const getPorcentagem = (valor: number) => {
-  // Pega o maior valor entre os dois para usar como base 100%
   const max = Math.max(dadosDep1.value.total, dadosDep2.value.total)
   if (max === 0) return 0
   return (valor / max) * 100
 }
 
+const getPorcentagemMedia = (valor: number) => {
+  const max = Math.max(dadosDep1.value.media, dadosDep2.value.media)
+  if (max === 0) return 0
+  return (valor / max) * 100
+}
+
 const formatCurrency = (val: number) => {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val)
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(val)
 }
 </script>
 
 <style scoped>
-/* Estilos Específicos da Página de Comparação */
-
-.search-input {
-  width: 100%;
-  padding: 0.75rem;
-  background-color: var(--surface-primary);
-  color: var(--text-primary);
-  border: 1px solid var(--border-primary);
-  border-radius: 0.5rem;
-  outline: none;
-  transition: border-color 0.2s;
-}
-.search-input:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+/* ===========================
+   ANIMATIONS & TRANSITIONS
+   =========================== */
+.fade-dropdown-enter-active,
+.fade-dropdown-leave-active {
+  transition: all 0.2s ease;
 }
 
-.search-results {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  background: var(--surface-primary);
-  border: 1px solid var(--border-primary);
-  border-radius: 0.5rem;
-  margin-top: 4px;
-  max-height: 200px;
-  overflow-y: auto;
-  z-index: 10;
-  box-shadow: var(--shadow-md);
+.fade-dropdown-enter-from,
+.fade-dropdown-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
 }
 
-.search-item {
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
+/* ===========================
+   HEADER SECTION
+   =========================== */
+.comparison-header-section {
+  padding: var(--space-16) 0 var(--space-12);
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+}
+
+.comparison-header {
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.header-icon-wrapper {
+  display: inline-flex;
   align-items: center;
-}
-.search-item:hover {
-  background-color: var(--card-hover-bg);
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  background: var(--color-primary);
+  border-radius: var(--radius-2xl);
+  margin-bottom: var(--space-6);
+  box-shadow: var(--shadow-xl);
 }
 
-.selector-card {
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: 1rem;
-  min-height: 300px;
+.header-icon {
+  width: 40px;
+  height: 40px;
+  color: white;
+}
+
+.comparison-title {
+  font-size: var(--font-size-4xl);
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: var(--space-4);
+  line-height: 1.2;
+}
+
+.comparison-subtitle {
+  font-size: var(--font-size-lg);
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* ===========================
+   SELECTION SECTION
+   =========================== */
+.selection-section {
+  padding: var(--space-12) 0;
+  position: relative;
+}
+
+.selection-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  position: relative;
+}
+
+@media (max-width: 768px) {
+  .selection-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}
+
+/* VS Badge */
+.vs-container {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 20;
+}
+
+.vs-badge {
+  background: var(--color-primary);
+  color: white;
+  font-size: 1.75rem;
+  font-weight: 900;
+  width: 80px;
+  height: 80px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
-  position: relative;
-  transition: all 0.3s ease;
-  box-shadow: var(--shadow-sm);
+  border-radius: 50%;
+  border: 6px solid var(--bg-primary);
+  box-shadow: var(--shadow-xl);
+  font-style: italic;
 }
 
-.search-mode, .selected-mode {
+@media (max-width: 768px) {
+  .vs-container {
+    display: none;
+  }
+}
+
+/* Selector Cards */
+.selector-card {
+  background: var(--card-bg);
+  border: 2px dashed var(--border-primary);
+  border-radius: var(--radius-2xl);
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.selector-card.has-selection {
+  border: 2px solid var(--color-primary);
+  box-shadow: var(--shadow-xl);
+  background: var(--card-hover-bg);
+}
+
+.selector-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.selector-card.has-selection:hover {
+  box-shadow: 0 20px 40px -10px rgba(37, 99, 235, 0.2);
+}
+
+/* Search Mode */
+.search-mode {
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-.selected-foto {
+.selector-icon-wrapper {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-2xl);
+  margin-bottom: var(--space-6);
+  box-shadow: var(--shadow-lg);
+}
+
+.selector-icon {
+  width: 40px;
+  height: 40px;
+  color: white;
+}
+
+.selector-title {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: var(--space-8);
+}
+
+.search-wrapper {
+  width: 100%;
+  position: relative;
+}
+
+.search-input-group {
+  position: relative;
+  width: 100%;
+}
+
+.search-icon-input {
+  position: absolute;
+  left: 1.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-tertiary);
+  width: 20px;
+  height: 20px;
+  z-index: 1;
+}
+
+.search-input {
+  width: 100%;
+  padding: 1rem 1rem 1rem 3.5rem;
+  background-color: var(--surface-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-xl);
+  outline: none;
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.search-input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.search-input:focus {
+  border-color: var(--color-primary);
+  background-color: var(--surface-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Search Results */
+.search-results {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  right: 0;
+  background: var(--surface-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 50;
+  box-shadow: var(--shadow-xl);
+}
+
+.search-results::-webkit-scrollbar {
+  width: 6px;
+}
+
+.search-results::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.search-results::-webkit-scrollbar-thumb {
+  background: var(--border-secondary);
+  border-radius: 10px;
+}
+
+.search-result-item {
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: background 0.15s ease;
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+.search-result-item:hover {
+  background-color: var(--surface-secondary);
+}
+
+.result-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-lg);
+  object-fit: cover;
+  background: var(--surface-secondary);
+  border: 2px solid var(--border-primary);
+}
+
+.result-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.result-name {
+  font-weight: 700;
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  margin-bottom: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.result-state {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.result-arrow {
+  width: 20px;
+  height: 20px;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+/* Selected Mode */
+.selected-mode {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: fadeInUp 0.4s ease;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.remove-button {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: var(--color-error);
+  color: white;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-md);
+}
+
+.remove-button:hover {
+  transform: scale(1.1) rotate(90deg);
+  background: #b91c1c;
+}
+
+.remove-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.selected-avatar-container {
+  position: relative;
+  padding: 6px;
+  background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary));
+  border-radius: 50%;
+  box-shadow: var(--shadow-xl);
+  margin-bottom: var(--space-6);
+}
+
+.selected-avatar {
   width: 140px;
   height: 140px;
   border-radius: 50%;
   object-fit: cover;
-  border: 4px solid var(--surface-primary);
-  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
-  margin-bottom: 1rem;
+  border: 4px solid white;
+  display: block;
 }
 
-.vs-badge {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  background: #0f172a;
+.selected-name {
+  font-size: var(--font-size-2xl);
+  font-weight: 800;
+  color: var(--text-primary);
+  text-align: center;
+  line-height: 1.3;
+  margin-bottom: var(--space-4);
+}
+
+.selected-tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.info-tag {
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.tag-partido {
+  background: var(--color-primary);
   color: white;
-  font-weight: 900;
-  width: 3rem;
-  height: 3rem;
+}
+
+.tag-estado {
+  background: var(--surface-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-primary);
+}
+
+/* ===========================
+   COMPARISON SECTION
+   =========================== */
+.comparison-section {
+  padding: var(--space-12) 0;
+  animation: fadeInUp 0.5s ease;
+}
+
+/* Stats Overview */
+.stats-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: var(--space-12);
+}
+
+.comparison-stat-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-xl);
+  padding: 1.5rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+}
+
+.comparison-stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.stat-card-icon-wrapper {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary));
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  z-index: 5;
-  border: 4px solid var(--surface-primary);
-  box-shadow: var(--shadow-md);
+  flex-shrink: 0;
 }
 
-@media (max-width: 768px) {
-  .vs-badge { top: 48%; } /* Ajuste fino para mobile */
+.stat-card-icon {
+  width: 28px;
+  height: 28px;
+  color: white;
 }
 
-.section-card {
+.stat-card-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.stat-card-label {
+  font-size: var(--font-size-xs);
+  font-weight: 800;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-3);
+}
+
+.stat-comparison-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.stat-value-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.stat-value {
+  font-size: var(--font-size-lg);
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.stat-deputy-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+}
+
+.stat-divider {
+  width: 1px;
+  height: 36px;
+  background: var(--border-primary);
+  flex-shrink: 0;
+}
+
+/* ===========================
+   COMPARISON BARS
+   =========================== */
+.comparison-bars-container {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
-  border-radius: 0.75rem;
-  padding: 1.5rem;
+  border-radius: var(--radius-xl);
+  padding: 2.5rem 2rem;
+  margin-bottom: var(--space-12);
   box-shadow: var(--shadow-sm);
 }
 
-.bar-container {
-  height: 0.75rem;
-  background-color: var(--surface-secondary);
-  border-radius: 999px;
+.section-header-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.divider-line {
+  height: 2px;
+  width: 60px;
+  background: linear-gradient(90deg, transparent, var(--border-primary), transparent);
+}
+
+.section-divider-title {
+  font-size: var(--font-size-sm);
+  font-weight: 800;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.comparison-bars-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.comparison-bar-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.comparison-bar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.bar-deputy-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.bar-deputy-info.text-right {
+  align-items: flex-end;
+}
+
+.deputy-label {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.deputy-value {
+  font-size: var(--font-size-xl);
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.bar-metric-label {
+  text-align: center;
+  padding-bottom: 0.25rem;
+}
+
+.bar-metric-label span {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--text-tertiary);
+  letter-spacing: 0.05em;
+}
+
+/* Dual Progress Bar */
+.dual-progress-bar {
+  height: 48px;
+  display: flex;
+  gap: 6px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  margin-top: 0.25rem;
 }
 
-.bar-fill {
+.progress-half {
+  flex: 1;
+  background: var(--surface-secondary);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-fill {
   height: 100%;
-  transition: width 1s ease;
+  transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: var(--radius-lg);
 }
-.bar-fill.left { background-color: var(--color-primary); border-radius: 999px 0 0 999px; }
-.bar-fill.right { background-color: var(--color-success); border-radius: 0 999px 999px 0; }
 
-.remove-btn {
+.progress-blue {
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+}
+
+.progress-green {
+  background: linear-gradient(270deg, #10b981, #34d399);
+}
+
+.progress-left .progress-fill {
+  float: right;
+  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+}
+
+.progress-right .progress-fill {
+  float: left;
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+}
+
+/* ===========================
+   CATEGORIES COMPARISON
+   =========================== */
+.categories-comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 2rem;
+  margin-bottom: var(--space-12);
+}
+
+.category-comparison-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-xl);
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+}
+
+.category-comparison-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.category-card-accent {
   position: absolute;
-  top: 1rem;
-  right: 1rem;
-  background: rgba(254, 226, 226, 0.8);
-  color: #ef4444;
-  padding: 0.5rem;
-  border-radius: 50%;
-  cursor: pointer;
-  border: none;
-  transition: background 0.2s;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
 }
-.remove-btn:hover { background: #fecaca; }
 
-.tag {
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 600;
+.accent-blue {
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
 }
-.tag-primary { background: var(--color-primary-light); color: var(--text-white); }
-.tag-secondary { background: var(--surface-secondary); color: var(--text-secondary); }
 
-.fade-in { animation: fadeIn 0.5s ease-in-out; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.accent-green {
+  background: linear-gradient(90deg, #10b981, #34d399);
+}
 
-/* Utilitários de texto e fundo substituídos por variáveis globais */
-.text-primary { color: var(--text-primary); }
-.text-secondary { color: var(--text-secondary); }
-.text-tertiary { color: var(--text-tertiary); }
-.bg-background { background-color: var(--bg-secondary); }
-.text-foreground { color: var(--text-primary); }
-.border-border { border-color: var(--border-primary); }
+.category-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+  padding-top: 0.5rem;
+}
+
+.category-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--color-primary);
+}
+
+.category-title {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.category-list-item {
+  transition: transform 0.2s ease;
+}
+
+.category-list-item:hover {
+  transform: translateX(6px);
+}
+
+.category-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  gap: 1rem;
+}
+
+.category-name {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--text-secondary);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.category-value {
+  font-size: var(--font-size-sm);
+  font-weight: 800;
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+
+.category-progress-track {
+  height: 8px;
+  background: var(--surface-secondary);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.category-progress-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.category-blue {
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+}
+
+.category-green {
+  background: linear-gradient(90deg, #10b981, #34d399);
+}
+
+/* ===========================
+   EMPTY STATE
+   =========================== */
+.empty-state-section {
+  padding: var(--space-20) 0;
+}
+
+.empty-state-content {
+  text-align: center;
+  padding: 5rem 2rem;
+  background: var(--surface-secondary);
+  border-radius: var(--radius-2xl);
+  border: 2px dashed var(--border-primary);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.empty-state-icon-wrapper {
+  display: inline-flex;
+  padding: 2rem;
+  background: var(--surface-primary);
+  border-radius: var(--radius-2xl);
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-lg);
+}
+
+.empty-state-icon {
+  width: 64px;
+  height: 64px;
+  color: var(--text-tertiary);
+}
+
+.empty-state-title {
+  font-size: var(--font-size-2xl);
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: var(--space-4);
+}
+
+.empty-state-description {
+  font-size: var(--font-size-base);
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* ===========================
+   RESPONSIVE ADJUSTMENTS
+   =========================== */
+@media (max-width: 768px) {
+  .comparison-title {
+    font-size: var(--font-size-3xl);
+  }
+
+  .stats-overview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .comparison-bar-header {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .bar-deputy-info.text-right {
+    align-items: flex-start;
+  }
+
+  .categories-comparison-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .selector-card {
+    padding: 2rem 1.5rem;
+    min-height: 350px;
+  }
+
+  .stat-comparison-wrapper {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .stat-divider {
+    width: 100%;
+    height: 1px;
+  }
+}
+
+@media (max-width: 640px) {
+  .comparison-header-section {
+    padding: var(--space-12) 0 var(--space-8);
+  }
+
+  .header-icon-wrapper {
+    width: 64px;
+    height: 64px;
+  }
+
+  .header-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .comparison-title {
+    font-size: var(--font-size-2xl);
+  }
+
+  .comparison-subtitle {
+    font-size: var(--font-size-base);
+  }
+
+  .deputy-value {
+    font-size: var(--font-size-lg);
+  }
+
+  .dual-progress-bar {
+    height: 36px;
+  }
+}
 </style>
