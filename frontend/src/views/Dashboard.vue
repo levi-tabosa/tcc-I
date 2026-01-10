@@ -130,8 +130,8 @@
               </div>
               <div class="chart-content">
                 <RegionalDistributionChart 
-                  v-if="!loading && deputados.length > 0"
-                  :deputados="deputados" 
+                  v-if="!loading && deputadosPorRegiao.length > 0"
+                  :distribuicao="deputadosPorRegiao" 
                 />
                 <div v-else-if="loading" class="empty-state">
                   <p>Carregando dados regionais...</p>
@@ -184,7 +184,7 @@ const fidelidadeMedia = ref(0)
 const gastosPorCategoria = ref<any[]>([])
 const gastosMensais = ref<any[]>([])
 const gastosPorEstado = ref<any[]>([])
-const deputados = ref<any[]>([])
+const deputadosPorRegiao = ref<any[]>([])
 
 // --- LÓGICA DE BUSCA DE DADOS ---
 const fetchDashboardData = async () => {
@@ -207,7 +207,10 @@ const fetchDashboardData = async () => {
     // 3. Gráfico de Estados
     gastosPorEstado.value = data.gastos_por_estado
 
-    // 4. Evolução Mensal (Tratando a imagem que você mandou)
+    // 4. Deputados por Região
+    deputadosPorRegiao.value = data.deputados_por_regiao || []
+
+    // 5. Evolução Mensal (Tratando a imagem que você mandou)
     const mesesNomes = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
     
     // Invertemos a ordem (reverse) para que o mês 10/2024 apareça antes do mês 09/2025
@@ -215,20 +218,6 @@ const fetchDashboardData = async () => {
       label: `${mesesNomes[item.mes - 1]}/${item.ano}`,
       valor: item.valor
     })).reverse()
-
-    // 5. Buscar lista de deputados para distribuição regional
-    try {
-      const deputadosResponse = await fetch('http://localhost:8000/api/deputados/')
-      if (deputadosResponse.ok) {
-        const data = await deputadosResponse.json()
-        deputados.value = data
-        console.log('Deputados carregados:', data.length)
-      } else {
-        console.error('Erro ao buscar deputados:', deputadosResponse.status)
-      }
-    } catch (err) {
-      console.error('Erro na requisição de deputados:', err)
-    }
 
   } catch (error) {
     console.error("Erro na integração com backend:", error)
