@@ -175,6 +175,31 @@ def buscar_estatisticas_geral():
             """)
             gastos_estado = [{"estado": r[0], "valor": float(r[1])} for r in cursor.fetchall()]
 
+
+            # 4. Quantidade de Deputados por Região
+            cursor.execute("""
+                SELECT 
+                    CASE
+                        WHEN m.sigla_uf IN ('AC', 'AP', 'AM', 'PA', 'RO', 'RR', 'TO') THEN 'Norte'
+                        WHEN m.sigla_uf IN ('AL', 'BA', 'CE', 'MA', 'PB', 'PE', 'PI', 'RN', 'SE') THEN 'Nordeste'
+                        WHEN m.sigla_uf IN ('DF', 'GO', 'MT', 'MS') THEN 'Centro-Oeste'
+                        WHEN m.sigla_uf IN ('ES', 'MG', 'RJ', 'SP') THEN 'Sudeste'
+                        WHEN m.sigla_uf IN ('PR', 'RS', 'SC') THEN 'Sul'
+                        ELSE 'Outros'
+                    END AS regiao,
+                    COUNT(DISTINCT m.deputado_id) as quantidade
+                FROM deputados_mandatos m
+                WHERE m.sigla_uf IS NOT NULL
+                GROUP BY regiao
+                ORDER BY quantidade DESC;
+            """)
+            
+            deputados_regiao = [
+                {"name": r[0], "value": int(r[1])} 
+                for r in cursor.fetchall()
+            ]
+
+                
             cursor.execute("SELECT SUM(valor_documento) from deputados_despesas")
             total_geral = cursor.fetchone()[0] or 0
 
@@ -186,7 +211,8 @@ def buscar_estatisticas_geral():
                 "total_parlamentares": total_deputados,
                 "gastos_por_categoria": gastos_categoria,
                 "gastos_por_mes": gastos_mensais,
-                "gastos_por_estado": gastos_estado
+                "gastos_por_estado": gastos_estado,
+                "deputados_por_regiao": deputados_regiao
             }
          
     except psycopg2.Error as e:
@@ -195,3 +221,4 @@ def buscar_estatisticas_geral():
     finally:
         conn.close()
     
+
