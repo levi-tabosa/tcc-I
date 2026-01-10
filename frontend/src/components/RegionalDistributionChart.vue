@@ -18,63 +18,39 @@ import {
 ChartJS.register(ArcElement, Tooltip, Legend, Title)
 
 interface Props {
-  deputados: Array<{
-    uf: string
-    [key: string]: any
+  distribuicao: Array<{
+    name: string
+    value: number
   }>
 }
 
 const props = defineProps<Props>()
 
-// Mapeamento de estados para regiões
-const estadosPorRegiao: Record<string, string[]> = {
-  'Sudeste': ['SP', 'RJ', 'MG', 'ES'],
-  'Nordeste': ['BA', 'CE', 'PE', 'MA', 'PB', 'RN', 'AL', 'SE', 'PI'],
-  'Sul': ['RS', 'SC', 'PR'],
-  'Norte': ['AM', 'PA', 'AC', 'RO', 'RR', 'AP', 'TO'],
-  'Centro-Oeste': ['GO', 'MT', 'MS', 'DF']
+// Mapa de cores por região
+const coresPorRegiao: Record<string, string> = {
+  'Sudeste': '#3b82f6',    // Azul
+  'Nordeste': '#f97316',   // Laranja
+  'Sul': '#1e3a8a',        // Azul escuro
+  'Norte': '#10b981',      // Verde
+  'Centro-Oeste': '#8b5cf6' // Roxo
 }
 
-// Calcula a distribuição por região
-const distribuicaoPorRegiao = computed(() => {
-  const contagem: Record<string, number> = {
-    'Sudeste': 0,
-    'Nordeste': 0,
-    'Sul': 0,
-    'Norte': 0,
-    'Centro-Oeste': 0
-  }
-
-  props.deputados.forEach(deputado => {
-    for (const [regiao, estados] of Object.entries(estadosPorRegiao)) {
-      if (estados.includes(deputado.uf)) {
-        contagem[regiao]++
-        break
-      }
-    }
-  })
-
-  const total = Object.values(contagem).reduce((sum, val) => sum + val, 0)
+// Calcula percentuais
+const distribuicaoComPercentual = computed(() => {
+  const total = props.distribuicao.reduce((sum, item) => sum + item.value, 0)
   
-  return Object.entries(contagem).map(([regiao, quantidade]) => ({
-    regiao,
-    quantidade,
-    percentual: total > 0 ? ((quantidade / total) * 100).toFixed(1) : '0.0'
+  return props.distribuicao.map(item => ({
+    ...item,
+    percentual: total > 0 ? ((item.value / total) * 100).toFixed(1) : '0.0'
   }))
 })
 
 const chartData = computed(() => ({
-  labels: distribuicaoPorRegiao.value.map(d => `${d.regiao}: ${d.percentual}%`),
+  labels: distribuicaoComPercentual.value.map(d => `${d.name}: ${d.percentual}%`),
   datasets: [
     {
-      data: distribuicaoPorRegiao.value.map(d => d.quantidade),
-      backgroundColor: [
-        '#3b82f6', // Sudeste - Azul
-        '#f97316', // Nordeste - Laranja
-        '#1e3a8a', // Sul - Azul escuro
-        '#10b981', // Norte - Verde
-        '#8b5cf6'  // Centro-Oeste - Roxo
-      ],
+      data: distribuicaoComPercentual.value.map(d => d.value),
+      backgroundColor: distribuicaoComPercentual.value.map(d => coresPorRegiao[d.name] || '#6b7280'),
       borderColor: '#ffffff',
       borderWidth: 2
     }
@@ -104,8 +80,8 @@ const chartOptions = computed(() => ({
     tooltip: {
       callbacks: {
         label: function(context: any) {
-          const regiao = distribuicaoPorRegiao.value[context.dataIndex]
-          return `${regiao.quantidade} deputados (${regiao.percentual}%)`
+          const item = distribuicaoComPercentual.value[context.dataIndex]
+          return `${item.value} deputados (${item.percentual}%)`
         }
       }
     }
