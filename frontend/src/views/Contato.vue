@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-gradient-to-b from-slate-50 to-white">
     
-    <!-- Success State -->
+    
     <div v-if="submitted" class="container mx-auto px-4 py-8 max-w-2xl">
       <div class="card border-primary">
         <div class="card-content pt-6">
