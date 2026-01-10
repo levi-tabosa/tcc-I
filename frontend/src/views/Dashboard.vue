@@ -186,11 +186,12 @@ const gastosMensais = ref<any[]>([])
 const gastosPorEstado = ref<any[]>([])
 const deputadosPorRegiao = ref<any[]>([])
 
+const apiUrl = import.meta.env.VITE_BACKEND_URL 
 // --- LÓGICA DE BUSCA DE DADOS ---
 const fetchDashboardData = async () => {
   loading.value = true
   try {
-    const response = await fetch('http://localhost:8000/api/deputados/estatisticas/geral')
+    const response = await fetch(`${apiUrl}/api/deputados/estatisticas/geral`)
     if (!response.ok) throw new Error('Falha ao buscar dados')
     
     const data = await response.json()

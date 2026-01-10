@@ -332,7 +332,8 @@
 import { ref } from 'vue'
 import { 
   UserPlus, X, DollarSign, BarChart3, Search, 
-  ChevronRight, TrendingUp, FileText, Award, Users 
+  ChevronRight, TrendingUp, FileText, Award, Users, 
+  Brackets
 } from 'lucide-vue-next'
 import AppFooter from '@/components/AppFooter.vue'
 
@@ -370,6 +371,7 @@ const handleImgError = (e: Event) => {
   (e.target as HTMLImageElement).src = 'https://via.placeholder.com/150/f1f5f9/94a3b8?text=Foto'
 }
 
+const apiUrl = import.meta.env.VITE_BACKEND_URL 
 // --- Funções de Busca ---
 const buscar = async (slot: number) => {
   const termo = slot === 1 ? termoBusca1.value : termoBusca2.value
@@ -380,7 +382,7 @@ const buscar = async (slot: number) => {
   }
 
   try {
-    const res = await fetch(`http://localhost:8000/api/deputados/buscar?nome=${termo}`)
+    const res = await fetch(`${apiUrl}/api/deputados/buscar?nome=${termo}`)
     const data = await res.json()
     if (slot === 1) resultados1.value = data.resultados
     else resultados2.value = data.resultados
@@ -397,7 +399,7 @@ const selecionarDeputado = async (slot: number, depBasic: DeputadoBusca) => {
 
   try {
     // 2. Busca Perfil Completo
-    const resPerfil = await fetch(`http://localhost:8000/api/deputados/${depBasic.id}`)
+    const resPerfil = await fetch(`${apiUrl}/api/deputados/${depBasic.id}`)
     const perfil = await resPerfil.json()
     
     const objDeputado = {
@@ -421,7 +423,7 @@ const selecionarDeputado = async (slot: number, depBasic: DeputadoBusca) => {
 
 const carregarDespesas = async (slot: number, id: number) => {
   try {
-    const res = await fetch(`http://localhost:8000/api/deputados/${id}/despesas`)
+    const res = await fetch(`${apiUrl}/api/deputados/${id}/despesas`)
     const data = await res.json()
     const despesas = data.despesas || []
 

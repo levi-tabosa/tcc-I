@@ -39,7 +39,7 @@ def listar_todos_deputados():
                 {
                     "id": dep[0],
                     "nome_civil": dep[1],
-                    "uf": dep[4] if dep[4] else dep[2],  # UF do mandato ou UF de nascimento
+                    "uf": dep[4] if dep[4] else dep[2],  
                     "sigla_partido": dep[3] if dep[3] else "S/P"
                 }
                 for dep in deputados

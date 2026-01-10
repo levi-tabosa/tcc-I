@@ -393,13 +393,14 @@ const errorDespesas = ref<string | null>(null)
 const mostrarTodasCategorias = ref(false)
 const mostrarTodasDespesas = ref(false)
 
+const apiUrl = import.meta.env.VITE_BACKEND_URL
 // Função para buscar despesas do parlamentar
 const fetchDespesas = async (id: number) => {
   isLoadingDespesas.value = true
   errorDespesas.value = null
   
   try {
-    const response = await fetch(`http://localhost:8000/api/deputados/${id}/despesas`)
+    const response = await fetch(`${apiUrl}/api/deputados/${id}/despesas`)
     if (!response.ok) {
       throw new Error('Erro ao buscar despesas')
     }
@@ -421,7 +422,7 @@ const fetchParlamentar = async (id: number) => {
   error.value = null
   
   try {
-    const response = await fetch(`http://localhost:8000/api/deputados/${id}`)
+    const response = await fetch(`${apiUrl}/api/deputados/${id}`)
     if (!response.ok) {
       throw new Error('Parlamentar não encontrado')
     }

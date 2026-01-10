@@ -130,13 +130,15 @@ const termoBusca = ref('')
 const paginaAtual = ref(1)
 const itensPorPagina = 12
 
+const apiUrl = import.meta.env.VITE_BACKEND_URL 
+
 // Fetch dos Dados
 const fetchDeputados = async () => {
   loading.value = true
   console.log('Iniciando busca de deputados...')
   
   try {
-    const response = await fetch('http://localhost:8000/api/deputados/')
+    const response = await fetch(`${apiUrl}/api/deputados/`)
     console.log('Status da resposta:', response.status)
     
     if (!response.ok) {
