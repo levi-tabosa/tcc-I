@@ -121,6 +121,26 @@
                 </div>
               </div>
             </div>
+
+            <!-- Distribuição Regional -->
+            <div class="chart-card full-width">
+              <div class="chart-header">
+                <h3 class="chart-title">Distribuição por Região</h3>
+                <p class="chart-description">Percentual de deputados por região do Brasil</p>
+              </div>
+              <div class="chart-content">
+                <RegionalDistributionChart 
+                  v-if="!loading && deputados.length > 0"
+                  :deputados="deputados" 
+                />
+                <div v-else-if="loading" class="empty-state">
+                  <p>Carregando dados regionais...</p>
+                </div>
+                <div v-else class="empty-state">
+                  <p>Nenhum dado disponível. Verifique se a API está respondendo.</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -151,6 +171,7 @@
 import { ref, computed, onMounted } from 'vue'
 import AppFooter from '@/components/AppFooter.vue'
 import StatCard from '@/components/StatCard.vue'
+import RegionalDistributionChart from '@/components/RegionalDistributionChart.vue'
 import { BarChart3, TrendingUp, Users, DollarSign, Award } from 'lucide-vue-next'
 
 // --- ESTADOS REATIVOS ---
@@ -163,6 +184,7 @@ const fidelidadeMedia = ref(0)
 const gastosPorCategoria = ref<any[]>([])
 const gastosMensais = ref<any[]>([])
 const gastosPorEstado = ref<any[]>([])
+const deputados = ref<any[]>([])
 
 // --- LÓGICA DE BUSCA DE DADOS ---
 const fetchDashboardData = async () => {
@@ -193,6 +215,20 @@ const fetchDashboardData = async () => {
       label: `${mesesNomes[item.mes - 1]}/${item.ano}`,
       valor: item.valor
     })).reverse()
+
+    // 5. Buscar lista de deputados para distribuição regional
+    try {
+      const deputadosResponse = await fetch('http://localhost:8000/api/deputados/')
+      if (deputadosResponse.ok) {
+        const data = await deputadosResponse.json()
+        deputados.value = data
+        console.log('Deputados carregados:', data.length)
+      } else {
+        console.error('Erro ao buscar deputados:', deputadosResponse.status)
+      }
+    } catch (err) {
+      console.error('Erro na requisição de deputados:', err)
+    }
 
   } catch (error) {
     console.error("Erro na integração com backend:", error)
@@ -550,5 +586,12 @@ onMounted(() => {
 .btn-secondary:hover {
   background-color: var(--card-hover-bg);
   border-color: var(--color-primary);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+  font-style: italic;
 }
 </style>
