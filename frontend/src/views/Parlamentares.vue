@@ -73,17 +73,19 @@
                 </div>
 
                 <!-- Corpo do Card -->
-                <div class="card-body">
-                  <h3 class="deputado-nome" :title="deputado.nome_civil">
-                    {{ formatarNome(deputado.nome_civil) }}
-                  </h3>
-                  <p class="deputado-full-name">{{ deputado.nome_civil }}</p>
-                  
-                  <router-link :to="`/deputados/${deputado.id}`" class="btn-perfil">
-                    Ver Perfil
-                    <ArrowRight class="w-4 h-4" />
-                  </router-link>
-                </div>
+        
+<div class="card-body">
+  <h3 class="deputado-nome" :title="deputado.nome_civil">
+    {{ formatarNome(deputado.nome_civil) }}
+  </h3>
+  <p class="deputado-full-name">{{ deputado.nome_civil }}</p>
+  
+ 
+  <router-link :to="`/perfil/${deputado.id}`" class="btn-perfil">
+    Ver Perfil
+    <ArrowRight class="w-4 h-4" />
+  </router-link>
+</div>
               </div>
             </div>
 
