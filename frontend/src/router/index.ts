@@ -5,12 +5,18 @@ import Dashboard from '../views/Dashboard.vue'
 import Metodologia from '../views/Metodologia.vue'
 import Contato from '../views/Contato.vue'
 import Comparativo from '../views/Comparativo.vue'
+import Parlamentares from '../views/Parlamentares.vue'
 
 const routes = [
   {
     path: '/',
     name: 'Home',
     component: Home
+  },
+  {
+    path: '/parlamentares',
+    name: 'Parlamentares',
+    component: Parlamentares
   },
   {
     path: '/perfil/:id',

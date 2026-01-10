@@ -12,6 +12,47 @@ router = APIRouter(
 )
 
 
+@router.get("/")
+def listar_todos_deputados():
+    """Lista todos os deputados com informações básicas"""
+    conn = db.get_connect()
+    if not conn:
+        raise HTTPException(status_code=503, detail="Serviço indisponível: Erro de conexão com o banco de dados.")
+    
+    try:
+        with conn.cursor() as cursor:
+            query = """
+                SELECT DISTINCT ON (d.id)
+                    d.id, 
+                    d.nome_civil,
+                    d.uf_nascimento,
+                    m.sigla_partido,
+                    m.sigla_uf
+                FROM deputados d
+                LEFT JOIN deputados_mandatos m ON d.id = m.deputado_id
+                ORDER BY d.id, m.id DESC
+            """
+            cursor.execute(query)
+            deputados = cursor.fetchall()
+            
+            resultado = [
+                {
+                    "id": dep[0],
+                    "nome_civil": dep[1],
+                    "uf": dep[4] if dep[4] else dep[2],  # UF do mandato ou UF de nascimento
+                    "sigla_partido": dep[3] if dep[3] else "S/P"
+                }
+                for dep in deputados
+            ]
+            
+            return resultado
+
+    except psycopg2.Error as e:
+        logging.error(f"Erro ao listar deputados: {e}")
+        raise HTTPException(status_code=500, detail="Erro interno ao listar deputados.")
+    finally:
+        if conn: conn.close()
+
 
 @router.get("/buscar")
 def buscar_deputados(nome: str = Query(..., min_length=2)):

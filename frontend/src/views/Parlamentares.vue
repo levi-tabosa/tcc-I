@@ -1,493 +1,519 @@
 ﻿<template>
   <div class="page-wrapper">
-    
     <main class="main-content">
-      <!-- Header Section -->
+      
+      <!-- Header com Busca -->
       <section class="header-section">
         <div class="container">
-          <div class="page-header">
+          <div class="header-content">
             <h1 class="page-title">Parlamentares</h1>
-            <p class="page-subtitle">
-              Acompanhe a atuação de {{ parlamentares.length }} deputados federais
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <!-- Search Section -->
-      <section class="search-section">
-        <div class="container">
-          <div class="search-container">
-            <div class="search-input-wrapper">
-              <Search class="search-icon" />
-              <input
-                type="text"
-                placeholder="Buscar por nome, partido ou estado..."
-                v-model="searchTerm"
-                class="search-input"
-              />
+            <p class="page-subtitle">Consulte a lista completa de deputados em exercício</p>
+            
+            <!-- Barra de Busca -->
+            <div class="search-container">
+              <div class="search-box">
+                <Search class="search-icon" />
+                <input 
+                  v-model="termoBusca" 
+                  type="text" 
+                  placeholder="Busque por nome, partido ou estado..." 
+                  class="search-input"
+                >
+                <button v-if="termoBusca" @click="termoBusca = ''" class="clear-btn">
+                  <X class="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- Results Section -->
-      <section class="results-section">
+      <!-- Lista de Cards -->
+      <section class="list-section">
         <div class="container">
-          <div class="results-header">
-            <h2 class="results-title">
-              {{ filteredParlamentares.length }} parlamentares encontrados
-            </h2>
-          </div>
           
-          <div class="parliamentarians-grid">
-            <div 
-              v-for="parlamentar in filteredParlamentares" 
-              :key="parlamentar.id" 
-              class="parliamentarian-card"
-            >
-              <div class="card-header">
-                <div class="parliamentarian-info">
-                  <RouterLink
-                    :to="'/perfil/' + parlamentar.id"
-                    class="parliamentarian-name"
-                  >
-                    {{ parlamentar.nome }}
-                  </RouterLink>
-                  <p class="parliamentarian-details">
-                    {{ parlamentar.partido }} - {{ parlamentar.estado }}
-                  </p>
+          <!-- Loading -->
+          <div v-if="loading" class="text-center py-12">
+            <div class="loading-spinner mx-auto mb-4"></div>
+            <p class="text-gray-500">Carregando lista de parlamentares...</p>
+          </div>
+
+          <!-- Erro -->
+          <div v-else-if="deputados.length === 0" class="text-center py-12">
+            <UserX class="w-12 h-12 mx-auto text-gray-300 mb-4" />
+            <h3 class="text-lg font-semibold text-gray-700">Nenhum dado disponível</h3>
+            <p class="text-gray-500">Verifique se a API está respondendo ou abra o console (F12)</p>
+          </div>
+
+          <!-- Sem Resultados de Busca -->
+          <div v-else-if="deputadosFiltrados.length === 0" class="text-center py-12">
+            <UserX class="w-12 h-12 mx-auto text-gray-300 mb-4" />
+            <h3 class="text-lg font-semibold text-gray-700">Nenhum parlamentar encontrado</h3>
+            <p class="text-gray-500">Tente buscar por outro termo.</p>
+          </div>
+
+          <!-- Grid de Deputados -->
+          <div v-else>
+            <div class="grid-deputados">
+              <div 
+                v-for="deputado in deputadosPaginados" 
+                :key="deputado.id" 
+                class="deputado-card"
+              >
+                <!-- Cabeçalho do Card (Foto e Partido) -->
+                <div class="card-header">
+                  <div class="partido-badge">{{ deputado.sigla_partido }}</div>
+                  <div class="estado-badge">{{ deputado.uf }}</div>
+                  <img 
+                    :src="`https://www.camara.leg.br/internet/deputado/bandep/${deputado.id}.jpg`" 
+                    @error="$event.target.src = 'https://via.placeholder.com/200x200?text=Foto'"
+                    :alt="deputado.nome_civil"
+                    class="deputado-foto"
+                  />
+                </div>
+
+                <!-- Corpo do Card -->
+                <div class="card-body">
+                  <h3 class="deputado-nome" :title="deputado.nome_civil">
+                    {{ formatarNome(deputado.nome_civil) }}
+                  </h3>
+                  <p class="deputado-full-name">{{ deputado.nome_civil }}</p>
+                  
+                  <router-link :to="`/deputados/${deputado.id}`" class="btn-perfil">
+                    Ver Perfil
+                    <ArrowRight class="w-4 h-4" />
+                  </router-link>
                 </div>
               </div>
+            </div>
+
+            <!-- Paginação -->
+            <div class="pagination-container" v-if="totalPages > 1">
+              <button 
+                @click="paginaAtual--" 
+                :disabled="paginaAtual === 1"
+                class="page-btn"
+              >
+                <ChevronLeft class="w-5 h-5" />
+              </button>
               
-              <div class="card-content">
-                <div class="stats-row">
-                  <div class="stat-item">
-                    <span class="stat-label">Gastos Totais</span>
-                    <span class="stat-value">{{ formatCurrency(parlamentar.gastoTotal) }}</span>
-                  </div>
-                  <div class="stat-item">
-                    <span class="stat-label">Presença</span>
-                    <span class="stat-value">{{ parlamentar.presenca }}%</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div v-if="filteredParlamentares.length === 0" class="empty-state">
-            <div class="empty-state-content">
-              <div class="empty-state-icon">
-                <Users />
-              </div>
-              <h3 class="empty-state-title">Nenhum parlamentar encontrado</h3>
-              <p class="empty-state-description">
-                Tente ajustar os termos de busca ou remova os filtros aplicados.
-              </p>
+              <span class="page-info">
+                Página {{ paginaAtual }} de {{ totalPages }}
+              </span>
+              
+              <button 
+                @click="paginaAtual++" 
+                :disabled="paginaAtual === totalPages"
+                class="page-btn"
+              >
+                <ChevronRight class="w-5 h-5" />
+              </button>
             </div>
           </div>
         </div>
       </section>
+
     </main>
+    <AppFooter />
   </div>
 </template>
 
-<script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { RouterLink } from 'vue-router'
-import { Search, Users } from 'lucide-vue-next'
+<script setup>
+import { ref, computed, onMounted, watch } from 'vue'
+import AppFooter from '@/components/AppFooter.vue'
+import { Search, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 
-// Interface para Parlamentar
-interface Parlamentar {
-  id: string
-  nome: string
-  cargo: string
-  uf: string
-  estado: string
-  partido: string
-  gastoTotal: number
-  presenca: number
-  fidelidadePartidaria: number
-}
+// Estado
+const deputados = ref([])
+const loading = ref(true)
+const termoBusca = ref('')
+const paginaAtual = ref(1)
+const itensPorPagina = 12
 
-// Estados reativos para dados dos parlamentares
-const parlamentares = ref<Parlamentar[]>([])
-const isLoading = ref(false)
-const error = ref<string | null>(null)
-
-// Lista de partidos brasileiros
-const partidos = [
-  'Todos', 'PT', 'PSDB', 'PL', 'PP', 'MDB', 'PSD', 'REPUBLICANOS', 'UNIÃO', 'PSB', 
-  'PDT', 'PSOL', 'PODE', 'AVANTE', 'PCdoB', 'CIDADANIA', 'PSC', 'PATRIOTA', 'PROS', 'SOLIDARIEDADE'
-]
-
-// Lista de estados brasileiros
-const estados = [
-  'Todos', 'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 
-  'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
-]
-
-// Função para buscar dados reais do backend
-const fetchParlamentares = async () => {
-  isLoading.value = true
-  error.value = null
+// Fetch dos Dados
+const fetchDeputados = async () => {
+  loading.value = true
+  console.log('Iniciando busca de deputados...')
   
   try {
     const response = await fetch('http://localhost:8000/api/deputados/')
+    console.log('Status da resposta:', response.status)
+    
     if (!response.ok) {
-      throw new Error('Falha ao carregar dados dos parlamentares')
+      throw new Error(`Erro ao buscar: ${response.status}`)
     }
     
     const data = await response.json()
+    console.log('Dados recebidos:', data)
+    console.log('Total de deputados:', data.length)
     
-    // Transformar os dados do backend para o formato esperado
-    parlamentares.value = data.map((deputado: any) => ({
-      id: deputado.id.toString(),
-      nome: deputado.nome_civil,
-      cargo: 'Deputado Federal',
-      uf: deputado.uf,
-      estado: deputado.uf,
-      partido: deputado.sigla_partido || 'S/P',
-      gastoTotal: 0,
-      presenca: 0,
-      fidelidadePartidaria: 0
-    }))
-  } catch (err: any) {
-    console.error('Erro ao carregar parlamentares:', err)
-    error.value = err.message
-    parlamentares.value = []
+    deputados.value = data
+  } catch (error) {
+    console.error("Erro ao buscar deputados:", error)
   } finally {
-    isLoading.value = false
+    loading.value = false
+    console.log('Loading finalizado. Total de deputados:', deputados.value.length)
   }
 }
 
-const searchTerm = ref('')
+// Lógica de Filtragem (Computed)
+const deputadosFiltrados = computed(() => {
+  if (!termoBusca.value) return deputados.value
 
-const filteredParlamentares = computed(() => {
-  if (!searchTerm.value) {
-    return parlamentares.value
-  }
-  
-  return parlamentares.value.filter((p) => 
-    p.nome.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
-    p.partido.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
-    p.estado.toLowerCase().includes(searchTerm.value.toLowerCase())
+  const termo = termoBusca.value.toLowerCase()
+  return deputados.value.filter(d => 
+    d.nome_civil.toLowerCase().includes(termo) || 
+    d.sigla_partido.toLowerCase().includes(termo) ||
+    d.uf.toLowerCase().includes(termo)
   )
 })
 
-const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0
-  }).format(value)
+// Lógica de Paginação (Computed)
+const totalPages = computed(() => {
+  const total = Math.ceil(deputadosFiltrados.value.length / itensPorPagina)
+  console.log('Total de páginas:', total, 'Total filtrados:', deputadosFiltrados.value.length)
+  return total
+})
+
+const deputadosPaginados = computed(() => {
+  const inicio = (paginaAtual.value - 1) * itensPorPagina
+  const fim = inicio + itensPorPagina
+  const paginados = deputadosFiltrados.value.slice(inicio, fim)
+  console.log(`Mostrando ${paginados.length} deputados (${inicio + 1} a ${fim})`)
+  return paginados
+})
+
+// Utilitários
+const formatarNome = (nomeCompleto) => {
+  // Pega apenas o primeiro e último nome para o título principal (opcional)
+  const partes = nomeCompleto.split(' ')
+  if (partes.length > 2) {
+    return `${partes[0]} ${partes[partes.length - 1]}`
+  }
+  return nomeCompleto
 }
 
-// Carregar dados automaticamente quando o componente for montado
-onMounted(async () => {
-  await fetchParlamentares()
+// Resetar página ao buscar
+watch(termoBusca, () => {
+  paginaAtual.value = 1
+})
+
+// Log imediato para verificar se o componente carregou
+console.log('Componente Parlamentares montado!')
+
+onMounted(() => {
+  console.log('onMounted executado - chamando fetchDeputados')
+  fetchDeputados()
 })
 </script>
 
 <style scoped>
-/* ======================
-   ESTRUTURA GERAL 
-   ====================== */
+/* Estrutura Base */
 .page-wrapper {
   min-height: 100vh;
-  background: linear-gradient(180deg, #f8fafc, #f1f5f9);
+  background: var(--bg-secondary);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  color: #1e293b;
 }
 
 .main-content {
-  margin: 0 auto;
+  flex: 1;
 }
 
-/* ======================
-   SEÇÃO HEADER 
-   ====================== */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
 
 /* Header Section */
 .header-section {
-  position: relative;
-  overflow: hidden;
-  width: 100%;
-  padding: 4rem 0 6rem;
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, transparent 100%);
-}
-
-.page-header {
-  position: relative;
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 0 1rem;
+  padding: 4rem 0 2rem;
   text-align: center;
 }
 
 .page-title {
   font-size: 2.5rem;
   font-weight: 900;
-  color: var(--color-gray-900);
-  margin-bottom: 1.5rem;
-  line-height: 1.2;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
   letter-spacing: -0.025em;
 }
 
-@media (min-width: 768px) {
-  .page-title {
-    font-size: 3.5rem;
-    margin-bottom: 2rem;
-  }
-}
-
 .page-subtitle {
-  font-size: 1.125rem;
-  color: var(--color-gray-600);
-  line-height: 1.6;
-  max-width: 700px;
-  margin: 0 auto;
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
 }
 
-/* ======================
-   SEÇÃO DE BUSCA 
-   ====================== */
-.search-section {
-  padding: 4rem 0;
-  background: var(--color-white);
-}
-
+/* Search Box Styles */
 .search-container {
-  position: relative;
   max-width: 600px;
   margin: 0 auto;
-  background: var(--color-white);
-  padding: 1rem;
-  border-radius: 0.75rem;
-  box-shadow: var(--shadow-lg);
-  border: 1px solid var(--color-gray-200);
 }
 
-.search-input-wrapper {
+.search-box {
   position: relative;
+  background: var(--surface-primary);
+  border-radius: 9999px;
+  box-shadow: var(--shadow-lg);
   display: flex;
   align-items: center;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border-primary);
+  transition: all 0.2s;
+}
+
+.search-box:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .search-icon {
-  position: absolute;
-  left: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
+  color: var(--text-tertiary);
   width: 1.25rem;
   height: 1.25rem;
-  color: var(--color-gray-400);
 }
 
 .search-input {
-  width: 100%;
-  height: 3rem;
-  padding-left: 3rem;
-  padding-right: 1rem;
-  border-radius: 0.5rem;
-  border: 1px solid var(--color-gray-300);
-  color: var(--color-gray-900);
-  font-size: 1rem;
-  transition: all 0.2s ease;
-  background-color: var(--color-white);
-}
-
-.search-input:focus {
-  border-color: var(--color-primary);
+  flex: 1;
+  border: none;
   outline: none;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  color: var(--text-primary);
+  background: transparent;
 }
 
-.search-input::placeholder {
-  color: var(--color-gray-500);
+.clear-btn {
+  color: var(--text-tertiary);
+  padding: 0.25rem;
+  cursor: pointer;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+}
+.clear-btn:hover {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
 }
 
-/* ======================
-   SEÇÃO RESULTADOS 
-   ====================== */
-.results-section {
-  padding: 4rem 0;
-  background: var(--color-gray-50);
-}
-
-.results-header {
-  margin-bottom: var(--space-8);
-}
-
-.results-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--color-gray-900);
-  text-align: center;
-}
-
-/* ======================
-   GRID DE PARLAMENTARES 
-   ====================== */
-.parliamentarians-grid {
+/* Grid de Deputados */
+.grid-deputados {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
-  gap: var(--space-6);
-  margin-top: var(--space-8);
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 2rem;
+  padding: 2rem 0;
 }
 
-.parliamentarian-card {
-  background: var(--color-white);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-gray-200);
-  transition: all 0.2s ease;
+.deputado-card {
+  background: var(--surface-primary);
+  border-radius: 1rem;
+  overflow: hidden;
+  border: 1px solid var(--border-primary);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.deputado-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--color-primary);
+}
+
+/* Header do Card com Foto */
+.card-header {
+  position: relative;
+  height: 200px;
+  background: var(--bg-secondary);
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
   overflow: hidden;
 }
 
-.parliamentarian-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
-  border-color: var(--color-primary-light);
+.deputado-foto {
+  height: 180px; /* Ajuste para a foto ficar "saindo" de baixo */
+  width: auto;
+  object-fit: cover;
+  transition: transform 0.3s;
 }
 
-.card-header {
-  padding: var(--space-6);
-  border-bottom: 1px solid var(--color-gray-100);
+.deputado-card:hover .deputado-foto {
+  transform: scale(1.05);
 }
 
-.parliamentarian-info {
-  text-align: center;
-}
-
-.parliamentarian-name {
-  display: block;
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: var(--color-primary);
-  text-decoration: none;
-  margin-bottom: var(--space-2);
-  transition: color 0.2s ease;
-}
-
-.parliamentarian-name:hover {
-  color: var(--color-primary-dark);
-  text-decoration: underline;
-}
-
-.parliamentarian-details {
-  color: var(--color-gray-600);
-  font-size: 0.875rem;
-  margin: 0;
-}
-
-.card-content {
-  padding: var(--space-6);
-}
-
-.stats-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-4);
-}
-
-.stat-item {
-  text-align: center;
-  padding: var(--space-3);
-  background: var(--color-gray-50);
-  border-radius: var(--radius-md);
-}
-
-.stat-label {
-  display: block;
+.partido-badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: var(--surface-primary);
+  color: var(--text-primary);
+  font-weight: 700;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
   font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--color-gray-600);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: var(--space-1);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-primary);
 }
 
-.stat-value {
-  display: block;
-  font-size: 0.875rem;
+.estado-badge {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  background: var(--color-primary);
+  color: white;
   font-weight: 600;
-  color: var(--color-gray-900);
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
 }
 
-/* ======================
-   ESTADO VAZIO 
-   ====================== */
-.empty-state {
+/* Corpo do Card */
+.card-body {
+  padding: 1.5rem;
   text-align: center;
-  padding: var(--space-16) var(--space-8);
 }
 
-.empty-state-content {
-  max-width: 24rem;
-  margin: 0 auto;
+.deputado-nome {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
 }
 
-.empty-state-icon {
+.deputado-full-name {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn-perfil {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 4rem;
-  height: 4rem;
-  background: var(--color-gray-100);
-  border-radius: 50%;
-  margin-bottom: var(--space-6);
-  color: var(--color-gray-400);
-}
-
-.empty-state-icon svg {
-  width: 2rem;
-  height: 2rem;
-}
-
-.empty-state-title {
-  font-size: 1.25rem;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem;
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--color-primary);
   font-weight: 600;
-  color: var(--color-gray-900);
-  margin-bottom: var(--space-2);
+  border-radius: 0.5rem;
+  text-decoration: none;
+  transition: all 0.2s;
 }
 
-.empty-state-description {
-  color: var(--color-gray-600);
-  line-height: 1.6;
-  margin: 0;
+.btn-perfil:hover {
+  background: var(--color-primary);
+  color: white;
 }
 
-/* ======================
-   DESIGN RESPONSIVO 
-   ====================== */
-@media (max-width: 768px) {
-  .page-title {
-    font-size: 2rem;
-  }
-  
-  .parliamentarians-grid {
-    grid-template-columns: 1fr;
-    gap: var(--space-4);
-  }
-  
-  .stats-row {
-    grid-template-columns: 1fr;
-    gap: var(--space-3);
-  }
+/* Paginação */
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 4rem;
 }
 
-@media (max-width: 640px) {
-  .header-section {
-    padding: var(--space-12) 0;
-  }
-  
-  .search-section {
-    padding: var(--space-8) 0;
-  }
-  
-  .results-section {
-    padding: var(--space-8) 0;
-  }
+.page-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.5rem;
+  background: var(--surface-primary);
+  border: 1px solid var(--border-primary);
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--text-primary);
+}
+
+.page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-btn:not(:disabled):hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.page-info {
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+/* Loading Spinner */
+.loading-spinner {
+  width: 3rem;
+  height: 3rem;
+  border: 3px solid var(--border-primary);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.py-12 {
+  padding-top: 3rem;
+  padding-bottom: 3rem;
+}
+
+.mx-auto {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.mb-4 {
+  margin-bottom: 1rem;
+}
+
+.text-gray-500 {
+  color: var(--text-secondary);
+}
+
+.text-gray-300 {
+  color: var(--text-tertiary);
+}
+
+.text-lg {
+  font-size: 1.125rem;
+}
+
+.font-semibold {
+  font-weight: 600;
+}
+
+.text-gray-700 {
+  color: var(--text-primary);
+}
+
+.w-12 {
+  width: 3rem;
+}
+
+.h-12 {
+  height: 3rem;
+}
+
+.w-4 {
+  width: 1rem;
+}
+
+.h-4 {
+  height: 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 </style>
