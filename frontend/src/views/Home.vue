@@ -99,7 +99,7 @@
         <div class="container">
           <h2 class="section-title">Acesso Rápido</h2>
           <div class="quick-links-grid">
-            <a href="/dashboard" class="quick-link-card">
+            <a href="/parlamentares" class="quick-link-card">
               <div class="quick-link-header">
                 <div class="quick-link-icon">
                   <Users />
