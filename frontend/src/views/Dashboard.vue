@@ -57,7 +57,7 @@
           
           <div v-if="!loading" class="charts-grid">
             <!-- Gastos por Categoria -->
-            <div class="chart-card full-width">
+            <div class="chart-card">
               <div class="chart-header">
                 <h3 class="chart-title">Gastos por Categoria</h3>
                 <p class="chart-description">Distribuição das despesas por tipo de serviço</p>
@@ -78,8 +78,8 @@
               </div>
             </div>
 
-            <!-- Evolução Mensal (Baseado na sua imagem de 12 meses) -->
-            <div class="chart-card full-width">
+            <!-- Evolução Mensal de Gastos -->
+            <div class="chart-card">
               <div class="chart-header">
                 <h3 class="chart-title">Evolução Mensal de Gastos</h3>
                 <p class="chart-description">Série temporal dos últimos 12 meses registrados</p>
@@ -101,7 +101,7 @@
             </div>
 
             <!-- Gastos por Estado -->
-            <div class="chart-card full-width">
+            <div class="chart-card">
               <div class="chart-header">
                 <h3 class="chart-title">Gastos por Estado</h3>
                 <p class="chart-description">Ranking de despesas acumuladas por UF</p>
@@ -123,7 +123,7 @@
             </div>
 
             <!-- Distribuição Regional -->
-            <div class="chart-card full-width">
+            <div class="chart-card">
               <div class="chart-header">
                 <h3 class="chart-title">Distribuição por Região</h3>
                 <p class="chart-description">Percentual de deputados por região do Brasil</p>
@@ -385,6 +385,12 @@ onMounted(() => {
   margin: 0 auto;
 }
 
+@media (min-width: 768px) {
+  .charts-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 /* ======================
    CARDS DE GRÁFICOS
    ====================== */
@@ -392,9 +398,15 @@ onMounted(() => {
   background: var(--chart-bg);
   border: 1px solid var(--card-border);
   border-radius: 1rem;
-  padding: 1.5rem;
+  padding: 1rem;
   box-shadow: var(--shadow-sm);
   transition: all 0.3s ease;
+}
+
+@media (min-width: 768px) {
+  .chart-card {
+    padding: 1.25rem;
+  }
 }
 
 .chart-card:hover {
@@ -407,26 +419,60 @@ onMounted(() => {
 }
 
 .chart-header {
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
   border-bottom: 2px solid var(--card-border);
 }
 
 .chart-title {
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   font-weight: 700;
   color: var(--text-primary);
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 0.375rem 0;
+}
+
+@media (min-width: 1024px) {
+  .chart-title {
+    font-size: 1.25rem;
+  }
 }
 
 .chart-description {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   color: var(--text-secondary);
   margin: 0;
+  line-height: 1.4;
+}
+
+@media (min-width: 1024px) {
+  .chart-description {
+    font-size: 0.875rem;
+  }
 }
 
 .chart-content {
   padding: 0.5rem 0;
+  max-height: 400px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.chart-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chart-content::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: 3px;
+}
+
+.chart-content::-webkit-scrollbar-thumb {
+  background: var(--card-border);
+  border-radius: 3px;
+}
+
+.chart-content::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
 }
 
 /* ======================
@@ -435,38 +481,74 @@ onMounted(() => {
 .simple-chart {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.75rem;
+}
+
+@media (min-width: 1024px) {
+  .simple-chart {
+    gap: 0.875rem;
+  }
 }
 
 .chart-item {
   display: flex;
-  align-items: center;
-  gap: 1rem;
+  align-items: flex-start;
+  gap: 0.5rem;
+  min-height: 2rem;
+}
+
+@media (min-width: 768px) {
+  .chart-item {
+    gap: 0.75rem;
+  }
 }
 
 .chart-label {
-  min-width: 100px;
-  font-size: 0.875rem;
+  min-width: 120px;
+  max-width: 180px;
+  font-size: 0.75rem;
   font-weight: 500;
   color: var(--chart-label);
-  flex-shrink: 0;
+  line-height: 1.3;
+  word-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
 }
 
-@media (min-width: 640px) {
+@media (min-width: 768px) {
   .chart-label {
-    min-width: 150px;
+    min-width: 140px;
+    max-width: 220px;
+    font-size: 0.8125rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .chart-label {
+    min-width: 160px;
+    max-width: 250px;
+    font-size: 0.875rem;
   }
 }
 
 .chart-bar {
   position: relative;
   flex: 1;
-  height: 2rem;
+  height: 1.5rem;
   background-color: var(--bg-secondary);
-  border-radius: 0.5rem;
+  border-radius: 0.375rem;
   overflow: hidden;
   display: flex;
   align-items: center;
+  align-self: flex-start;
+  margin-top: 0.125rem;
+}
+
+@media (min-width: 1024px) {
+  .chart-bar {
+    height: 1.75rem;
+    border-radius: 0.5rem;
+  }
 }
 
 .dark .chart-bar {
@@ -495,11 +577,25 @@ onMounted(() => {
 .chart-value {
   position: relative;
   z-index: 1;
-  padding: 0 1rem;
-  font-size: 0.875rem;
+  padding: 0 0.5rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   color: var(--chart-text);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+@media (min-width: 768px) {
+  .chart-value {
+    padding: 0 0.625rem;
+    font-size: 0.75rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .chart-value {
+    padding: 0 0.75rem;
+    font-size: 0.8125rem;
+  }
 }
 
 /* ======================
