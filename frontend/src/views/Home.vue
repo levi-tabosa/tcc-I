@@ -91,10 +91,18 @@
             />
           </div>
         </div>
-    </section>
+      </section>
 
+      <!-- Map Section -->
+      <section class="map-section">
+        <div class="container">
+          <h2 class="section-title">Distribuição por Estado</h2>
+          <p class="section-subtitle">Clique em um estado para ver os parlamentares daquela região</p>
+          <BrazilMap :parlamentares-por-estado="parlamentaresPorEstado" />
+        </div>
+      </section>
 
-    <!-- Quick Links -->
+      <!-- Quick Links -->
       <section class="quick-links-section">
         <div class="container">
           <h2 class="section-title">Acesso Rápido</h2>
@@ -175,14 +183,14 @@ import {
 } from 'lucide-vue-next'
 import AppFooter from '../components/AppFooter.vue'
 import StatCard from '../components/StatCard.vue'
-// --- Interface para Tipagem dos Resultados da Busca ---
+import BrazilMap from '../components/BrazilMap.vue'
+
 interface SearchResult {
   id: number;
   nome_civil: string;
   uf: string;
 }
 
-// Interface para Parlamentar
 interface Parlamentar {
   id: string
   nome: string
@@ -196,7 +204,7 @@ interface Parlamentar {
 }
 
 const apiUrl = import.meta.env.VITE_BACKEND_URL 
-// --- Variáveis Reativas ---
+
 const searchQuery = ref('');
 const originalQuery = ref('');
 const searchResults = ref<SearchResult[]>([]);
@@ -206,19 +214,16 @@ const error = ref<string | null>(null);
 
 const router = useRouter();
 
-// Autocomplete helpers
 const searchWrapper = ref<HTMLElement | null>(null);
 const activeIndex = ref(-1);
 const showSuggestions = computed(() => {
   return searchQuery.value.length >= 2 && (isLoading.value || searchResults.value.length > 0);
 });
 
-// Estados reativos para dados dos parlamentares
 const parlamentares = ref<Parlamentar[]>([])
 const parlamentaresLoading = ref(false)
 const parlamentaresError = ref<string | null>(null)
 
-// Estados reativos para estatísticas gerais
 const estatisticasGerais = ref({
   total_gastos: 0,
   presenca_media: 0,
@@ -228,20 +233,17 @@ const estatisticasGerais = ref({
 const estatisticasLoading = ref(false)
 
 
-// Lista de partidos brasileiros
 const partidos = [
   'Todos', 'PT', 'PSDB', 'PL', 'PP', 'MDB', 'PSD', 'REPUBLICANOS', 'UNIÃO', 'PSB', 
   'PDT', 'PSOL', 'PODE', 'AVANTE', 'PCdoB', 'CIDADANIA', 'PSC', 'PATRIOTA', 'PROS', 'SOLIDARIEDADE'
 ]
 
-// Lista de estados brasileiros
 const estados = [
   'Todos', 'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 
   'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
 ]
 
 
-// Função para buscar estatísticas gerais do backend
 const fetchEstatisticasGerais = async () => {
   estatisticasLoading.value = true
 
@@ -266,7 +268,6 @@ const fetchEstatisticasGerais = async () => {
   }
 }
 
-// Função para buscar dados reais do backend
 const fetchParlamentares = async () => {
 
   parlamentaresLoading.value = true
@@ -280,7 +281,6 @@ const fetchParlamentares = async () => {
     
     const data = await response.json()
     
-    // Transformar os dados do backend para o formato esperado
     parlamentares.value = data.map((deputado: any) => ({
       id: deputado.id.toString(),
       nome: deputado.nome_civil,
@@ -301,7 +301,6 @@ const fetchParlamentares = async () => {
   }
 }
 
-// Cálculos dos indicadores usando dados de estatísticas gerais
 const totalGastos = computed(() => {
   return estatisticasGerais.value.total_gastos
 })
@@ -314,13 +313,10 @@ const fidelidadeMedia = computed(() => {
   return estatisticasGerais.value.fidelidade_media
 })
 
-
-// --- Busca com debounce e filtro por prefixo (nome começa com) ---
 let debounceTimer: number | null = null;
 const DEBOUNCE_MS = 300;
 
 const fetchSuggestions = async (q: string) => {
-  // limpa e prepara estados
   error.value = null;
   isLoading.value = true;
   hasSearched.value = true;
@@ -339,16 +335,12 @@ const fetchSuggestions = async (q: string) => {
 
     const resultados = Array.isArray(data.resultados) ? data.resultados : [];
 
-    // Filtra apenas aqueles cujo nome_civil COMEÇA com a query (case-insensitive)
     const filtered = resultados.filter((r: any) => {
       if (!r.nome_civil) return false;
       return r.nome_civil.toLowerCase().startsWith(q.toLowerCase());
     });
 
-    // Se houver correspondências por prefixo, mostra elas; senão, exibe as correspondências por substring
     searchResults.value = filtered.length > 0 ? filtered : resultados;
-
-    // Se restar apenas 1 resultado e for uma busca por submit, redirecionamento será feito em handleSearch (veja abaixo)
   } catch (err: any) {
     console.error('Erro na busca:', err);
     error.value = err.message || 'Ocorreu um erro inesperado.';
@@ -357,10 +349,8 @@ const fetchSuggestions = async (q: string) => {
   }
 };
 
-// watcher: quando o usuário digita, pesquisamos com debounce
 watch(searchQuery, (newVal) => {
   if (debounceTimer) window.clearTimeout(debounceTimer);
-  // mínima proteção: não pesquisar com string vazia
   if (!newVal || newVal.length < 1) {
     searchResults.value = [];
     hasSearched.value = false;
@@ -373,9 +363,7 @@ watch(searchQuery, (newVal) => {
   }, DEBOUNCE_MS);
 });
 
-// manter handleSearch para comportamento de submit (enter / botão)
 const handleSearch = async () => {
-  // se houver debounce pendente, limpar e executar imediatamente
   if (debounceTimer) {
     window.clearTimeout(debounceTimer);
     debounceTimer = null;
@@ -387,34 +375,26 @@ const handleSearch = async () => {
     return;
   }
 
-  // executar busca e redirecionar se encontrar exatamente um
   await fetchSuggestions(q);
 
   if (searchResults.value.length === 1) {
     const deputadoId = searchResults.value[0].id;
     router.push({ name: 'Perfil', params: { id: deputadoId } });
   } else if (searchResults.value.length > 1) {
-    // Se houver múltiplos resultados, redireciona para o primeiro resultado
     const deputadoId = searchResults.value[0].id;
     router.push({ name: 'Perfil', params: { id: deputadoId } });
   } else {
-    // Nenhum resultado encontrado
     error.value = 'Nenhum deputado encontrado com esse nome.';
   }
 };
 
-// --- Funções de Interatividade do Autocomplete ---
-
-// Clicar em uma sugestão
 const selectSuggestion = (deputado: SearchResult) => {
   searchQuery.value = deputado.nome_civil;
-  searchResults.value = []; // Esconde o dropdown
+  searchResults.value = []; 
   activeIndex.value = -1;
-  // Redireciona imediatamente para o perfil
   router.push({ name: 'Perfil', params: { id: deputado.id } });
 };
 
-// --- Funções de Navegação por Teclado ---
 const onArrowDown = () => {
   if (searchResults.value.length === 0) return;
   activeIndex.value = (activeIndex.value + 1) % searchResults.value.length;
@@ -433,21 +413,19 @@ const onEnter = () => {
   if (activeIndex.value >= 0 && searchResults.value[activeIndex.value]) {
     selectSuggestion(searchResults.value[activeIndex.value]);
   } else {
-    handleSearch(); // comportamento padrão de busca
+    handleSearch(); 
   }
 };
 
-// --- Lógica para fechar ao clicar fora ---
 const handleClickOutside = (event: MouseEvent) => {
   if (searchWrapper.value && !searchWrapper.value.contains(event.target as Node)) {
-    searchResults.value = []; // Esconde o dropdown
+    searchResults.value = []; 
     activeIndex.value = -1;
   }
 };
 
 onMounted(async () => {
   document.addEventListener('click', handleClickOutside);
-  // Carregar dados dos parlamentares e estatísticas gerais
   await Promise.all([
     fetchParlamentares(),
     fetchEstatisticasGerais()
@@ -457,12 +435,19 @@ onMounted(async () => {
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside);
 });
+
+const parlamentaresPorEstado = computed(() => {
+  const contagem: Record<string, number> = {}
+  parlamentares.value.forEach((p) => {
+    if (p.uf) {
+      contagem[p.uf] = (contagem[p.uf] || 0) + 1
+    }
+  })
+  return contagem
+})
 </script>
 
 <style scoped>
-/* ======================
-   ESTRUTURA GERAL 
-   ====================== */
 .page-wrapper {
   min-height: 100vh;
   background: var(--bg-secondary);
@@ -474,9 +459,6 @@ onUnmounted(() => {
   margin: 0 auto;
 }
 
-/* ======================
-   SEÇÃO HERO 
-   ====================== */
 .hero-section {
   position: relative;
   overflow: hidden;
@@ -549,9 +531,6 @@ onUnmounted(() => {
   text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3), 0 2px 12px rgba(255, 255, 255, 0.7);
 }
 
-/* ======================
-   BARRA DE PESQUISA 
-   ====================== */
 .search-autocomplete-wrapper {
   position: relative;
   max-width: 600px;
@@ -635,7 +614,6 @@ onUnmounted(() => {
   cursor: not-allowed;
 }
 
-/* Autocomplete Results */
 .autocomplete-results {
   position: absolute;
   top: calc(100% - 0.5rem);
@@ -693,9 +671,6 @@ onUnmounted(() => {
   margin: 0.5rem;
 }
 
-/* ======================
-   SEÇÃO KPIS 
-   ====================== */
 .kpis-section {
   padding: 4rem 0;
   background-color: var(--bg-secondary);
@@ -723,9 +698,21 @@ onUnmounted(() => {
   }
 }
 
-/* ======================
-   SEÇÃO QUICK LINKS 
-   ====================== */
+.map-section {
+  padding: 4rem 0;
+  background-color: var(--bg-secondary);
+  position: relative;
+  z-index: 1;
+}
+
+.section-subtitle {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  margin-bottom: 2rem;
+  margin-top: -1rem;
+}
+
 .quick-links-section {
   padding: 4rem 0;
   background-color: var(--bg-primary);
@@ -737,10 +724,9 @@ onUnmounted(() => {
   gap: 1.5rem;
   max-width: 1200px;
   margin: 0 auto;
-  justify-items: center; /* centraliza os cards quando há menos colunas */
+  justify-items: center; 
 }
 
-/* garante que os cartões não estiquem demais e fiquem centrados */
 .quick-link-card {
   width: 100%;
   max-width: 360px;
@@ -794,9 +780,6 @@ onUnmounted(() => {
   line-height: 1.5;
 }
 
-/* ======================
-   SEÇÃO INFO 
-   ====================== */
 .info-section {
   padding: 4rem 0;
   background-color: var(--surface-primary);
@@ -873,9 +856,6 @@ onUnmounted(() => {
   background-color: var(--color-gray-50);
 }
 
-/* ======================
-   RESPONSIVIDADE 
-   ====================== */
 .container {
   max-width: 1200px;
   margin: 0 auto;
