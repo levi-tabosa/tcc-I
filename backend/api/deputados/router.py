@@ -240,6 +240,13 @@ def buscar_estatisticas_geral():
                 for r in cursor.fetchall()
             ]
 
+    
+            cursor.execute("""
+                SELECT SUM(valor_documento) 
+                FROM deputados_despesas
+                WHERE TO_DATE(CAST(ano AS TEXT) || '-' || CAST(mes AS TEXT), 'YYYY-MM') >= (CURRENT_DATE - INTERVAL '1 year');
+            """)
+            total_12_meses = cursor.fetchone()[0] or 0
                 
             cursor.execute("SELECT SUM(valor_documento) from deputados_despesas")
             total_geral = cursor.fetchone()[0] or 0
@@ -248,6 +255,7 @@ def buscar_estatisticas_geral():
             total_deputados = cursor.fetchone()[0] or 0
 
             return{
+                "total_gastos_12_meses": float(total_12_meses),
                 "total_gastos": float(total_geral),
                 "total_parlamentares": total_deputados,
                 "gastos_por_categoria": gastos_categoria,
