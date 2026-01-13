@@ -195,7 +195,7 @@ interface Parlamentar {
   fidelidadePartidaria: number
 }
 
-
+const apiUrl = import.meta.env.VITE_BACKEND_URL 
 // --- Variáveis Reativas ---
 const searchQuery = ref('');
 const originalQuery = ref('');
@@ -218,6 +218,15 @@ const parlamentares = ref<Parlamentar[]>([])
 const parlamentaresLoading = ref(false)
 const parlamentaresError = ref<string | null>(null)
 
+// Estados reativos para estatísticas gerais
+const estatisticasGerais = ref({
+  total_gastos: 0,
+  presenca_media: 0,
+  fidelidade_media: 0,
+  total_parlamentares: 0
+})
+const estatisticasLoading = ref(false)
+
 
 // Lista de partidos brasileiros
 const partidos = [
@@ -232,13 +241,39 @@ const estados = [
 ]
 
 
+// Função para buscar estatísticas gerais do backend
+const fetchEstatisticasGerais = async () => {
+  estatisticasLoading.value = true
+
+  try {
+    const response = await fetch(`${apiUrl}/api/deputados/estatisticas/geral`)
+    if (!response.ok) {
+      throw new Error('Falha ao carregar estatísticas gerais')
+    }
+    
+    const data = await response.json()
+    console.log('Estatísticas gerais recebidas:', data)
+    estatisticasGerais.value = {
+      total_gastos: data.total_gastos_12_meses || 0,
+      presenca_media: data.presenca_media || 0,
+      fidelidade_media: data.fidelidade_media || 0,
+      total_parlamentares: data.total_parlamentares || 0
+    }
+  } catch (err: any) {
+    console.error('Erro ao carregar estatísticas gerais:', err)
+  } finally {
+    estatisticasLoading.value = false
+  }
+}
+
 // Função para buscar dados reais do backend
 const fetchParlamentares = async () => {
+
   parlamentaresLoading.value = true
   parlamentaresError.value = null
   
   try {
-    const response = await fetch('http://localhost:8000/api/deputados/')
+    const response = await fetch(`${apiUrl}/api/deputados/`)
     if (!response.ok) {
       throw new Error('Falha ao carregar dados dos parlamentares')
     }
@@ -266,21 +301,17 @@ const fetchParlamentares = async () => {
   }
 }
 
-// Cálculos dos indicadores
+// Cálculos dos indicadores usando dados de estatísticas gerais
 const totalGastos = computed(() => {
-  return parlamentares.value.reduce((sum, p) => sum + p.gastoTotal, 0)
+  return estatisticasGerais.value.total_gastos
 })
 
 const presencaMedia = computed(() => {
-  if (parlamentares.value.length === 0) return 0
-  const total = parlamentares.value.reduce((sum, p) => sum + p.presenca, 0)
-  return Math.round(total / parlamentares.value.length)
+  return estatisticasGerais.value.presenca_media
 })
 
 const fidelidadeMedia = computed(() => {
-  if (parlamentares.value.length === 0) return 0
-  const total = parlamentares.value.reduce((sum, p) => sum + p.fidelidadePartidaria, 0)
-  return Math.round(total / parlamentares.value.length)
+  return estatisticasGerais.value.fidelidade_media
 })
 
 
@@ -302,7 +333,7 @@ const fetchSuggestions = async (q: string) => {
   }
 
   try {
-    const response = await fetch(`http://localhost:8000/api/deputados/buscar?nome=${encodeURIComponent(q)}`);
+    const response = await fetch(`${apiUrl}/api/deputados/buscar?nome=${encodeURIComponent(q)}`);
     if (!response.ok) throw new Error('Falha ao comunicar com o servidor. A API está rodando?');
     const data = await response.json();
 
@@ -416,9 +447,10 @@ const handleClickOutside = (event: MouseEvent) => {
 
 onMounted(async () => {
   document.addEventListener('click', handleClickOutside);
-  // Carregar dados dos parlamentares
+  // Carregar dados dos parlamentares e estatísticas gerais
   await Promise.all([
-    fetchParlamentares()
+    fetchParlamentares(),
+    fetchEstatisticasGerais()
   ]);
 });
 
