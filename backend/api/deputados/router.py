@@ -25,11 +25,11 @@ def listar_todos_deputados():
                 SELECT DISTINCT ON (d.id)
                     d.id, 
                     d.nome_civil,
-                    d.uf_nascimento,
                     m.sigla_partido,
                     m.sigla_uf
                 FROM deputados d
-                LEFT JOIN deputados_mandatos m ON d.id = m.deputado_id
+                INNER JOIN deputados_mandatos m ON d.id = m.deputado_id
+                WHERE m.sigla_uf IS NOT NULL
                 ORDER BY d.id, m.id DESC
             """
             cursor.execute(query)
@@ -39,8 +39,8 @@ def listar_todos_deputados():
                 {
                     "id": dep[0],
                     "nome_civil": dep[1],
-                    "uf": dep[4] if dep[4] else dep[2],  
-                    "sigla_partido": dep[3] if dep[3] else "S/P"
+                    "sigla_partido": dep[2] if dep[2] else "S/P",
+                    "uf": dep[3]
                 }
                 for dep in deputados
             ]
