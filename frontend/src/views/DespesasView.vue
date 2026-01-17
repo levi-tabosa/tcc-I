@@ -203,10 +203,40 @@ const totalGastosFormatado = computed(() => {
   return `R$ ${(total / 1000000).toFixed(0)}M`
 })
 
-const overviewStats = [
-  { label: "Total de Gastos", value: `R$ ${(statsGerais.totalGastos / 1000000).toFixed(0)}M`, icon: Banknote, color: "text-primary", bgColor: "bg-primary/10" },
-  { label: "Média por Deputado", value: `R$ ${(statsGerais.mediaGastoDeputado / 1000).toFixed(0)}K`, icon: Users, color: "text-accent", bgColor: "bg-accent/10" },
-  { label: "Empresas Contratadas", value: statsGerais.totalEmpresas.toLocaleString(), icon: Building2, color: "text-chart-2", bgColor: "bg-chart-2/10" },
-  { label: "Deputados c/ Auxílio", value: '--', icon: TrendingUp, color: "text-chart-4", bgColor: "bg-chart-4/10" },
-]
+const overviewStats = computed(() => [
+  { 
+    label: "Total de Gastos", 
+    value: store.generalStats 
+      ? `R$ ${(store.generalStats.total_gastos / 1000000).toFixed(0)}M` 
+      : "Carregando...", 
+    icon: Banknote, 
+    color: "text-primary", 
+    bgColor: "bg-primary/10" 
+  },
+  { 
+    label: "Média por Deputado", 
+    value: store.generalStats && store.generalStats.total_deputados > 0
+      ? `R$ ${(store.generalStats.total_gastos / store.generalStats.total_deputados / 1000).toFixed(0)}K`
+      : "Carregando...", 
+    icon: Users, 
+    color: "text-accent", 
+    bgColor: "bg-accent/10" 
+  },
+  { 
+    label: "Empresas Contratadas", 
+    value: store.generalStats 
+      ? store.generalStats.total_empresas_contratadas.toLocaleString()
+      : "Carregando...", 
+    icon: Building2, 
+    color: "text-chart-2", 
+    bgColor: "bg-chart-2/10" 
+  },
+  { 
+    label: "Deputados c/ Auxílio", 
+    value: '--', 
+    icon: TrendingUp, 
+    color: "text-chart-4", 
+    bgColor: "bg-chart-4/10" 
+  },
+])
 </script>

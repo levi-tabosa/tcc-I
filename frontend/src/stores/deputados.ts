@@ -35,6 +35,7 @@ export interface EstatisticasGerais {
   total_gastos_12_meses: number
   total_gastos: number
   total_deputados: number
+  total_empresas_contratadas: number
   gastos_por_categoria: { categoria: string; valor: number }[]
   gastos_por_mes: { ano: number; mes: number; valor: number }[]
   gastos_por_estado: { estado: string; valor: number }[]

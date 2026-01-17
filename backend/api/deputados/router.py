@@ -265,16 +265,20 @@ def buscar_estatisticas_geral():
             """)
             total_12_meses = cursor.fetchone()[0] or 0
                 
-            cursor.execute("SELECT SUM(valor_documento) from deputados_despesas")
+            cursor.execute("SELECT SUM(valor_documento) from deputados_despesas WHERE ano >= 2023")
             total_geral = cursor.fetchone()[0] or 0
 
             cursor.execute("SELECT COUNT(DISTINCT deputado_id) from deputados_mandatos")
             total_deputados = cursor.fetchone()[0] or 0
+            
+            cursor.execute("SELECT COUNT(DISTINCT cnpj_cpf_fornecedor) FROM deputados_despesas")
+            total_empresas_contratadas = cursor.fetchone()[0] or 0
 
             return{
                 "total_gastos_12_meses": float(total_12_meses),
                 "total_gastos": float(total_geral),
                 "total_deputados": total_deputados,
+                "total_empresas_contratadas": total_empresas_contratadas,
                 "gastos_por_categoria": gastos_categoria,
                 "gastos_por_mes": gastos_mensais,
                 "gastos_por_estado": gastos_estado,
