@@ -342,7 +342,7 @@ export const topEmpresas: Empresa[] = [
 ]
 
 export const statsGerais = {
-  totalDeputados: 513,
+  totalDeputados: 2010,
   totalEmendas: 1300000000,
   totalGastos: 497000000,
   deputadosComAuxilio: 113,

@@ -3,7 +3,7 @@
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-12">
         <h2 class="text-3xl font-bold text-foreground">Números da Câmara</h2>
-        <p class="mt-2 text-muted-foreground">Dados da 57ª Legislatura (2023-2027)</p>
+        <p class="mt-2 text-muted-foreground">Dados da 57ª Legislatura</p>
       </div>
 
       <!-- Métricas Principais -->
@@ -32,13 +32,23 @@
 </template>
 
 <script setup lang="ts">
+import { computed, onMounted } from 'vue'
 import { Banknote, UserCheck, Shield, Users } from 'lucide-vue-next'
+import { useDeputadosStore } from '@/stores/deputados'
 
-const metrics = [
+const store = useDeputadosStore()
+
+onMounted(() => {
+  store.fetchEstatisticasGerais()
+})
+
+const metrics = computed(() => [
   {
     id: 1,
     label: "Gastos Totais",
-    value: "R$ 2,32B",
+    value: store.generalStats 
+      ? `R$ ${(store.generalStats.total_gastos / 1000000).toFixed(1)}M`
+      : "Carregando...",
     description: "Acumulado total",
     icon: Banknote,
     color: "text-primary",
@@ -47,7 +57,7 @@ const metrics = [
   {
     id: 2,
     label: "Presença Média",
-    value: "87,5%",
+    value: "-", // Requested to be zeroed/dashed
     description: "Sessões plenárias",
     icon: UserCheck,
     color: "text-accent",
@@ -56,7 +66,7 @@ const metrics = [
   {
     id: 3,
     label: "Fidelidade Média",
-    value: "76,3%",
+    value: "-", // Requested to be zeroed/dashed
     description: "Alinhamento partidário",
     icon: Shield,
     color: "text-chart-2",
@@ -65,11 +75,11 @@ const metrics = [
   {
     id: 4,
     label: "Parlamentares",
-    value: "513",
+    value: store.generalStats ? store.generalStats.total_deputados : "...",
     description: "Monitorados",
     icon: Users,
     color: "text-chart-1",
     bgColor: "bg-chart-1/10"
   }
-]
+])
 </script>

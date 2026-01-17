@@ -93,7 +93,6 @@ const navigation = [
   { name: 'Deputados', href: '/deputados' },
   { name: 'Despesas', href: '/despesas' },
   { name: 'Emendas', href: '/emendas' },
-  { name: 'Análises', href: '/rankings' },
   { name: 'Metodologia', href: '/metodologia' },
   { name: 'Contato', href: '/contato' },
 ]

@@ -15,9 +15,9 @@
           </div>
 
           <h1 class="text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-            De Olho nos
+            Fiscaliza
             <span class="text-primary relative">
-              Deputados
+              Brasil
               <svg class="absolute -bottom-2 left-0 w-full h-3 text-secondary" viewBox="0 0 200 12">
                 <path d="M0 8 Q 50 0, 100 8 T 200 8" stroke="currentColor" stroke-width="4" fill="none" />
               </svg>
@@ -42,10 +42,6 @@
 
           <div class="mt-10 flex items-center gap-8 text-sm text-muted-foreground">
             <div class="flex items-center gap-2">
-              <div class="h-2 w-2 rounded-full bg-primary animate-pulse" />
-              Dados atualizados diariamente
-            </div>
-            <div class="flex items-center gap-2">
               <div class="h-2 w-2 rounded-full bg-accent animate-pulse" />
               100% transparente
             </div>
@@ -56,7 +52,7 @@
         <div class="relative animate-fade-in-up animate-delay-200">
           <div class="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl">
             <img
-              src="/brazilian-congress-building-brasilia-modern-archit.jpg"
+              src="/imagem-padrao.jpg"
               alt="Congresso Nacional do Brasil"
               class="object-cover w-full h-full"
             />

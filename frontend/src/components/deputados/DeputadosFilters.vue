@@ -57,6 +57,6 @@ import { partidos, estados } from '@/data/mock-data'
 const store = useDeputadosStore()
 
 const hasActiveFilters = computed(() => {
-  return store.filters.search || store.filters.partido || store.filters.estado || store.filters.bloco
+  return store.filters.search || store.filters.partido || store.filters.estado
 })
 </script>

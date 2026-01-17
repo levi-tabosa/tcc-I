@@ -6,7 +6,7 @@
         <p class="mt-2 text-muted-foreground">Fatos importantes sobre os gastos e atuação parlamentar</p>
       </div>
 
-      <div class="grid gap-4 md:grid-cols-2">
+      <div class="grid gap-4 md:grid-cols-3">
         <div
           v-for="(fact, index) in facts"
           :key="index"
@@ -50,12 +50,6 @@ const facts = [
     title: "TAM é a empresa que mais recebe",
     description: "R$ 59 milhões em passagens aéreas de deputados federais",
     type: "neutral" as const,
-  },
-  {
-    icon: CheckCircle,
-    title: "Saúde lidera em emendas",
-    description: "25,8% das emendas são destinadas à área de saúde",
-    type: "success" as const,
   },
 ]
 

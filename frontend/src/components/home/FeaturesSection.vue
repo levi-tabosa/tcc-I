@@ -8,7 +8,7 @@
         </p>
       </div>
 
-      <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div class="grid gap-6 md:grid-cols-3 max-w-5xl mx-auto">
         <BaseCard
           v-for="(feature, index) in features"
           :key="feature.title"
@@ -42,7 +42,7 @@ import BaseCard from '@/components/ui/BaseCard.vue'
 const features = [
   {
     title: "Perfis dos Deputados",
-    description: "Acesse informações detalhadas de todos os 513 deputados federais, incluindo partido, estado e contatos.",
+    description: "Acesse informações detalhadas de todos os 2010 deputados federais, incluindo partido, estado e contatos.",
     icon: Users,
     href: "/deputados",
     color: "text-primary",
@@ -63,14 +63,6 @@ const features = [
     href: "/emendas",
     color: "text-accent",
     bgColor: "bg-accent/10",
-  },
-  {
-    title: "Análises Detalhadas",
-    description: "Visualizações baseadas em dados reais processados",
-    icon: Building2,
-    href: "/rankings",
-    color: "text-chart-4",
-    bgColor: "bg-chart-4/10",
   },
 ]
 </script>

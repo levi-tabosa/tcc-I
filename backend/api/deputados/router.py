@@ -134,6 +134,7 @@ def buscar_despesas_deputado(deputado_id: int):
     
     try:
         with conn.cursor() as cursor:
+            logging.info(f"Buscando despesas para deputado {deputado_id}")
             query = """
                 SELECT 
                     desp.ano, 
@@ -144,10 +145,13 @@ def buscar_despesas_deputado(deputado_id: int):
                 FROM deputados_despesas AS desp
                 JOIN deputados_mandatos AS mand ON desp.mandato_id = mand.id
                 WHERE mand.deputado_id = %s
-                ORDER BY desp.ano DESC, desp.mes DESC;
+                ORDER BY desp.ano DESC, desp.mes DESC
+                LIMIT 50;
             """
             cursor.execute(query, (deputado_id,))
             despesas = cursor.fetchall()
+            logging.info(f"Encontradas {len(despesas)} despesas")
+
             
             resultado_formatado = [
                 {
@@ -257,7 +261,7 @@ def buscar_estatisticas_geral():
             return{
                 "total_gastos_12_meses": float(total_12_meses),
                 "total_gastos": float(total_geral),
-                "total_parlamentares": total_deputados,
+                "total_deputados": total_deputados,
                 "gastos_por_categoria": gastos_categoria,
                 "gastos_por_mes": gastos_mensais,
                 "gastos_por_estado": gastos_estado,

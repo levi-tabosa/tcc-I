@@ -7,7 +7,7 @@
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h1 class="text-3xl font-bold text-foreground sm:text-4xl">Deputados Federais</h1>
           <p class="mt-2 text-muted-foreground max-w-2xl">
-            Conheça todos os 513 deputados federais da 57ª Legislatura. Filtre por partido, estado ou região.
+            Conheça todos os 2010 deputados federais da 57ª Legislatura. Filtre por partido, estado ou região.
           </p>
         </div>
       </section>

@@ -5,8 +5,18 @@
       Mostrando {{ store.paginatedDeputados.length }} de {{ store.filteredDeputados.length }} deputados
     </p>
 
+    <!-- Loading State -->
+    <div v-if="store.loading" class="text-center py-12">
+      <p class="text-muted-foreground">Carregando deputados...</p>
+    </div>
+
+    <!-- Error State -->
+    <div v-else-if="store.error" class="text-center py-12">
+      <p class="text-destructive">{{ store.error }}</p>
+    </div>
+
     <!-- Grid -->
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div v-else class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       <BaseCard
         v-for="deputado in store.paginatedDeputados"
         :key="deputado.id"
@@ -28,22 +38,6 @@
               <BaseBadge variant="outline">{{ deputado.partido }}</BaseBadge>
               <span class="text-xs text-muted-foreground">{{ deputado.estado }}</span>
             </div>
-            <BaseBadge :class="getBlocoColor(deputado.blocoIdeologico)" class="mt-2">
-              {{ deputado.blocoIdeologico.charAt(0).toUpperCase() + deputado.blocoIdeologico.slice(1) }}
-            </BaseBadge>
-          </div>
-        </div>
-
-        <div class="mt-4 pt-4 border-t border-border">
-          <div class="grid grid-cols-2 gap-2 text-sm">
-            <div>
-              <p class="text-muted-foreground text-xs">Gastos</p>
-              <p class="font-medium text-foreground">R$ {{ (deputado.gastoTotal / 1000).toFixed(0) }}K</p>
-            </div>
-            <div>
-              <p class="text-muted-foreground text-xs">Emendas</p>
-              <p class="font-medium text-foreground">R$ {{ (deputado.emendasTotal / 1000000).toFixed(1) }}M</p>
-            </div>
           </div>
         </div>
 
@@ -58,7 +52,7 @@
     </div>
 
     <!-- Empty state -->
-    <div v-if="store.paginatedDeputados.length === 0" class="text-center py-12">
+    <div v-if="!store.loading && !store.error && store.paginatedDeputados.length === 0" class="text-center py-12">
       <p class="text-muted-foreground">Nenhum deputado encontrado com os filtros selecionados.</p>
     </div>
 
@@ -96,7 +90,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
@@ -104,13 +98,9 @@ import { useDeputadosStore } from '@/stores/deputados'
 
 const store = useDeputadosStore()
 
-const getBlocoColor = (bloco: string) => {
-  switch (bloco) {
-    case 'direita': return 'bg-chart-3/10 text-chart-3'
-    case 'esquerda': return 'bg-chart-4/10 text-chart-4'
-    default: return 'bg-chart-2/10 text-chart-2'
-  }
-}
+onMounted(() => {
+  store.fetchDeputados()
+})
 
 const visiblePages = computed(() => {
   const total = store.totalPages

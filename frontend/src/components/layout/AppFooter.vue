@@ -5,10 +5,10 @@
         <!-- About -->
         <div class="md:col-span-2">
           <div class="flex items-center gap-2 mb-4">
-            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-lg">
-              DO
+            <div class="flex h-10 w-10 items-center justify-center">
+              <img src="/logo.svg" alt="Logo" class="h-10 w-10 object-contain" />
             </div>
-            <span class="font-bold text-lg text-foreground">De Olho nos Deputados</span>
+            <span class="font-bold text-lg text-foreground">Fiscaliza Brasil</span>
           </div>
           <p class="text-sm text-muted-foreground max-w-md">
             Plataforma de transparência política dedicada a monitorar a atuação dos deputados federais brasileiros.
@@ -48,7 +48,7 @@
 
       <div class="mt-8 pt-8 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-4">
         <p class="text-xs text-muted-foreground">
-          © 2026 De Olho nos Deputados. Dados públicos para uma democracia transparente.
+          © 2026 Fiscaliza Brasil. Dados públicos para uma democracia transparente.
         </p>
         <div class="flex gap-4">
           <a href="#" class="text-muted-foreground hover:text-primary transition-colors">
@@ -73,7 +73,6 @@ const navLinks = [
   { name: 'Deputados', href: '/deputados' },
   { name: 'Despesas', href: '/despesas' },
   { name: 'Emendas', href: '/emendas' },
-  { name: 'Análises', href: '/rankings' },
 ]
 
 const dataSources = [
