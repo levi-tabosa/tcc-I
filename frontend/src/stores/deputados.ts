@@ -38,6 +38,7 @@ export interface EstatisticasGerais {
   gastos_por_categoria: { categoria: string; valor: number }[]
   gastos_por_mes: { ano: number; mes: number; valor: number }[]
   gastos_por_estado: { estado: string; valor: number }[]
+  gastos_por_partido: { partido: string; valor: number }[]
   deputados_por_regiao: { name: string; value: number }[]
 }
 

@@ -220,6 +220,19 @@ def buscar_estatisticas_geral():
             """)
             gastos_estado = [{"estado": r[0], "valor": float(r[1])} for r in cursor.fetchall()]
 
+            cursor.execute(
+                """
+                SELECT m.sigla_partido, SUM(desp.valor_documento) as total
+                FROM deputados_mandatos m
+                JOIN deputados_despesas desp ON m.id = desp.mandato_id
+                WHERE m.sigla_partido IS NOT NULL
+                GROUP BY m.sigla_partido
+                ORDER BY total DESC;
+            """
+            )
+
+            gastos_partido =[{"partido": r[0], "valor": float(r[1])} for r in cursor.fetchall()]
+    
 
             # 4. Quantidade de Deputados por Região
             cursor.execute("""
@@ -265,6 +278,7 @@ def buscar_estatisticas_geral():
                 "gastos_por_categoria": gastos_categoria,
                 "gastos_por_mes": gastos_mensais,
                 "gastos_por_estado": gastos_estado,
+                "gastos_por_partido": gastos_partido,
                 "deputados_por_regiao": deputados_regiao
             }
          

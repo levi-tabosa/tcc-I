@@ -46,10 +46,10 @@ const metrics = computed(() => [
   {
     id: 1,
     label: "Gastos Totais",
-    value: store.generalStats 
-      ? `R$ ${(store.generalStats.total_gastos / 1000000).toFixed(1)}M`
+    value: store.generalStats
+      ? `R$ ${(store.generalStats.total_gastos_12_meses / 1000000).toFixed(1)}M`
       : "Carregando...",
-    description: "Acumulado total",
+    description: "Gastos (últimos 12 meses)",
     icon: Banknote,
     color: "text-primary",
     bgColor: "bg-primary/10"
