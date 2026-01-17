@@ -1,53 +1,53 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import Home from '../views/Home.vue'
-import Perfil from '../views/Perfil.vue'
-import Dashboard from '../views/Dashboard.vue'
-import Metodologia from '../views/Metodologia.vue'
-import Contato from '../views/Contato.vue'
-import Comparativo from '../views/Comparativo.vue'
-import Parlamentares from '../views/Parlamentares.vue'
-
-const routes = [
-  {
-    path: '/',
-    name: 'Home',
-    component: Home
-  },
-  {
-    path: '/parlamentares',
-    name: 'Parlamentares',
-    component: Parlamentares
-  },
-  {
-    path: '/perfil/:id',
-    name: 'Perfil',
-    component: Perfil
-  },
-  {
-    path: '/dashboard',
-    name: 'Dashboard',
-    component: Dashboard
-  },
-  {
-    path: '/metodologia',
-    name: 'Metodologia',
-    component: Metodologia
-  },
-  {
-    path: '/contato',
-    name: 'Contato',
-    component: Contato
-  },
-  {
-    path: '/comparativo',
-    name: 'Comparativo',
-    component: Comparativo
-  }
-]
+import { createRouter, createWebHistory } from "vue-router"
+import HomeView from "@/views/HomeView.vue"
 
 const router = createRouter({
   history: createWebHistory(),
-  routes
+  routes: [
+    {
+      path: "/",
+      name: "home",
+      component: HomeView,
+    },
+    {
+      path: "/deputados",
+      name: "deputados",
+      component: () => import("@/views/DeputadosView.vue"),
+    },
+    {
+      path: "/deputados/:id",
+      name: "deputado-detail",
+      component: () => import("@/views/DeputadoDetailView.vue"),
+    },
+    {
+      path: "/despesas",
+      name: "despesas",
+      component: () => import("@/views/DespesasView.vue"),
+    },
+    {
+      path: "/emendas",
+      name: "emendas",
+      component: () => import("@/views/EmendasView.vue"),
+    },
+    {
+      path: "/rankings",
+      name: "rankings",
+      component: () => import("@/views/AnaliseView.vue"),
+    },
+    {
+      path: "/metodologia",
+      name: "metodologia",
+      component: () => import("@/views/MetodologiaView.vue"),
+    },
+    {
+      path: "/contato",
+      name: "contato",
+      component: () => import("@/views/ContatoView.vue"),
+    },
+  ],
+  scrollBehavior() {
+    return { top: 0 }
+  },
 })
 
 export default router

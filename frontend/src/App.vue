@@ -1,25 +1,9 @@
-<script setup lang="ts">
-import AppHeader from '@/components/AppHeader.vue'
-import { useTheme } from '@/composables/useTheme'
-
-// Inicializa o tema quando a aplicação carrega
-const { initTheme } = useTheme()
-initTheme()
-</script>
-
 <template>
-  <AppHeader />
-  <router-view />
+  <div class="min-h-screen">
+    <router-view />
+  </div>
 </template>
 
-<style>
-/* 
-  É uma boa prática remover o "scoped" do style no App.vue
-  para que você possa definir estilos globais para toda a sua aplicação aqui.
-*/
-body {
-  margin: 0;
-  font-family: sans-serif;
-  background-color: #f8fafc;
-}
-</style>
+<script setup lang="ts">
+// Tema claro fixo
+</script>
