@@ -36,9 +36,6 @@
       </div>
 
       <div class="hidden lg:flex lg:flex-1 lg:justify-end lg:gap-x-4">
-        <button class="p-2 rounded-lg hover:bg-muted transition-colors">
-          <Search class="h-5 w-5 text-foreground" />
-        </button>
       </div>
     </nav>
 
@@ -72,9 +69,6 @@
                 </router-link>
               </div>
               <div class="py-6 flex items-center gap-4">
-                <button class="p-2 rounded-lg hover:bg-muted">
-                  <Search class="h-5 w-5" />
-                </button>
               </div>
             </div>
           </div>
@@ -86,7 +80,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Menu, X, Search } from 'lucide-vue-next'
+import { Menu, X } from 'lucide-vue-next'
 
 const navigation = [
   { name: 'Home', href: '/' },
