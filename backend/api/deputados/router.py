@@ -173,10 +173,62 @@ def buscar_despesas_deputado(deputado_id: int):
         if conn: conn.close()        
         
 
-
-
+@router.get("/estatisticas/categorias")
+def estatisticas_categorias():
+    conn = db.get_connect()
+    if not conn:
+        raise HTTPException(status_code=503, detail="Serviço indisponível: Erro de conexão com o banco de dados.")
+    
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT tipo_despesa, SUM(valor_documento)
+                FROM deputados_despesas
+                WHERE ano >= 2023
+                GROUP BY tipo_despesa
+                ORDER BY 2 DESC
+                """
+            )
+            resultados = cursor.fetchall()
+            
+            dados_formatados = []
+            total_outros = 0.0
+            
+            LIMITE_TOP = 9
+            
+            for i, row in enumerate(resultados):
+                nome_categoria = row[0]
+                valor = float(row[1])
+                
+                nome_bonito = nome_categoria.title().replace("_", " ")
+                
+                if i < LIMITE_TOP:
+                    dados_formatados.append({
+                        "categoria": nome_bonito, 
+                        "valor": valor
+                    })
+                else:
+                    total_outros += valor
+            
+            # Adicionar "Outros" após o loop, se houver
+            if total_outros > 0:
+                dados_formatados.append({
+                    "categoria": "Outros", 
+                    "valor": total_outros
+                })
+            
+            return dados_formatados
+                
+    except psycopg2.Error as e:
+        logging.error(f"Erro na query de estatísticas por categorias: {e}")
+        raise HTTPException(status_code=500, detail="Erro interno ao buscar as estatísticas por categorias.")
+    finally:
+        conn.close()
+         
+ 
 @router.get("/estatisticas/geral")
-def buscar_estatisticas_geral():    
+def estatisticas_geral():    
     conn = db.get_connect()
     if not conn:
         raise HTTPException(status_code=503, detail="Serviço indisponível: Erro de conexão com o banco de dados.")

@@ -31,6 +31,11 @@ export interface Despesa {
   url_documento: string | null
 }
 
+export interface Categoria {
+  categoria: string
+  valor: number
+}
+
 export interface EstatisticasGerais {
   total_gastos_12_meses: number
   total_gastos: number
@@ -72,6 +77,10 @@ export const useDeputadosStore = defineStore("deputados", () => {
 
   // General Stats state
   const generalStats = ref<EstatisticasGerais | null>(null)
+  
+  // Categories state
+  const categorias = ref<Categoria[]>([])
+  const loadingCategorias = ref(false)
 
   const fetchDeputados = async () => {
     loading.value = true
@@ -138,6 +147,19 @@ export const useDeputadosStore = defineStore("deputados", () => {
     }
   }
 
+  const fetchCategorias = async () => {
+    loadingCategorias.value = true
+    try {
+      const response = await fetch(`${apiUrl}/api/deputados/estatisticas/categorias`)
+      if (!response.ok) throw new Error("Falha ao buscar categorias")
+      categorias.value = await response.json()
+    } catch (e: any) {
+      console.error("Erro ao buscar categorias:", e)
+    } finally {
+      loadingCategorias.value = false
+    }
+  }
+
   const filteredDeputados = computed(() => {
     return deputadosList.value.filter((dep) => {
       if (filters.value.search && !dep.nome.toLowerCase().includes(filters.value.search.toLowerCase())) {
@@ -186,9 +208,12 @@ export const useDeputadosStore = defineStore("deputados", () => {
     currentDespesas,
     loadingDetail,
     generalStats,
+    categorias,
+    loadingCategorias,
     fetchDeputados,
     fetchDeputado,
     fetchEstatisticasGerais,
+    fetchCategorias,
     setFilter,
     setPage,
     resetFilters,

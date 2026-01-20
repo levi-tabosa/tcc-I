@@ -47,7 +47,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'

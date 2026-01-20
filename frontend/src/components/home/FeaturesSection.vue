@@ -36,7 +36,7 @@
 </template>
 
 <script setup lang="ts">
-import { Users, Receipt, Landmark, Building2, ArrowRight } from 'lucide-vue-next'
+import { Users, Receipt, Landmark, ArrowRight } from 'lucide-vue-next'
 import BaseCard from '@/components/ui/BaseCard.vue'
 
 const features = [

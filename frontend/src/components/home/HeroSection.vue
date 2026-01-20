@@ -70,7 +70,9 @@
               </div>
               <div>
                 <p class="text-xs text-muted-foreground">Total de Gastos</p>
-                <p class="font-bold text-foreground">R$ 497M</p>
+                <p class="font-bold text-foreground">
+                  {{ store.generalStats ? formatCurrency(store.generalStats.total_gastos) : 'R$ 0M' }}
+                </p>
               </div>
             </div>
           </div>
@@ -81,9 +83,30 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { Eye, ArrowRight, TrendingUp } from 'lucide-vue-next'
 import BaseButton from '@/components/ui/BaseButton.vue'
+import { useDeputadosStore } from '@/stores/deputados'
+
+const store = useDeputadosStore()
+
+onMounted(() => {
+  store.fetchEstatisticasGerais()
+})
+
+const formatCurrency = (value: number) => {
+  if (value >= 1000000000) {
+    return `R$ ${(value / 1000000000).toFixed(1)}B`
+  }
+  if (value >= 1000000) {
+    return `R$ ${(value / 1000000).toFixed(0)}M`
+  }
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    maximumFractionDigits: 0
+  }).format(value)
+}
 
 const backgroundStyle = computed(() => ({
   backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fillRule=\'evenodd\'%3E%3Cg fill=\'%23228B22\' fillOpacity=\'0.4\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")'

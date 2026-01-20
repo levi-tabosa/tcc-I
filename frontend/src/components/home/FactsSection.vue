@@ -30,7 +30,7 @@
 </template>
 
 <script setup lang="ts">
-import { AlertTriangle, CheckCircle, Info, TrendingUp } from 'lucide-vue-next'
+import { AlertTriangle, Info, TrendingUp } from 'lucide-vue-next'
 
 const facts = [
   {

@@ -101,12 +101,12 @@
             <BaseCard v-for="categoria in categoriasDespesas" :key="categoria.nome">
               <div class="flex items-center justify-between mb-2">
                 <span class="text-sm font-medium text-foreground">{{ categoria.nome }}</span>
-                <span class="text-sm text-muted-foreground">R$ {{ (categoria.total / 1000000).toFixed(0) }}M</span>
+                <span class="text-sm text-muted-foreground">R$ {{ (categoria.total / 1000000).toFixed(1) }}M</span>
               </div>
               <div class="h-2 bg-muted rounded-full overflow-hidden">
                 <div
                   class="h-full bg-primary rounded-full"
-                  :style="{ width: `${(categoria.total / 127000000) * 100}%` }"
+                  :style="{ width: `${categoria.percentual}%` }"
                 />
               </div>
             </BaseCard>
@@ -124,13 +124,13 @@ import { onMounted, computed } from 'vue'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
-import { statsGerais, categoriasDespesas } from '@/data/mock-data'
 import { useDeputadosStore } from '@/stores/deputados'
 
 const store = useDeputadosStore()
 
 onMounted(() => {
   store.fetchEstatisticasGerais()
+  store.fetchCategorias()
 })
 
 const todosPartidos = computed(() => {
@@ -187,20 +187,23 @@ const getStrokeColorClass = (index: number) => {
   return textColors[index % textColors.length]
 }
 
-const getTextColorClass = (index: number) => {
-  const textColors = [
-    'text-chart-1', 'text-chart-2', 'text-chart-3', 'text-chart-4', 'text-chart-5',
-    'text-primary', 'text-accent', 'text-red-500', 'text-blue-500', 'text-green-500',
-    'text-yellow-500', 'text-purple-500', 'text-pink-500', 'text-indigo-500', 'text-teal-500',
-    'text-orange-500', 'text-cyan-500', 'text-lime-500', 'text-amber-500', 'text-emerald-500'
-  ]
-  return textColors[index % textColors.length]
-}
 
 const totalGastosFormatado = computed(() => {
   if (!store.generalStats?.gastos_por_partido) return 'R$ 0'
   const total = store.generalStats.gastos_por_partido.reduce((sum, p) => sum + p.valor, 0)
   return `R$ ${(total / 1000000).toFixed(0)}M`
+})
+
+const categoriasDespesas = computed(() => {
+  if (!store.categorias.length) return []
+  
+  const maxValor = Math.max(...store.categorias.map(c => c.valor))
+  
+  return store.categorias.map(c => ({
+    nome: c.categoria,
+    total: c.valor,
+    percentual: (c.valor / maxValor) * 100
+  }))
 })
 
 const overviewStats = computed(() => [
