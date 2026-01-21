@@ -57,9 +57,7 @@
           <a href="#" class="text-muted-foreground hover:text-primary transition-colors">
             <Twitter class="h-5 w-5" />
           </a>
-          <a href="mailto:contato@deolhonosdeputados.com.br" class="text-muted-foreground hover:text-primary transition-colors">
-            <Mail class="h-5 w-5" />
-          </a>
+          <!-- contato removido -->
         </div>
       </div>
     </div>
@@ -67,7 +65,7 @@
 </template>
 
 <script setup lang="ts">
-import { Github, Twitter, Mail } from 'lucide-vue-next'
+import { Github, Twitter } from 'lucide-vue-next'
 
 const navLinks = [
   { name: 'Deputados', href: '/deputados' },

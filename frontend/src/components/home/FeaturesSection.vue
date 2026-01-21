@@ -42,7 +42,7 @@ import BaseCard from '@/components/ui/BaseCard.vue'
 const features = [
   {
     title: "Perfis dos Deputados",
-    description: "Acesse informações detalhadas de todos os 2010 deputados federais, incluindo partido, estado e contatos.",
+    description: "Acesse informações detalhadas de todos os 2010 deputados federais, incluindo partido e estado.",
     icon: Users,
     href: "/deputados",
     color: "text-primary",
