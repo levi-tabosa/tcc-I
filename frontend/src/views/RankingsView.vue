@@ -21,10 +21,11 @@
                 <div class="p-3 rounded-xl bg-primary/10">
                   <Building2 class="h-6 w-6 text-primary" />
                 </div>
-                <div>
+                <div v-if="!loading">
                   <p class="text-sm text-muted-foreground">Total de Empresas</p>
-                  <p class="text-2xl font-bold text-foreground">12.847</p>
+                  <p class="text-2xl font-bold text-foreground">{{ formatNumber(stats.total_empresas) }}</p>
                 </div>
+                <div v-else class="animate-pulse h-10 w-32 bg-muted rounded"></div>
               </div>
             </BaseCard>
             <BaseCard hover>
@@ -32,10 +33,11 @@
                 <div class="p-3 rounded-xl bg-chart-2/10">
                   <Banknote class="h-6 w-6 text-chart-2" />
                 </div>
-                <div>
+                <div v-if="!loading">
                   <p class="text-sm text-muted-foreground">Total Pago</p>
-                  <p class="text-2xl font-bold text-foreground">R$ 497M</p>
+                  <p class="text-2xl font-bold text-foreground">{{ formatCurrency(stats.total_pago) }}</p>
                 </div>
+                <div v-else class="animate-pulse h-10 w-32 bg-muted rounded"></div>
               </div>
             </BaseCard>
             <BaseCard hover>
@@ -43,10 +45,11 @@
                 <div class="p-3 rounded-xl bg-chart-3/10">
                   <TrendingUp class="h-6 w-6 text-chart-3" />
                 </div>
-                <div>
+                <div v-if="!loading">
                   <p class="text-sm text-muted-foreground">Total de Contratos</p>
-                  <p class="text-2xl font-bold text-foreground">143.567</p>
+                  <p class="text-2xl font-bold text-foreground">{{ formatNumber(stats.total_contratos) }}</p>
                 </div>
+                <div v-else class="animate-pulse h-10 w-32 bg-muted rounded"></div>
               </div>
             </BaseCard>
           </div>
@@ -57,21 +60,24 @@
       <section class="py-8">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 class="text-2xl font-bold text-foreground mb-6">Top 10 Empresas por Valor Recebido</h2>
-          <BaseCard>
+          <BaseCard v-if="!loading">
             <div class="space-y-4">
-              <div v-for="empresa in topEmpresas.slice(0, 10)" :key="empresa.id" class="flex items-center gap-4">
-                <div class="w-32 text-sm font-medium text-foreground truncate">{{ empresa.nome.split(' ')[0] }}</div>
+              <div v-for="empresa in topEmpresas.slice(0, 10)" :key="empresa.cnpj" class="flex items-center gap-4">
+                <div class="w-32 text-sm font-medium text-foreground truncate" :title="empresa.nome">{{ empresa.nome }}</div>
                 <div class="flex-1 h-8 bg-muted rounded-lg overflow-hidden">
                   <div
-                    class="h-full bg-primary rounded-lg flex items-center justify-end px-2"
-                    :style="{ width: `${(empresa.valorTotal / 59000000) * 100}%` }"
+                    class="h-full bg-primary rounded-lg flex items-center justify-end px-2 transition-all duration-1000"
+                    :style="{ width: `${(empresa.valor_total / (topEmpresas[0]?.valor_total || 1)) * 100}%` }"
                   >
-                    <span class="text-xs text-primary-foreground font-medium">R$ {{ (empresa.valorTotal / 1000000).toFixed(0) }}M</span>
+                    <span class="text-xs text-primary-foreground font-medium">{{ formatCurrency(empresa.valor_total) }}</span>
                   </div>
                 </div>
               </div>
             </div>
           </BaseCard>
+          <div v-else class="space-y-4 animate-pulse">
+            <div v-for="i in 10" :key="i" class="h-8 bg-muted rounded"></div>
+          </div>
         </div>
       </section>
 
@@ -79,7 +85,7 @@
       <section class="py-8 bg-muted/30">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 class="text-2xl font-bold text-foreground mb-6">Lista das 20 maiores Empresas</h2>
-          <BaseCard>
+          <BaseCard v-if="!loading">
             <div class="overflow-x-auto">
               <table class="w-full">
                 <thead>
@@ -95,23 +101,26 @@
                 <tbody>
                   <tr
                     v-for="(empresa, index) in topEmpresas"
-                    :key="empresa.id"
+                    :key="empresa.cnpj"
                     class="border-b border-border hover:bg-muted/50 transition-colors"
                   >
                     <td class="py-3 px-4 text-sm text-muted-foreground">{{ index + 1 }}</td>
                     <td class="py-3 px-4">
                       <p class="text-sm font-medium text-foreground">{{ empresa.nome }}</p>
-                      <p class="text-xs text-muted-foreground">{{ empresa.partidosPrincipais.join(', ') }}</p>
+                      <p class="text-xs text-muted-foreground">{{ empresa.principais_partidos }}</p>
                     </td>
                     <td class="py-3 px-4 text-sm text-muted-foreground font-mono">{{ empresa.cnpj }}</td>
-                    <td class="py-3 px-4 text-sm font-medium text-foreground text-right">R$ {{ (empresa.valorTotal / 1000000).toFixed(1) }}M</td>
-                    <td class="py-3 px-4 text-sm text-muted-foreground text-right">{{ empresa.contratos.toLocaleString() }}</td>
-                    <td class="py-3 px-4 text-sm text-muted-foreground text-right">{{ ((empresa.valorTotal / 497000000) * 100).toFixed(2) }}%</td>
+                    <td class="py-3 px-4 text-sm font-medium text-foreground text-right">{{ formatCurrency(empresa.valor_total) }}</td>
+                    <td class="py-3 px-4 text-sm text-muted-foreground text-right">{{ formatNumber(empresa.contratos) }}</td>
+                    <td class="py-3 px-4 text-sm text-muted-foreground text-right">{{ empresa.percentual.toFixed(2) }}%</td>
                   </tr>
                 </tbody>
               </table>
             </div>
           </BaseCard>
+          <div v-else class="animate-pulse space-y-4">
+             <div v-for="i in 10" :key="i" class="h-12 bg-muted rounded"></div>
+          </div>
         </div>
       </section>
     </main>
@@ -120,9 +129,68 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import { Building2, Banknote, TrendingUp } from 'lucide-vue-next'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
-import { topEmpresas } from '@/data/mock-data'
+
+interface Empresa {
+  rank: number
+  cnpj: string
+  nome: string
+  valor_total: number
+  contratos: number
+  principais_partidos: string
+  percentual: number
+}
+
+interface Stats {
+  total_empresas: number
+  total_pago: number
+  total_contratos: number
+}
+
+const stats = ref<Stats>({
+  total_empresas: 0,
+  total_pago: 0,
+  total_contratos: 0
+})
+
+const topEmpresas = ref<Empresa[]>([])
+const loading = ref(true)
+
+const formatCurrency = (value: number) => {
+  if (value >= 1000000) {
+    return `R$ ${(value / 1000000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}M`
+  }
+  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+}
+
+const formatNumber = (value: number) => {
+  return value.toLocaleString('pt-BR')
+}
+
+const apiUrl = import.meta.env.VITE_API_URL
+
+onMounted(async () => {
+  try {
+    const [statsRes, rankingRes] = await Promise.all([
+      fetch(`${apiUrl}/api/empresas/estatisticas`),
+      fetch(`${apiUrl}/api/empresas/ranking?limit=20`)
+    ])
+    
+    if (statsRes.ok) {
+      stats.value = await statsRes.json()
+    }
+    
+    if (rankingRes.ok) {
+      topEmpresas.value = await rankingRes.json()
+    }
+  } catch (error) {
+    console.error('Erro ao buscar dados:', error)
+  } finally {
+    loading.value = false
+  }
+})
 </script>

@@ -17,7 +17,7 @@
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 class="text-2xl font-bold text-foreground mb-3">Gastos por Categoria</h2>
           <p class="text-muted-foreground mb-8">Distribuição das despesas por tipo de serviço</p>
-          <BaseCard>
+          <BaseCard v-if="categorias.length">
             <div class="space-y-3 p-6">
               <div v-for="(categoria, index) in categorias" :key="index" class="group">
                 <div class="flex items-center justify-between mb-2">
@@ -39,6 +39,7 @@
               </div>
             </div>
           </BaseCard>
+          <div v-else class="h-64 animate-pulse bg-muted rounded-xl"></div>
         </div>
       </section>
 
@@ -47,7 +48,7 @@
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 class="text-2xl font-bold text-foreground mb-3">Gastos nos Últimos Meses</h2>
           <p class="text-muted-foreground mb-8">Série temporal dos últimos meses registrados</p>
-          <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div v-if="mesesGastos.length" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             <BaseCard v-for="mes in mesesGastos" :key="mes.mes" hover>
               <div class="p-6">
                 <div class="flex items-start gap-4">
@@ -62,6 +63,9 @@
               </div>
             </BaseCard>
           </div>
+          <div v-else class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div v-for="i in 3" :key="i" class="h-32 animate-pulse bg-muted rounded-xl"></div>
+          </div>
         </div>
       </section>
 
@@ -70,13 +74,14 @@
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 class="text-2xl font-bold text-foreground mb-3">Gastos por Estado</h2>
           <p class="text-muted-foreground mb-8">Análise de despesas acumuladas por UF</p>
-          <BaseCard>
+          <BaseCard v-if="estadosData.length">
             <div class="p-6">
               <div class="max-w-3xl mx-auto">
                 <Pie :data="chartData" :options="chartOptions" />
               </div>
             </div>
           </BaseCard>
+          <div v-else class="h-96 animate-pulse bg-muted rounded-xl"></div>
         </div>
       </section>
     </main>
@@ -85,77 +90,58 @@
 </template>
 
 <script setup lang="ts">
+import { computed, onMounted } from 'vue'
 import { TrendingUp } from 'lucide-vue-next'
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js'
 import { Pie } from 'vue-chartjs'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
+import { useDeputadosStore } from '@/stores/deputados'
 
 ChartJS.register(ArcElement, Tooltip, Legend)
 
-const categorias = [
-  { nome: 'DIVULGAÇÃO DA ATIVIDADE PARLAMENTAR.', valor: 'R$ 802.081.900', percentual: 100 },
-  { nome: 'MANUTENÇÃO DE ESCRITÓRIO DE APOIO À ATIVIDADE PARLAMENTAR', valor: 'R$ 340.822.104', percentual: 42.5 },
-  { nome: 'LOCAÇÃO OU FRETAMENTO DE VEÍCULOS AUTOMOTORES', valor: 'R$ 309.383.652', percentual: 38.6 },
-  { nome: 'COMBUSTÍVEIS E LUBRIFICANTES.', valor: 'R$ 263.172.035', percentual: 32.8 },
-  { nome: 'CONSULTORIAS, PESQUISAS E TRABALHOS TÉCNICOS.', valor: 'R$ 237.330.739', percentual: 29.6 },
-  { nome: 'TELEFONIA', valor: 'R$ 104.914.929', percentual: 13.1 },
-  { nome: 'LOCAÇÃO DE VEÍCULOS AUTOMOTORES OU FRETAMENTO DE EMBARCAÇÕES', valor: 'R$ 90.951.259', percentual: 11.3 },
-  { nome: 'PASSAGEM AÉREA - REEMBOLSO', valor: 'R$ 48.372.000', percentual: 6.0 },
-  { nome: 'HOSPEDAGEM ,EXCETO DO PARLAMENTAR NO DISTRITO FEDERAL.', valor: 'R$ 29.794.213', percentual: 3.7 },
-  { nome: 'LOCAÇÃO OU FRETAMENTO DE AERONAVES', valor: 'R$ 25.511.421', percentual: 3.2 },
-  { nome: 'SERVIÇO DE SEGURANÇA PRESTADO POR EMPRESA ESPECIALIZADA.', valor: 'R$ 19.736.109', percentual: 2.5 },
-  { nome: 'FORNECIMENTO DE ALIMENTAÇÃO DO PARLAMENTAR', valor: 'R$ 15.820.379', percentual: 2.0 },
-  { nome: 'SERVIÇO DE TÁXI, PEDÁGIO E ESTACIONAMENTO', valor: 'R$ 8.281.050', percentual: 1.0 },
-  { nome: 'SERVIÇOS POSTAIS', valor: 'R$ 7.914.879', percentual: 1.0 },
-  { nome: 'LOCOMOÇÃO, ALIMENTAÇÃO E HOSPEDAGEM', valor: 'R$ 5.589.553', percentual: 0.7 },
-  { nome: 'ASSINATURA DE PUBLICAÇÕES', valor: 'R$ 2.795.812', percentual: 0.35 },
-  { nome: 'LOCAÇÃO OU FRETAMENTO DE EMBARCAÇÕES', valor: 'R$ 2.042.053', percentual: 0.25 },
-  { nome: 'AQUISIÇÃO OU LOC. DE SOFTWARE; SERV. POSTAIS; ASS.', valor: 'R$ 985.521', percentual: 0.12 },
-  { nome: 'PASSAGENS TERRESTRES, MARÍTIMAS OU FLUVIAIS', valor: 'R$ 955.024', percentual: 0.12 },
-  { nome: 'PARTICIPAÇÃO EM CURSO, PALESTRA OU EVENTO SIMILAR', valor: 'R$ 657.195', percentual: 0.08 },
-  { nome: 'AQUISIÇÃO DE MATERIAL DE ESCRITÓRIO.', valor: 'R$ 564.825', percentual: 0.07 },
-  { nome: 'AQUISIÇÃO DE TOKENS E CERTIFICADOS DIGITAIS', valor: 'R$ 22.506', percentual: 0.003 }
-]
+const store = useDeputadosStore()
 
-const mesesGastos = [
-  { mes: 'Dez/2025', titulo: 'Dezembro 2025', valor: 'R$ 42,5M' },
-  { mes: 'Nov/2025', titulo: 'Novembro 2025', valor: 'R$ 41,8M' },
-  { mes: 'Out/2025', titulo: 'Outubro 2025', valor: 'R$ 44,2M' },
-  { mes: 'Set/2025', titulo: 'Setembro 2025', valor: 'R$ 38,9M' },
-  { mes: 'Ago/2025', titulo: 'Agosto 2025', valor: 'R$ 40,1M' }
-]
+onMounted(() => {
+  store.fetchEstatisticasGerais()
+  store.fetchCategorias()
+})
 
-const estados = [
-  { uf: 'SP', valor: 262638502 },
-  { uf: 'MG', valor: 226440719 },
-  { uf: 'BA', valor: 184124059 },
-  { uf: 'RJ', valor: 178609251 },
-  { uf: 'RS', valor: 134913580 },
-  { uf: 'PR', valor: 126752432 },
-  { uf: 'PE', valor: 112713385 },
-  { uf: 'CE', valor: 109887455 },
-  { uf: 'MA', valor: 91084619 },
-  { uf: 'GO', valor: 89228162 },
-  { uf: 'PA', valor: 80188671 },
-  { uf: 'PB', valor: 60240034 },
-  { uf: 'SC', valor: 58771100 },
-  { uf: 'PI', valor: 53242480 },
-  { uf: 'RR', valor: 49036509 },
-  { uf: 'AC', valor: 46609379 },
-  { uf: 'AP', valor: 45999723 },
-  { uf: 'AL', valor: 45336123 },
-  { uf: 'ES', valor: 44889313 },
-  { uf: 'RO', valor: 43428965 },
-  { uf: 'TO', valor: 42229409 },
-  { uf: 'SE', valor: 41779840 },
-  { uf: 'MS', valor: 39833962 },
-  { uf: 'AM', valor: 39728252 },
-  { uf: 'MT', valor: 38929387 },
-  { uf: 'RN', valor: 36422479 },
-  { uf: 'DF', valor: 34641369 }
-]
+const categorias = computed(() => {
+  if (!store.categorias.length) return []
+  
+  const maxValor = Math.max(...store.categorias.map(c => c.valor))
+  
+  return store.categorias.map(c => ({
+    nome: c.categoria,
+    valor: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(c.valor),
+    percentual: (c.valor / maxValor) * 100
+  }))
+})
+
+const mesesGastos = computed(() => {
+  if (!store.generalStats?.gastos_por_mes) return []
+  
+  return store.generalStats.gastos_por_mes.map(m => {
+    const data = new Date(m.ano, m.mes - 1)
+    const mesNome = data.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })
+    const valorFormatado = m.valor >= 1000000 
+      ? `R$ ${(m.valor / 1000000).toFixed(1)}M`
+      : `R$ ${(m.valor / 1000).toFixed(0)}K`
+      
+    return {
+      mes: `${m.mes}/${m.ano}`,
+      titulo: mesNome.charAt(0).toUpperCase() + mesNome.slice(1),
+      valor: valorFormatado
+    }
+  })
+})
+
+const estadosData = computed(() => {
+  if (!store.generalStats?.gastos_por_estado) return []
+  return store.generalStats.gastos_por_estado
+})
 
 // Generate colors for all states
 const generateColors = (count: number) => {
@@ -178,18 +164,18 @@ const generateColors = (count: number) => {
   return result
 }
 
-const chartData = {
-  labels: estados.map(e => e.uf),
+const chartData = computed(() => ({
+  labels: estadosData.value.map(e => e.estado),
   datasets: [
     {
       label: 'Gastos',
-      data: estados.map(e => e.valor),
-      backgroundColor: generateColors(estados.length),
+      data: estadosData.value.map(e => e.valor),
+      backgroundColor: generateColors(estadosData.value.length),
       borderColor: 'rgba(255, 255, 255, 1)',
       borderWidth: 2,
     }
   ]
-}
+}))
 
 const chartOptions = {
   responsive: true,

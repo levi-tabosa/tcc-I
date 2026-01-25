@@ -126,8 +126,8 @@ def ranking_empresas(limit: int = 20):
                     "percentual": round(percentual, 2)
                     
                 })
-                
-                return lista_formatada
+            
+            return lista_formatada
     except Exception as e:  
         logging.error(f"Erro ao buscar ranking de empresas: {e}")
         raise HTTPException(status_code=500, detail="Erro ao processar ranking de empresas")
