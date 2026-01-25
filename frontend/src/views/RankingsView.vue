@@ -12,6 +12,12 @@
         </div>
       </section>
 
+      <section v-if="error" class="py-4 bg-destructive/10">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <p class="text-sm text-destructive font-medium">Erro ao carregar dados: {{ error }}. Verifique se o backend está rodando em {{ apiUrl }}.</p>
+        </div>
+      </section>
+
       <!-- Overview -->
       <section class="py-8 bg-muted/30">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -171,7 +177,8 @@ const formatNumber = (value: number) => {
   return value.toLocaleString('pt-BR')
 }
 
-const apiUrl = import.meta.env.VITE_API_URL
+const apiUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+const error = ref<string | null>(null)
 
 onMounted(async () => {
   try {
@@ -187,8 +194,10 @@ onMounted(async () => {
     if (rankingRes.ok) {
       topEmpresas.value = await rankingRes.json()
     }
-  } catch (error) {
-    console.error('Erro ao buscar dados:', error)
+    }
+  } catch (err: any) {
+    console.error('Erro ao buscar dados:', err)
+    error.value = err.message || 'Erro de conexão'
   } finally {
     loading.value = false
   }

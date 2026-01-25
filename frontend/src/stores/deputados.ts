@@ -61,7 +61,7 @@ export const useDeputadosStore = defineStore("deputados", () => {
     estado: "",
   })
 
-  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000"
+  const apiUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000"
 
   // List state
   const deputadosList = ref<Deputado[]>([])
@@ -77,7 +77,7 @@ export const useDeputadosStore = defineStore("deputados", () => {
 
   // General Stats state
   const generalStats = ref<EstatisticasGerais | null>(null)
-  
+
   // Categories state
   const categorias = ref<Categoria[]>([])
   const loadingCategorias = ref(false)
