@@ -11,7 +11,7 @@
       </div>
 
       <!-- Mobile menu button -->
-  
+      <div class="flex lg:hidden">
         <button
           type="button"
           class="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-foreground"
@@ -87,6 +87,7 @@ const navigation = [
   { name: 'Deputados', href: '/deputados' },
   { name: 'Despesas', href: '/despesas' },
   { name: 'Emendas', href: '/emendas' },
+  { name: 'Rankings', href: '/rankings' },
   { name: 'Metodologia', href: '/metodologia' },
 ]
 

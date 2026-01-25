@@ -34,8 +34,13 @@ const router = createRouter({
       name: "metodologia",
       component: () => import("@/views/MetodologiaView.vue"),
     },
-    
-    
+    {
+      path: "/rankings",
+      name: "rankings",
+      component: () => import("@/views/RankingsView.vue"),
+    },
+
+
   ],
   scrollBehavior() {
     return { top: 0 }

@@ -21,8 +21,8 @@ export interface Empresa {
   valorTotal: number
   contratos: number
   partidosPrincipais: string[]
-  sancionada: boolean
 }
+
 
 export const partidos = [
   { sigla: "PL", nome: "Partido Liberal", deputados: 99, bloco: "direita" as const },
@@ -158,189 +158,6 @@ export const areasEmendas = [
   { nome: "Meio Ambiente", percentual: 1.9, valor: 24700000 },
 ]
 
-export const topEmpresas: Empresa[] = [
-  {
-    id: 1,
-    nome: "TAM Linhas Aéreas S.A.",
-    cnpj: "02.012.862/0001-60",
-    valorTotal: 59000000,
-    contratos: 2847,
-    partidosPrincipais: ["PL", "PP", "UNIÃO"],
-    sancionada: false,
-  },
-  {
-    id: 2,
-    nome: "GOL Linhas Aéreas S.A.",
-    cnpj: "07.575.651/0001-59",
-    valorTotal: 45000000,
-    contratos: 2156,
-    partidosPrincipais: ["PT", "MDB", "PSD"],
-    sancionada: false,
-  },
-  {
-    id: 3,
-    nome: "Azul Linhas Aéreas Brasileiras S.A.",
-    cnpj: "09.296.295/0001-60",
-    valorTotal: 38000000,
-    contratos: 1893,
-    partidosPrincipais: ["PL", "REPUBLICANOS"],
-    sancionada: false,
-  },
-  {
-    id: 4,
-    nome: "Gráfica Brasil Ltda.",
-    cnpj: "01.234.567/0001-89",
-    valorTotal: 28000000,
-    contratos: 892,
-    partidosPrincipais: ["PT", "PSB", "PDT"],
-    sancionada: false,
-  },
-  {
-    id: 5,
-    nome: "Comunicação Digital S.A.",
-    cnpj: "12.345.678/0001-90",
-    valorTotal: 25000000,
-    contratos: 756,
-    partidosPrincipais: ["PL", "PP"],
-    sancionada: false,
-  },
-  {
-    id: 6,
-    nome: "Consultoria Política Ltda.",
-    cnpj: "23.456.789/0001-12",
-    valorTotal: 22000000,
-    contratos: 634,
-    partidosPrincipais: ["MDB", "UNIÃO"],
-    sancionada: true,
-  },
-  {
-    id: 7,
-    nome: "Assessoria Parlamentar ME",
-    cnpj: "34.567.890/0001-23",
-    valorTotal: 19000000,
-    contratos: 587,
-    partidosPrincipais: ["PT", "PSOL"],
-    sancionada: false,
-  },
-  {
-    id: 8,
-    nome: "Locadora Nacional S.A.",
-    cnpj: "45.678.901/0001-34",
-    valorTotal: 17000000,
-    contratos: 523,
-    partidosPrincipais: ["PP", "PSD"],
-    sancionada: false,
-  },
-  {
-    id: 9,
-    nome: "Serviços Gráficos Brasil",
-    cnpj: "56.789.012/0001-45",
-    valorTotal: 15000000,
-    contratos: 478,
-    partidosPrincipais: ["PL", "REPUBLICANOS"],
-    sancionada: false,
-  },
-  {
-    id: 10,
-    nome: "Marketing Digital Corp.",
-    cnpj: "67.890.123/0001-56",
-    valorTotal: 14000000,
-    contratos: 445,
-    partidosPrincipais: ["PT", "PDT"],
-    sancionada: false,
-  },
-  {
-    id: 11,
-    nome: "Eventos & Congressos S.A.",
-    cnpj: "78.901.234/0001-67",
-    valorTotal: 12000000,
-    contratos: 412,
-    partidosPrincipais: ["MDB", "PSDB"],
-    sancionada: false,
-  },
-  {
-    id: 12,
-    nome: "Telecomunicações Brasil",
-    cnpj: "89.012.345/0001-78",
-    valorTotal: 11000000,
-    contratos: 389,
-    partidosPrincipais: ["UNIÃO", "PP"],
-    sancionada: false,
-  },
-  {
-    id: 13,
-    nome: "Posto de Combustível Central",
-    cnpj: "90.123.456/0001-89",
-    valorTotal: 10000000,
-    contratos: 356,
-    partidosPrincipais: ["PL", "PT"],
-    sancionada: false,
-  },
-  {
-    id: 14,
-    nome: "Hotel Capital S.A.",
-    cnpj: "01.234.567/0002-70",
-    valorTotal: 9500000,
-    contratos: 334,
-    partidosPrincipais: ["PSD", "MDB"],
-    sancionada: false,
-  },
-  {
-    id: 15,
-    nome: "Restaurante Parlamentar Ltda.",
-    cnpj: "12.345.678/0002-51",
-    valorTotal: 9000000,
-    contratos: 312,
-    partidosPrincipais: ["PP", "REPUBLICANOS"],
-    sancionada: false,
-  },
-  {
-    id: 16,
-    nome: "Software Solutions Ltda.",
-    cnpj: "23.456.789/0002-32",
-    valorTotal: 8500000,
-    contratos: 289,
-    partidosPrincipais: ["NOVO", "PSDB"],
-    sancionada: false,
-  },
-  {
-    id: 17,
-    nome: "Papelaria Nacional ME",
-    cnpj: "34.567.890/0002-13",
-    valorTotal: 8000000,
-    contratos: 267,
-    partidosPrincipais: ["PT", "PSB"],
-    sancionada: false,
-  },
-  {
-    id: 18,
-    nome: "Segurança Privada S.A.",
-    cnpj: "45.678.901/0002-94",
-    valorTotal: 7500000,
-    contratos: 245,
-    partidosPrincipais: ["PL", "PP"],
-    sancionada: true,
-  },
-  {
-    id: 19,
-    nome: "Agência de Publicidade Brasil",
-    cnpj: "56.789.012/0002-75",
-    valorTotal: 7000000,
-    contratos: 223,
-    partidosPrincipais: ["MDB", "UNIÃO"],
-    sancionada: false,
-  },
-  {
-    id: 20,
-    nome: "Transporte Executivo Ltda.",
-    cnpj: "67.890.123/0002-56",
-    valorTotal: 6500000,
-    contratos: 201,
-    partidosPrincipais: ["PSD", "PDT"],
-    sancionada: false,
-  },
-]
-
 export const statsGerais = {
   totalDeputados: 2010,
   totalEmendas: 1300000000,
@@ -364,3 +181,168 @@ export const regioes = [
   { nome: "Norte", percentual: 12.9, deputados: 66 },
   { nome: "Centro-Oeste", percentual: 7.6, deputados: 39 },
 ]
+
+export const topEmpresas: Empresa[] = [
+  {
+    id: 1,
+    nome: "TAM Linhas Aéreas S.A.",
+    cnpj: "02.012.862/0001-60",
+    valorTotal: 59000000,
+    contratos: 8234,
+    partidosPrincipais: ["PL", "PT", "UNIÃO"]
+  },
+  {
+    id: 2,
+    nome: "GOL Linhas Aéreas Inteligentes S.A.",
+    cnpj: "07.575.651/0001-59",
+    valorTotal: 47500000,
+    contratos: 6892,
+    partidosPrincipais: ["PT", "MDB", "PP"]
+  },
+  {
+    id: 3,
+    nome: "Azul Linhas Aéreas Brasileiras S.A.",
+    cnpj: "09.296.295/0001-60",
+    valorTotal: 38200000,
+    contratos: 5421,
+    partidosPrincipais: ["UNIÃO", "PSD", "REPUBLICANOS"]
+  },
+  {
+    id: 4,
+    nome: "Petrobras Distribuidora S.A.",
+    cnpj: "34.274.233/0001-02",
+    valorTotal: 35800000,
+    contratos: 12456,
+    partidosPrincipais: ["PL", "PP", "MDB"]
+  },
+  {
+    id: 5,
+    nome: "Ipiranga Produtos de Petróleo S.A.",
+    cnpj: "33.337.122/0001-97",
+    valorTotal: 28900000,
+    contratos: 9876,
+    partidosPrincipais: ["PT", "PDT", "PSB"]
+  },
+  {
+    id: 6,
+    nome: "Localiza Rent a Car S.A.",
+    cnpj: "16.670.085/0001-55",
+    valorTotal: 24300000,
+    contratos: 7234,
+    partidosPrincipais: ["UNIÃO", "REPUBLICANOS", "PODE"]
+  },
+  {
+    id: 7,
+    nome: "Movida Locação de Veículos S.A.",
+    cnpj: "04.548.776/0001-73",
+    valorTotal: 21700000,
+    contratos: 6543,
+    partidosPrincipais: ["PL", "PSDB", "CIDADANIA"]
+  },
+  {
+    id: 8,
+    nome: "Vivo S.A.",
+    cnpj: "02.558.157/0001-62",
+    valorTotal: 19800000,
+    contratos: 8932,
+    partidosPrincipais: ["PT", "MDB", "PP"]
+  },
+  {
+    id: 9,
+    nome: "Claro S.A.",
+    cnpj: "40.432.544/0001-47",
+    valorTotal: 18500000,
+    contratos: 8234,
+    partidosPrincipais: ["UNIÃO", "PSD", "REPUBLICANOS"]
+  },
+  {
+    id: 10,
+    nome: "TIM S.A.",
+    cnpj: "02.421.421/0001-11",
+    valorTotal: 17200000,
+    contratos: 7865,
+    partidosPrincipais: ["PL", "PT", "PSOL"]
+  },
+  {
+    id: 11,
+    nome: "Magazine Luiza S.A.",
+    cnpj: "47.960.950/0001-21",
+    valorTotal: 15800000,
+    contratos: 5432,
+    partidosPrincipais: ["PP", "MDB", "PSDB"]
+  },
+  {
+    id: 12,
+    nome: "Americanas S.A.",
+    cnpj: "00.776.574/0001-56",
+    valorTotal: 14600000,
+    contratos: 4987,
+    partidosPrincipais: ["PT", "PDT", "PSB"]
+  },
+  {
+    id: 13,
+    nome: "Grupo Pão de Açúcar",
+    cnpj: "59.281.253/0001-50",
+    valorTotal: 13200000,
+    contratos: 4321,
+    partidosPrincipais: ["UNIÃO", "REPUBLICANOS", "PODE"]
+  },
+  {
+    id: 14,
+    nome: "Carrefour Comércio e Indústria Ltda",
+    cnpj: "45.543.915/0001-81",
+    valorTotal: 12100000,
+    contratos: 3876,
+    partidosPrincipais: ["PL", "PSDB", "NOVO"]
+  },
+  {
+    id: 15,
+    nome: "Grupo Casas Bahia",
+    cnpj: "33.530.486/0001-07",
+    valorTotal: 11400000,
+    contratos: 3654,
+    partidosPrincipais: ["PT", "MDB", "PP"]
+  },
+  {
+    id: 16,
+    nome: "Rede de Hotéis Accor Brasil S.A.",
+    cnpj: "34.640.833/0001-04",
+    valorTotal: 10800000,
+    contratos: 3298,
+    partidosPrincipais: ["UNIÃO", "PSD", "REPUBLICANOS"]
+  },
+  {
+    id: 17,
+    nome: "Atlantica Hospitality International",
+    cnpj: "08.667.881/0001-15",
+    valorTotal: 9900000,
+    contratos: 2987,
+    partidosPrincipais: ["PL", "PT", "PODE"]
+  },
+  {
+    id: 18,
+    nome: "Bristol Hotéis Brasil S.A.",
+    cnpj: "60.558.491/0001-99",
+    valorTotal: 9200000,
+    contratos: 2765,
+    partidosPrincipais: ["PP", "MDB", "PSDB"]
+  },
+  {
+    id: 19,
+    nome: "Gráfica Mundo Digital Ltda",
+    cnpj: "12.345.678/0001-90",
+    valorTotal: 8700000,
+    contratos: 2543,
+    partidosPrincipais: ["PT", "PDT", "PSB"]
+  },
+  {
+    id: 20,
+    nome: "Editora Nacional S.A.",
+    cnpj: "09.876.543/0001-21",
+    valorTotal: 8100000,
+    contratos: 2321,
+    partidosPrincipais: ["UNIÃO", "REPUBLICANOS", "CIDADANIA"]
+  }
+]
+
+
