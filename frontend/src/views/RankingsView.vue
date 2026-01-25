@@ -194,7 +194,6 @@ onMounted(async () => {
     if (rankingRes.ok) {
       topEmpresas.value = await rankingRes.json()
     }
-    }
   } catch (err: any) {
     console.error('Erro ao buscar dados:', err)
     error.value = err.message || 'Erro de conexão'
