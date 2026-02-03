@@ -23,15 +23,75 @@
       </div>
 
       <!-- Desktop nav -->
-      <div class="hidden lg:flex lg:gap-x-8">
+      <div class="hidden lg:flex lg:gap-x-6">
         <router-link
-          v-for="item in navigation"
-          :key="item.name"
-          :to="item.href"
+          to="/"
           class="text-sm font-semibold leading-6 transition-colors hover:text-primary"
-          :class="$route.path === item.href ? 'text-primary' : 'text-muted-foreground'"
+          :class="$route.path === '/' ? 'text-primary' : 'text-muted-foreground'"
         >
-          {{ item.name }}
+          Home
+        </router-link>
+
+        <!-- Câmara Dropdown -->
+        <div class="relative group">
+          <button
+            class="text-sm font-semibold leading-6 transition-colors hover:text-primary inline-flex items-center gap-1"
+            :class="$route.path.startsWith('/camara') ? 'text-primary' : 'text-muted-foreground'"
+          >
+            Câmara
+            <ChevronDown class="h-4 w-4" />
+          </button>
+          <div class="absolute left-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+            <div class="bg-background border border-border rounded-lg shadow-lg py-2 min-w-[160px]">
+              <router-link
+                v-for="item in camaraItems"
+                :key="item.href"
+                :to="item.href"
+                class="block px-4 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+              >
+                {{ item.name }}
+              </router-link>
+            </div>
+          </div>
+        </div>
+
+        <!-- Senado Dropdown -->
+        <div class="relative group">
+          <button
+            class="text-sm font-semibold leading-6 transition-colors hover:text-primary inline-flex items-center gap-1"
+            :class="$route.path.startsWith('/senado') ? 'text-primary' : 'text-muted-foreground'"
+          >
+            Senado
+            <ChevronDown class="h-4 w-4" />
+          </button>
+          <div class="absolute left-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+            <div class="bg-background border border-border rounded-lg shadow-lg py-2 min-w-[160px]">
+              <router-link
+                v-for="item in senadoItems"
+                :key="item.href"
+                :to="item.href"
+                class="block px-4 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+              >
+                {{ item.name }}
+              </router-link>
+            </div>
+          </div>
+        </div>
+
+        <router-link
+          to="/rankings"
+          class="text-sm font-semibold leading-6 transition-colors hover:text-primary"
+          :class="$route.path === '/rankings' ? 'text-primary' : 'text-muted-foreground'"
+        >
+          Rankings
+        </router-link>
+
+        <router-link
+          to="/metodologia"
+          class="text-sm font-semibold leading-6 transition-colors hover:text-primary"
+          :class="$route.path === '/metodologia' ? 'text-primary' : 'text-muted-foreground'"
+        >
+          Metodologia
         </router-link>
       </div>
 
@@ -58,17 +118,61 @@
             <div class="-my-6 divide-y divide-border">
               <div class="space-y-2 py-6">
                 <router-link
-                  v-for="item in navigation"
-                  :key="item.name"
-                  :to="item.href"
+                  to="/"
                   class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 transition-colors hover:bg-muted"
-                  :class="$route.path === item.href ? 'text-primary bg-muted' : 'text-foreground'"
+                  :class="$route.path === '/' ? 'text-primary bg-muted' : 'text-foreground'"
                   @click="mobileMenuOpen = false"
                 >
-                  {{ item.name }}
+                  Home
                 </router-link>
-              </div>
-              <div class="py-6 flex items-center gap-4">
+
+                <!-- Câmara Section -->
+                <div class="pt-2">
+                  <p class="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Câmara</p>
+                  <router-link
+                    v-for="item in camaraItems"
+                    :key="item.href"
+                    :to="item.href"
+                    class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 transition-colors hover:bg-muted"
+                    :class="$route.path === item.href ? 'text-primary bg-muted' : 'text-foreground'"
+                    @click="mobileMenuOpen = false"
+                  >
+                    {{ item.name }}
+                  </router-link>
+                </div>
+
+                <!-- Senado Section -->
+                <div class="pt-2">
+                  <p class="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Senado</p>
+                  <router-link
+                    v-for="item in senadoItems"
+                    :key="item.href"
+                    :to="item.href"
+                    class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 transition-colors hover:bg-muted"
+                    :class="$route.path === item.href ? 'text-primary bg-muted' : 'text-foreground'"
+                    @click="mobileMenuOpen = false"
+                  >
+                    {{ item.name }}
+                  </router-link>
+                </div>
+
+                <router-link
+                  to="/rankings"
+                  class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 transition-colors hover:bg-muted"
+                  :class="$route.path === '/rankings' ? 'text-primary bg-muted' : 'text-foreground'"
+                  @click="mobileMenuOpen = false"
+                >
+                  Rankings
+                </router-link>
+
+                <router-link
+                  to="/metodologia"
+                  class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 transition-colors hover:bg-muted"
+                  :class="$route.path === '/metodologia' ? 'text-primary bg-muted' : 'text-foreground'"
+                  @click="mobileMenuOpen = false"
+                >
+                  Metodologia
+                </router-link>
               </div>
             </div>
           </div>
@@ -80,15 +184,18 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Menu, X } from 'lucide-vue-next'
+import { Menu, X, ChevronDown } from 'lucide-vue-next'
 
-const navigation = [
-  { name: 'Home', href: '/' },
-  { name: 'Deputados', href: '/deputados' },
-  { name: 'Despesas', href: '/despesas' },
-  { name: 'Emendas', href: '/emendas' },
-  { name: 'Rankings', href: '/rankings' },
-  { name: 'Metodologia', href: '/metodologia' },
+const camaraItems = [
+  { name: 'Deputados', href: '/camara/deputados' },
+  { name: 'Despesas', href: '/camara/despesas' },
+  { name: 'Emendas', href: '/camara/emendas' },
+]
+
+const senadoItems = [
+  { name: 'Senadores', href: '/senado/senadores' },
+  { name: 'Despesas', href: '/senado/despesas' },
+  { name: 'Emendas', href: '/senado/emendas' },
 ]
 
 const mobileMenuOpen = ref(false)

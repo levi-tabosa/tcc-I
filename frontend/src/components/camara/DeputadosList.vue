@@ -42,7 +42,7 @@
         </div>
 
         <router-link
-          :to="`/deputados/${deputado.id}`"
+          :to="`/camara/deputados/${deputado.id}`"
           class="mt-4 w-full inline-flex items-center justify-center py-2 text-sm font-medium text-primary hover:bg-muted rounded-lg transition-colors group"
         >
           Ver detalhes

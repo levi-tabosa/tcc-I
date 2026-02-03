@@ -2,8 +2,8 @@
   <section class="py-16 bg-muted/30">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-12">
-        <h2 class="text-3xl font-bold text-foreground">Números da Câmara</h2>
-        <p class="mt-2 text-muted-foreground">Dados da 57ª Legislatura</p>
+        <h2 class="text-3xl font-bold text-foreground">Números do Congresso</h2>
+        <p class="mt-2 text-muted-foreground">Câmara dos Deputados e Senado Federal</p>
       </div>
 
       <!-- Métricas Principais -->
@@ -33,7 +33,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
-import { Banknote, UserCheck, Shield, Users } from 'lucide-vue-next'
+import { Banknote, Building2, Landmark, Users } from 'lucide-vue-next'
 import { useDeputadosStore } from '@/stores/deputados'
 
 const store = useDeputadosStore()
@@ -42,41 +42,51 @@ onMounted(() => {
   store.fetchEstatisticasGerais()
 })
 
+const formatCurrency = (value: number) => {
+  if (value >= 1000000000) {
+    return `R$ ${(value / 1000000000).toFixed(1)}B`
+  }
+  if (value >= 1000000) {
+    return `R$ ${(value / 1000000).toFixed(0)}M`
+  }
+  return `R$ ${(value / 1000).toFixed(0)}K`
+}
+
 const metrics = computed(() => [
   {
     id: 1,
-    label: "Gastos Totais",
-    value: store.generalStats
-      ? `R$ ${(store.generalStats.total_gastos_12_meses / 1000000).toFixed(1)}M`
-      : "Carregando...",
-    description: "Gastos (últimos 12 meses)",
-    icon: Banknote,
+    label: "Deputados Federais",
+    value: store.generalStats ? store.generalStats.total_deputados : "--", // Usar dado real ou --
+    description: "Câmara dos Deputados",
+    icon: Building2,
     color: "text-primary",
     bgColor: "bg-primary/10"
   },
   {
     id: 2,
-    label: "Presença Média",
-    value: "-", // Requested to be zeroed/dashed
-    description: "Sessões plenárias",
-    icon: UserCheck,
-    color: "text-accent",
-    bgColor: "bg-accent/10"
+    label: "Senadores",
+    value: "81", // Valor fixo por enquanto, pois não tem endpoint
+    description: "Senado Federal",
+    icon: Landmark,
+    color: "text-purple-500",
+    bgColor: "bg-purple-500/10"
   },
   {
     id: 3,
-    label: "Fidelidade Média",
-    value: "-", // Requested to be zeroed/dashed
-    description: "Alinhamento partidário",
-    icon: Shield,
+    label: "Gastos Câmara",
+    value: store.generalStats
+      ? formatCurrency(store.generalStats.total_gastos_12_meses)
+      : "--",
+    description: "Últimos 12 meses",
+    icon: Banknote,
     color: "text-chart-2",
     bgColor: "bg-chart-2/10"
   },
   {
     id: 4,
-    label: "Parlamentares",
-    value: store.generalStats ? store.generalStats.total_deputados : "...",
-    description: "Monitorados",
+    label: "Total Monitorados",
+    value: store.generalStats ? (store.generalStats.total_deputados + 81) : "--",
+    description: "Parlamentares",
     icon: Users,
     color: "text-chart-1",
     bgColor: "bg-chart-1/10"

@@ -5,7 +5,7 @@
       <!-- Breadcrumb -->
       <div class="bg-muted/30 border-b border-border">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
-          <router-link to="/deputados" class="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+          <router-link to="/camara/deputados" class="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
             <ChevronLeft class="h-4 w-4" />
             Voltar para lista
           </router-link>
@@ -83,7 +83,7 @@
                     <p class="text-sm text-muted-foreground">Emendas</p>
                     <BaseBadge variant="secondary">N/A</BaseBadge>
                   </div>
-                  <p class="mt-2 text-3xl font-bold text-foreground">-</p>
+                  <p class="mt-2 text-3xl font-bold text-foreground">--</p>
                   <p class="mt-1 text-xs text-muted-foreground">Dado não disponível na API atual</p>
                 </BaseCard>
 
@@ -136,7 +136,7 @@
                                         <a v-if="despesa.url_documento" :href="despesa.url_documento" target="_blank" class="text-primary hover:underline" title="Ver documento">
                                             <FileText class="h-4 w-4 mx-auto" />
                                         </a>
-                                        <span v-else class="text-muted-foreground">-</span>
+                                        <span v-else class="text-muted-foreground">--</span>
                                     </td>
                                 </tr>
                                 <tr v-if="store.currentDespesas.length === 0">
@@ -188,7 +188,7 @@ watch(() => route.params.id, () => {
 })
 
 const formatDate = (dateString: string) => {
-    if (!dateString) return '-'
+    if (!dateString) return '--'
     const date = new Date(dateString)
     return date.toLocaleDateString('pt-BR')
 }

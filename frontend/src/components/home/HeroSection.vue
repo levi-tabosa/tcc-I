@@ -1,5 +1,5 @@
 <template>
-  <section class="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-accent/10">
+  <section class="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-purple-500/10">
     <!-- Background pattern -->
     <div class="absolute inset-0 opacity-5">
       <div class="absolute inset-0" :style="backgroundStyle" />
@@ -11,7 +11,7 @@
         <div class="animate-fade-in-up">
           <div class="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary mb-6">
             <Eye class="h-4 w-4" />
-            Fiscaliza Brasil
+            Transparência Legislativa
           </div>
 
           <h1 class="text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
@@ -25,24 +25,31 @@
           </h1>
 
           <p class="mt-6 text-lg text-muted-foreground max-w-xl leading-relaxed">
-            Fiscalize a atuação dos seus representantes. Acompanhe gastos, emendas parlamentares e a representação
-            política do Brasil de forma transparente e acessível.
+            Fiscalize a atuação dos <strong>Deputados Federais</strong> e <strong>Senadores</strong>. 
+            Acompanhe gastos, emendas parlamentares e a representação política do Brasil de forma 
+            transparente e acessível.
           </p>
 
           <div class="mt-8 flex flex-col sm:flex-row gap-4">
-            <BaseButton to="/deputados" size="lg" class="group">
-              Ver Deputados
+            <BaseButton to="/camara/deputados" size="lg" class="group">
+              <Building2 class="mr-2 h-4 w-4" />
+              Câmara dos Deputados
               <ArrowRight class="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
             </BaseButton>
-            <BaseButton to="/despesas" variant="outline" size="lg">
-              <TrendingUp class="mr-2 h-4 w-4" />
-              Explorar Gastos
+            <BaseButton to="/senado/senadores" variant="outline" size="lg" class="group border-purple-500/50 hover:bg-purple-500/10">
+              <Landmark class="mr-2 h-4 w-4 text-purple-500" />
+              Senado Federal
+              <ArrowRight class="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
             </BaseButton>
           </div>
 
-          <div class="mt-10 flex items-center gap-8 text-sm text-muted-foreground">
+          <div class="mt-10 flex items-center gap-6 text-sm text-muted-foreground">
             <div class="flex items-center gap-2">
               <div class="h-2 w-2 rounded-full bg-accent animate-pulse" />
+              Dados públicos
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="h-2 w-2 rounded-full bg-primary animate-pulse" />
               100% transparente
             </div>
           </div>
@@ -66,13 +73,23 @@
           <div class="absolute -left-4 top-1/4 bg-card rounded-xl shadow-lg p-4 border border-border animate-pulse-glow">
             <div class="flex items-center gap-3">
               <div class="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <TrendingUp class="h-5 w-5 text-primary" />
+                <Users class="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p class="text-xs text-muted-foreground">Total de Gastos</p>
-                <p class="font-bold text-foreground">
-                  {{ store.generalStats ? formatCurrency(store.generalStats.total_gastos) : 'R$ 0M' }}
-                </p>
+                <p class="text-xs text-muted-foreground">Deputados</p>
+                <p class="font-bold text-foreground">{{ store.generalStats ? store.generalStats.total_deputados : '--' }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="absolute -right-4 bottom-1/4 bg-card rounded-xl shadow-lg p-4 border border-purple-500/30 animate-pulse-glow">
+            <div class="flex items-center gap-3">
+              <div class="h-10 w-10 rounded-full bg-purple-500/10 flex items-center justify-center">
+                <Landmark class="h-5 w-5 text-purple-500" />
+              </div>
+              <div>
+                <p class="text-xs text-muted-foreground">Senadores</p>
+                <p class="font-bold text-foreground">81</p>
               </div>
             </div>
           </div>
@@ -84,7 +101,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
-import { Eye, ArrowRight, TrendingUp } from 'lucide-vue-next'
+import { Eye, ArrowRight, Building2, Landmark, Users } from 'lucide-vue-next'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import { useDeputadosStore } from '@/stores/deputados'
 
@@ -93,20 +110,6 @@ const store = useDeputadosStore()
 onMounted(() => {
   store.fetchEstatisticasGerais()
 })
-
-const formatCurrency = (value: number) => {
-  if (value >= 1000000000) {
-    return `R$ ${(value / 1000000000).toFixed(1)}B`
-  }
-  if (value >= 1000000) {
-    return `R$ ${(value / 1000000).toFixed(0)}M`
-  }
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    maximumFractionDigits: 0
-  }).format(value)
-}
 
 const backgroundStyle = computed(() => ({
   backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fillRule=\'evenodd\'%3E%3Cg fill=\'%23228B22\' fillOpacity=\'0.4\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")'

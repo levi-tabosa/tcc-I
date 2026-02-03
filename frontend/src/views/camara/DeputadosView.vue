@@ -27,6 +27,6 @@
 <script setup lang="ts">
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
-import DeputadosFilters from '@/components/deputados/DeputadosFilters.vue'
-import DeputadosList from '@/components/deputados/DeputadosList.vue'
+import DeputadosFilters from '@/components/camara/DeputadosFilters.vue'
+import DeputadosList from '@/components/camara/DeputadosList.vue'
 </script>

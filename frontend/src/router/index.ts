@@ -9,38 +9,75 @@ const router = createRouter({
       name: "home",
       component: HomeView,
     },
+
+    // ========== CÂMARA DOS DEPUTADOS ==========
     {
-      path: "/deputados",
+      path: "/camara/deputados",
       name: "deputados",
-      component: () => import("@/views/DeputadosView.vue"),
+      component: () => import("@/views/camara/DeputadosView.vue"),
     },
     {
-      path: "/deputados/:id",
+      path: "/camara/deputados/:id",
       name: "deputado-detail",
-      component: () => import("@/views/DeputadoDetailView.vue"),
+      component: () => import("@/views/camara/DeputadoDetailView.vue"),
     },
     {
-      path: "/despesas",
-      name: "despesas",
-      component: () => import("@/views/DespesasView.vue"),
+      path: "/camara/despesas",
+      name: "despesas-camara",
+      component: () => import("@/views/camara/DespesasCamaraView.vue"),
     },
     {
-      path: "/emendas",
-      name: "emendas",
-      component: () => import("@/views/EmendasView.vue"),
+      path: "/camara/emendas",
+      name: "emendas-camara",
+      component: () => import("@/views/camara/EmendasCamaraView.vue"),
+    },
+
+    // ========== SENADO FEDERAL ==========
+    {
+      path: "/senado/senadores",
+      name: "senadores",
+      component: () => import("@/views/senado/SenadoresView.vue"),
+    },
+    {
+      path: "/senado/despesas",
+      name: "despesas-senado",
+      component: () => import("@/views/senado/DespesasSenadoView.vue"),
+    },
+    {
+      path: "/senado/emendas",
+      name: "emendas-senado",
+      component: () => import("@/views/senado/EmendasSenadoView.vue"),
+    },
+
+    // ========== OUTRAS PÁGINAS ==========
+    {
+      path: "/rankings",
+      name: "rankings",
+      component: () => import("@/views/RankingsView.vue"),
     },
     {
       path: "/metodologia",
       name: "metodologia",
       component: () => import("@/views/MetodologiaView.vue"),
     },
+
+    // ========== REDIRECTS (compatibilidade) ==========
     {
-      path: "/rankings",
-      name: "rankings",
-      component: () => import("@/views/RankingsView.vue"),
+      path: "/deputados",
+      redirect: "/camara/deputados",
     },
-
-
+    {
+      path: "/deputados/:id",
+      redirect: to => `/camara/deputados/${to.params.id}`,
+    },
+    {
+      path: "/despesas",
+      redirect: "/camara/despesas",
+    },
+    {
+      path: "/emendas",
+      redirect: "/camara/emendas",
+    },
   ],
   scrollBehavior() {
     return { top: 0 }
