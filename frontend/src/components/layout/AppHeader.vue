@@ -78,13 +78,7 @@
           </div>
         </div>
 
-        <router-link
-          to="/rankings"
-          class="text-sm font-semibold leading-6 transition-colors hover:text-primary"
-          :class="$route.path === '/rankings' ? 'text-primary' : 'text-muted-foreground'"
-        >
-          Rankings
-        </router-link>
+
 
         <router-link
           to="/metodologia"
@@ -156,14 +150,7 @@
                   </router-link>
                 </div>
 
-                <router-link
-                  to="/rankings"
-                  class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 transition-colors hover:bg-muted"
-                  :class="$route.path === '/rankings' ? 'text-primary bg-muted' : 'text-foreground'"
-                  @click="mobileMenuOpen = false"
-                >
-                  Rankings
-                </router-link>
+
 
                 <router-link
                   to="/metodologia"
@@ -190,6 +177,7 @@ const camaraItems = [
   { name: 'Deputados', href: '/camara/deputados' },
   { name: 'Despesas', href: '/camara/despesas' },
   { name: 'Emendas', href: '/camara/emendas' },
+  { name: 'Empresas', href: '/camara/empresas' },
 ]
 
 const senadoItems = [

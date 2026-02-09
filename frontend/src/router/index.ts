@@ -31,6 +31,11 @@ const router = createRouter({
       name: "emendas-camara",
       component: () => import("@/views/camara/EmendasCamaraView.vue"),
     },
+    {
+      path: "/camara/empresas",
+      name: "empresas-camara",
+      component: () => import("@/views/camara/EmpresasView.vue"),
+    },
 
     // ========== SENADO FEDERAL ==========
     {
@@ -51,14 +56,13 @@ const router = createRouter({
 
     // ========== OUTRAS PÁGINAS ==========
     {
-      path: "/rankings",
-      name: "rankings",
-      component: () => import("@/views/RankingsView.vue"),
-    },
-    {
       path: "/metodologia",
       name: "metodologia",
       component: () => import("@/views/MetodologiaView.vue"),
+    },
+    {
+      path: "/rankings",
+      redirect: "/camara/empresas",
     },
 
     // ========== REDIRECTS (compatibilidade) ==========
