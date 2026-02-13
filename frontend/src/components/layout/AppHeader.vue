@@ -175,6 +175,7 @@ import { Menu, X, ChevronDown } from 'lucide-vue-next'
 
 const camaraItems = [
   { name: 'Deputados', href: '/camara/deputados' },
+  { name: 'Proposições', href: '/camara/proposicoes' },
   { name: 'Despesas', href: '/camara/despesas' },
   { name: 'Emendas', href: '/camara/emendas' },
   { name: 'Empresas', href: '/camara/empresas' },

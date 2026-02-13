@@ -183,8 +183,8 @@ const error = ref<string | null>(null)
 onMounted(async () => {
   try {
     const [statsRes, rankingRes] = await Promise.all([
-      fetch(`${apiUrl}/api/empresas/estatisticas`),
-      fetch(`${apiUrl}/api/empresas/ranking?limit=20`)
+      fetch(`${apiUrl}/api/deputados/empresas/estatisticas`),
+      fetch(`${apiUrl}/api/deputados/empresas/ranking?limit=20`)
     ])
     
     if (statsRes.ok) {

@@ -2,7 +2,6 @@ from fastapi import APIRouter, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.deputados.router import router as deputados_router
-from api.empresas.router import router as empresas_router
 import uvicorn
 
 
@@ -19,7 +18,6 @@ app.add_middleware(
 )
 
 app.include_router(deputados_router, prefix="/api")
-app.include_router(empresas_router, prefix="/api")
 
 @app.get("/")
 def read_root():

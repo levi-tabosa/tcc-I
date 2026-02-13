@@ -36,6 +36,11 @@ const router = createRouter({
       name: "empresas-camara",
       component: () => import("@/views/camara/EmpresasView.vue"),
     },
+    {
+      path: "/camara/proposicoes",
+      name: "proposicoes-camara",
+      component: () => import("@/views/camara/ProposicoesCamaraView.vue"),
+    },
 
     // ========== SENADO FEDERAL ==========
     {
