@@ -194,12 +194,15 @@ const formatDate = (dateString: string) => {
 }
 
 const totalGastos = computed(() => {
-    return store.currentDespesas.reduce((acc, curr) => acc + curr.valor, 0)
+    return store.totalDespesas
 })
 
 const gastosCategorias = computed(() => {
-    const total = totalGastos.value
-    if (total === 0) return []
+    // Para o gráfico de barras, usamos o total das despesas EXIBIDAS para que as porcentagens somem 100%
+    // e representem a distribuição das despesas recentes (já que só temos as últimas 50).
+    const totalExibido = store.currentDespesas.reduce((acc, curr) => acc + curr.valor, 0)
+    
+    if (totalExibido === 0) return []
 
     const categorias: Record<string, number> = {}
     
@@ -211,7 +214,7 @@ const gastosCategorias = computed(() => {
         .map(([categoria, valor]) => ({
             categoria,
             valor,
-            percentage: (valor / total) * 100
+            percentage: (valor / totalExibido) * 100
         }))
         .sort((a, b) => b.valor - a.valor)
         .slice(0, 5) // Top 5

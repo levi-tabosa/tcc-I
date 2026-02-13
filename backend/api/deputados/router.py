@@ -135,13 +135,16 @@ def buscar_despesas_deputado(deputado_id: int):
     try:
         with conn.cursor() as cursor:
             logging.info(f"Buscando despesas para deputado {deputado_id}")
+            # Query otimizada com Window Function
+            # Traz as despesas limitadas a 50, mas o total_geral considera TODAS as despesas do mandato
             query = """
                 SELECT 
                     desp.ano, 
                     desp.mes, 
                     desp.tipo_despesa, 
                     desp.valor_documento, 
-                    desp.url_documento
+                    desp.url_documento,
+                    SUM(desp.valor_documento) OVER() as total_geral
                 FROM deputados_despesas AS desp
                 JOIN deputados_mandatos AS mand ON desp.mandato_id = mand.id
                 WHERE mand.deputado_id = %s
@@ -149,22 +152,27 @@ def buscar_despesas_deputado(deputado_id: int):
                 LIMIT 50;
             """
             cursor.execute(query, (deputado_id,))
-            despesas = cursor.fetchall()
-            logging.info(f"Encontradas {len(despesas)} despesas")
+            resultados = cursor.fetchall()
+            logging.info(f"Encontradas {len(resultados)} despesas")
 
+            # Se houver resultados, o total está na coluna 5 (índice 5) da primeira linha
+            total_despesas = resultados[0][5] if resultados else 0.0
             
             resultado_formatado = [
                 {
-                    "ano": d[0],
-                    "mes": d[1],
-                    "tipo_despesa": d[2],
-                    "valor": d[3],
-                    "url_documento": d[4]
+                    "ano": r[0],
+                    "mes": r[1],
+                    "tipo_despesa": r[2],
+                    "valor": r[3],
+                    "url_documento": r[4]
                 }
-                for d in despesas
+                for r in resultados
             ]
             
-            return {"despesas": resultado_formatado}
+            return {
+                "despesas": resultado_formatado,
+                "total_despesas": float(total_despesas)
+            }
 
     except psycopg2.Error as e:
         logging.error(f"Erro na query de despesas: {e}")
