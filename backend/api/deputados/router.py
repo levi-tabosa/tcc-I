@@ -16,6 +16,7 @@ router = APIRouter(
 
 
 
+
 @router.get("/proposicoes")
 def listar_proposicoes_deputados(
     siglaTipo: str = Query(None), 
@@ -148,6 +149,123 @@ def buscar_deputados(nome: str = Query(..., min_length=2)):
     finally:
         if conn: conn.close()
 
+
+@router.get("/comparar")
+def comparar_deputados(id1: int, id2: int, ano: int = None):
+    conn = db.get_connect()
+    if not conn:
+        raise HTTPException(status_code=503, detail="Serviço indispónivel")
+    
+    if id1 == id2:
+        raise HTTPException(status_code=400, detail="Escolha dois deputados diferentes para comparar.")
+
+    try:
+        with conn.cursor() as cursor:
+            # 1. Buscar Perfis
+            query_perfil = """
+                SELECT DISTINCT ON (d.id)
+                    d.id, 
+                    d.nome_civil, 
+                    m.sigla_partido, 
+                    m.sigla_uf, 
+                    d.email,
+                    d.data_nascimento,
+                    d.escolaridade,
+                    d.uf_nascimento
+                FROM deputados d
+                LEFT JOIN deputados_mandatos m ON d.id = m.deputado_id
+                WHERE d.id IN (%s, %s)
+                ORDER BY d.id, m.id DESC
+            """
+            cursor.execute(query_perfil, (id1, id2))
+            perfis = cursor.fetchall()
+
+            if len(perfis) < 2:
+                raise HTTPException(status_code=404, detail="Um ou ambos os deputados não foram encontrados.")
+            
+            comparacao = {}
+            for p in perfis:
+                data_nasc = p[5]
+                comparacao[p[0]] = {
+                    "id": p[0],
+                    "nome_civil": p[1],
+                    "sigla_partido": p[2],
+                    "sigla_uf": p[3],
+                    "email": p[4],
+                    "data_nascimento": data_nasc.isoformat() if isinstance(data_nasc, date) else None,
+                    "escolaridade": p[6],
+                    "uf_nascimento": p[7],
+                    "foto": f"https://www.camara.leg.br/internet/deputado/bandep/{p[0]}.jpg",
+                    "total_gasto": 0.0,
+                    "qtd_despesas": 0,
+                    "maior_categoria": {"nome": "-", "valor": 0.0},
+                    "despesas": [],
+                    "categorias": []
+                }
+            
+            # 2. Buscar Despesas (Categorias e Total)
+            query_stats = """
+                SELECT 
+                    m.deputado_id, 
+                    d.tipo_despesa, 
+                    SUM(d.valor_documento) as total,
+                    COUNT(d.id) as qtd
+                FROM deputados_despesas d
+                JOIN deputados_mandatos m ON d.mandato_id = m.id
+                WHERE m.deputado_id IN (%s, %s)
+            """
+            params = [id1, id2]
+            if ano:
+                query_stats += " AND d.ano = %s"
+                params.append(ano)
+            query_stats += " GROUP BY m.deputado_id, d.tipo_despesa"
+
+            cursor.execute(query_stats, tuple(params))
+            stats = cursor.fetchall() 
+
+            for linha in stats:
+                dep_id, cat, valor, qtd = linha
+                valor = float(valor)
+                if dep_id in comparacao:
+                    comparacao[dep_id]["total_gasto"] += valor
+                    comparacao[dep_id]["qtd_despesas"] += qtd
+                    comparacao[dep_id]["categorias"].append({"categoria": cat, "valor": valor})
+
+                    if valor > comparacao[dep_id]["maior_categoria"]["valor"]:
+                        comparacao[dep_id]["maior_categoria"] = {
+                            "nome": cat.replace("_", " ").title() if cat else "-",
+                            "valor": valor
+                        }
+
+            # 3. Buscar Últimas Despesas (Top 10 para cada um)
+            for dep_id in [id1, id2]:
+                query_recent = """
+                    SELECT d.ano, d.mes, d.tipo_despesa, d.valor_documento, d.url_documento
+                    FROM deputados_despesas d
+                    JOIN deputados_mandatos m ON d.mandato_id = m.id
+                    WHERE m.deputado_id = %s
+                    ORDER BY d.ano DESC, d.mes DESC
+                    LIMIT 10
+                """
+                cursor.execute(query_recent, (dep_id,))
+                recentes = cursor.fetchall()
+                comparacao[dep_id]["despesas"] = [
+                    {"ano": r[0], "mes": r[1], "tipo_despesa": r[2], "valor": float(r[3]), "url_documento": r[4]}
+                    for r in recentes
+                ]
+            
+            resultado_final = [comparacao[id1], comparacao[id2]]
+            for item in resultado_final:
+                item["total_gasto"] = round(item["total_gasto"], 2)
+                item["maior_categoria"]["valor"] = round(item["maior_categoria"]["valor"], 2)
+
+            return resultado_final
+            
+    except psycopg2.Error as e:
+        logging.error(f"Erro ao comparar deputados: {e}")
+        raise HTTPException(status_code=500, detail="Erro interno ao comparar deputados.")
+    finally:
+        if conn: conn.close()
 
 @router.get("/{deputado_id}")
 def buscar_perfil_por_id(deputado_id: int):

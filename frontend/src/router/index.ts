@@ -41,6 +41,11 @@ const router = createRouter({
       name: "proposicoes-camara",
       component: () => import("@/views/camara/ProposicoesCamaraView.vue"),
     },
+    {
+      path: "/camara/comparar",
+      name: "comparar-deputados",
+      component: () => import("@/views/camara/ComparacaoDeputadosView.vue"),
+    },
 
     // ========== SENADO FEDERAL ==========
     {
