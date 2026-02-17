@@ -89,7 +89,7 @@
               </div>
               <div>
                 <p class="text-xs text-muted-foreground">Senadores</p>
-                <p class="font-bold text-foreground">81</p>
+                <p class="font-bold text-foreground">{{ senadoresStore.generalStats ? senadoresStore.generalStats.total_senadores : '81' }}</p>
               </div>
             </div>
           </div>
@@ -104,11 +104,14 @@ import { computed, onMounted } from 'vue'
 import { Eye, ArrowRight, Building2, Landmark, Users } from 'lucide-vue-next'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import { useDeputadosStore } from '@/stores/deputados'
+import { useSenadoresStore } from '@/stores/senadores'
 
 const store = useDeputadosStore()
+const senadoresStore = useSenadoresStore()
 
 onMounted(() => {
   store.fetchEstatisticasGerais()
+  senadoresStore.fetchEstatisticasGerais()
 })
 
 const backgroundStyle = computed(() => ({

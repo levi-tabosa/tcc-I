@@ -9,7 +9,7 @@
             </div>
             <div>
               <p class="text-sm text-muted-foreground">Total Carregadas</p>
-              <p class="text-2xl font-bold text-foreground">{{ store.totalProposicoes }}</p>
+              <p class="text-2xl font-bold text-foreground">{{ store.proposicoesList.length }}</p>
             </div>
           </div>
         </BaseCard>
@@ -66,9 +66,9 @@
 import { FileText, BarChart3, TrendingUp } from 'lucide-vue-next'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
-import { useProposicoesStore } from '@/stores/proposicoes'
+import { useDeputadosStore } from '@/stores/deputados'
 
-const store = useProposicoesStore()
+const store = useDeputadosStore()
 
 const tiposNomes: Record<string, string> = {
   PL: 'Projeto de Lei',

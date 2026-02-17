@@ -9,6 +9,16 @@ export interface Deputado {
   foto: string
 }
 
+export interface Proposicao {
+  id: number
+  siglaTipo: string
+  numero: number
+  ano: number
+  ementa: string
+  dataApresentacao: string | null
+  autor_principal: string
+}
+
 export interface DeputadoDetail {
   id: number
   nome_civil: string
@@ -54,11 +64,23 @@ export interface Filters {
   estado: string
 }
 
+export interface ProposicoesFilters {
+  search: string
+  siglaTipo: string
+  ano: string
+}
+
 export const useDeputadosStore = defineStore("deputados", () => {
   const filters = ref<Filters>({
     search: "",
     partido: "",
     estado: "",
+  })
+
+  const proposicoesFilters = ref<ProposicoesFilters>({
+    search: "",
+    siglaTipo: "",
+    ano: "",
   })
 
   const apiUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000"
@@ -82,6 +104,12 @@ export const useDeputadosStore = defineStore("deputados", () => {
   // Categories state
   const categorias = ref<Categoria[]>([])
   const loadingCategorias = ref(false)
+
+  // Propositions state
+  const proposicoesList = ref<Proposicao[]>([])
+  const loadingProposicoes = ref(false)
+  const proposicoesPage = ref(1)
+  const hasMoreProposicoes = ref(true)
 
   const fetchDeputados = async () => {
     loading.value = true
@@ -163,6 +191,81 @@ export const useDeputadosStore = defineStore("deputados", () => {
     }
   }
 
+  const fetchProposicoes = async (pagina = 1) => {
+    loadingProposicoes.value = true
+    error.value = null
+
+    try {
+      const params = new URLSearchParams()
+      params.append("pagina", String(pagina))
+
+      if (proposicoesFilters.value.siglaTipo) {
+        params.append("siglaTipo", proposicoesFilters.value.siglaTipo)
+      }
+      if (proposicoesFilters.value.ano) {
+        params.append("ano", proposicoesFilters.value.ano)
+      }
+      if (proposicoesFilters.value.search) {
+        params.append("ementa", proposicoesFilters.value.search)
+      }
+
+      const response = await fetch(`${apiUrl}/api/deputados/proposicoes?${params.toString()}`)
+      if (!response.ok) throw new Error("Falha ao buscar proposições")
+
+      const data: Proposicao[] = await response.json()
+
+      if (pagina === 1) {
+        proposicoesList.value = data
+      } else {
+        proposicoesList.value = [...proposicoesList.value, ...data]
+      }
+
+      proposicoesPage.value = pagina
+      hasMoreProposicoes.value = data.length === 15
+    } catch (e: any) {
+      console.error("Erro ao buscar proposições:", e)
+      error.value = "Erro ao carregar proposições."
+    } finally {
+      loadingProposicoes.value = false
+    }
+  }
+
+  const loadMoreProposicoes = async () => {
+    if (!loadingProposicoes.value && hasMoreProposicoes.value) {
+      await fetchProposicoes(proposicoesPage.value + 1)
+    }
+  }
+
+  const tiposUnicosProposicoes = computed(() => {
+    const tipos = new Set(proposicoesList.value.map((p) => p.siglaTipo))
+    return Array.from(tipos).sort()
+  })
+
+  const anosUnicosProposicoes = computed(() => {
+    const anos = new Set(proposicoesList.value.map((p) => p.ano))
+    return Array.from(anos).sort((a, b) => b - a)
+  })
+
+  const proposicoesPorTipo = computed(() => {
+    const contagem: Record<string, number> = {}
+    proposicoesList.value.forEach((p) => {
+      contagem[p.siglaTipo] = (contagem[p.siglaTipo] || 0) + 1
+    })
+    return Object.entries(contagem)
+      .map(([tipo, quantidade]) => ({ tipo, quantidade }))
+      .sort((a, b) => b.quantidade - a.quantidade)
+  })
+
+  const setProposicoesFilter = (key: keyof ProposicoesFilters, value: string) => {
+    proposicoesFilters.value[key] = value
+    fetchProposicoes(1)
+  }
+
+  const resetProposicoesFilters = () => {
+    proposicoesFilters.value = { search: "", siglaTipo: "", ano: "" }
+    fetchProposicoes(1)
+  }
+
   const filteredDeputados = computed(() => {
     return deputadosList.value.filter((dep) => {
       if (filters.value.search && !dep.nome.toLowerCase().includes(filters.value.search.toLowerCase())) {
@@ -218,6 +321,18 @@ export const useDeputadosStore = defineStore("deputados", () => {
     fetchDeputado,
     fetchEstatisticasGerais,
     fetchCategorias,
+    proposicoesList,
+    loadingProposicoes,
+    proposicoesPage,
+    hasMoreProposicoes,
+    proposicoesFilters,
+    fetchProposicoes,
+    loadMoreProposicoes,
+    tiposUnicosProposicoes,
+    anosUnicosProposicoes,
+    proposicoesPorTipo,
+    setProposicoesFilter,
+    resetProposicoesFilters,
     setFilter,
     setPage,
     resetFilters,

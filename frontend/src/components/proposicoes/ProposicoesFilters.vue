@@ -6,7 +6,7 @@
         <input
           type="text"
           placeholder="Buscar por ementa..."
-          :value="store.filters.search"
+          :value="store.proposicoesFilters.search"
           @input="onSearchInput"
           class="w-full px-4 py-3 rounded-full border border-gray-300 bg-background text-foreground placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:shadow-md transition-shadow"
         />
@@ -14,8 +14,8 @@
 
       <!-- Tipo -->
       <select
-        :value="store.filters.siglaTipo"
-        @change="store.setFilter('siglaTipo', ($event.target as HTMLSelectElement).value)"
+        :value="store.proposicoesFilters.siglaTipo"
+        @change="store.setProposicoesFilter('siglaTipo', ($event.target as HTMLSelectElement).value)"
         class="px-4 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
       >
         <option value="">Todos os tipos</option>
@@ -26,8 +26,8 @@
 
       <!-- Ano -->
       <select
-        :value="store.filters.ano"
-        @change="store.setFilter('ano', ($event.target as HTMLSelectElement).value)"
+        :value="store.proposicoesFilters.ano"
+        @change="store.setProposicoesFilter('ano', ($event.target as HTMLSelectElement).value)"
         class="px-4 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
       >
         <option value="">Todos os anos</option>
@@ -40,7 +40,7 @@
     <div v-if="hasActiveFilters" class="flex items-center gap-2">
       <span class="text-sm text-muted-foreground">Filtros ativos:</span>
       <button
-        @click="store.resetFilters()"
+        @click="store.resetProposicoesFilters()"
         class="text-sm text-primary hover:underline"
       >
         Limpar todos
@@ -51,9 +51,9 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useProposicoesStore } from '@/stores/proposicoes'
+import { useDeputadosStore } from '@/stores/deputados'
 
-const store = useProposicoesStore()
+const store = useDeputadosStore()
 
 let searchTimeout: ReturnType<typeof setTimeout> | null = null
 
@@ -61,7 +61,7 @@ const onSearchInput = (event: Event) => {
   const value = (event.target as HTMLInputElement).value
   if (searchTimeout) clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
-    store.setFilter('search', value)
+    store.setProposicoesFilter('search', value)
   }, 500)
 }
 
@@ -79,6 +79,6 @@ const anosDisponiveis = computed(() => {
 })
 
 const hasActiveFilters = computed(() => {
-  return store.filters.search || store.filters.siglaTipo || store.filters.ano
+  return store.proposicoesFilters.search || store.proposicoesFilters.siglaTipo || store.proposicoesFilters.ano
 })
 </script>

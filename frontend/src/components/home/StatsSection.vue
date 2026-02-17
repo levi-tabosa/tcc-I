@@ -35,11 +35,14 @@
 import { computed, onMounted } from 'vue'
 import { Banknote, Building2, Landmark, Users } from 'lucide-vue-next'
 import { useDeputadosStore } from '@/stores/deputados'
+import { useSenadoresStore } from '@/stores/senadores'
 
 const store = useDeputadosStore()
+const senadoresStore = useSenadoresStore()
 
 onMounted(() => {
   store.fetchEstatisticasGerais()
+  senadoresStore.fetchEstatisticasGerais()
 })
 
 const formatCurrency = (value: number) => {
@@ -84,12 +87,14 @@ const metrics = computed(() => [
   },
   {
     id: 4,
-    label: "Total Monitorados",
-    value: store.generalStats ? (store.generalStats.total_deputados + 81) : "--",
-    description: "Parlamentares",
-    icon: Users,
-    color: "text-chart-1",
-    bgColor: "bg-chart-1/10"
+    label: "Gastos Senado",
+    value: senadoresStore.generalStats?.total_gastos_12_meses
+      ? formatCurrency(senadoresStore.generalStats.total_gastos_12_meses)
+      : "--",
+    description: "Últimos 12 meses",
+    icon: Banknote,
+    color: "text-purple-500",
+    bgColor: "bg-purple-500/10"
   }
 ])
 </script>
