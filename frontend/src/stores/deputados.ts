@@ -68,6 +68,26 @@ export interface ProposicoesFilters {
   search: string
   siglaTipo: string
   ano: string
+  deputado: string
+}
+
+export interface VotoDeputado {
+  deputado_id: number
+  nome: string
+  voto: string
+}
+
+export interface Votacao {
+  id_votacao: string
+  data: string
+  descricao: string
+  total_votos: number
+  lista_votos: VotoDeputado[]
+}
+
+export interface VotosProposicao {
+  proposicao_id: number
+  historico_votacoes: Votacao[]
 }
 
 export const useDeputadosStore = defineStore("deputados", () => {
@@ -81,6 +101,7 @@ export const useDeputadosStore = defineStore("deputados", () => {
     search: "",
     siglaTipo: "",
     ano: "",
+    deputado: "",
   })
 
   const apiUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000"
@@ -110,6 +131,11 @@ export const useDeputadosStore = defineStore("deputados", () => {
   const loadingProposicoes = ref(false)
   const proposicoesPage = ref(1)
   const hasMoreProposicoes = ref(true)
+
+  // Votos state
+  const currentVotos = ref<VotosProposicao | null>(null)
+  const loadingVotos = ref(false)
+  const selectedProposicaoId = ref<number | null>(null)
 
   const fetchDeputados = async () => {
     loading.value = true
@@ -208,6 +234,9 @@ export const useDeputadosStore = defineStore("deputados", () => {
       if (proposicoesFilters.value.search) {
         params.append("ementa", proposicoesFilters.value.search)
       }
+      if (proposicoesFilters.value.deputado) {
+        params.append("deputado", proposicoesFilters.value.deputado)
+      }
 
       const response = await fetch(`${apiUrl}/api/deputados/proposicoes?${params.toString()}`)
       if (!response.ok) throw new Error("Falha ao buscar proposições")
@@ -256,13 +285,37 @@ export const useDeputadosStore = defineStore("deputados", () => {
       .sort((a, b) => b.quantidade - a.quantidade)
   })
 
+  const fetchVotosProposicao = async (id: number) => {
+    loadingVotos.value = true
+    currentVotos.value = null
+    try {
+      const response = await fetch(`${apiUrl}/api/deputados/proposicoes/${id}/votos`)
+      if (!response.ok) throw new Error("Falha ao buscar votos")
+      currentVotos.value = await response.json()
+    } catch (e: any) {
+      console.error("Erro ao buscar votos da proposição:", e)
+    } finally {
+      loadingVotos.value = false
+    }
+  }
+
+  const toggleProposicaoVotos = async (id: number) => {
+    if (selectedProposicaoId.value === id) {
+      selectedProposicaoId.value = null
+      currentVotos.value = null
+    } else {
+      selectedProposicaoId.value = id
+      await fetchVotosProposicao(id)
+    }
+  }
+
   const setProposicoesFilter = (key: keyof ProposicoesFilters, value: string) => {
     proposicoesFilters.value[key] = value
     fetchProposicoes(1)
   }
 
   const resetProposicoesFilters = () => {
-    proposicoesFilters.value = { search: "", siglaTipo: "", ano: "" }
+    proposicoesFilters.value = { search: "", siglaTipo: "", ano: "", deputado: "" }
     fetchProposicoes(1)
   }
 
@@ -333,6 +386,11 @@ export const useDeputadosStore = defineStore("deputados", () => {
     proposicoesPorTipo,
     setProposicoesFilter,
     resetProposicoesFilters,
+    currentVotos,
+    loadingVotos,
+    selectedProposicaoId,
+    fetchVotosProposicao,
+    toggleProposicaoVotos,
     setFilter,
     setPage,
     resetFilters,

@@ -13,15 +13,12 @@ router = APIRouter(
 
 
 
-
-
-
-
 @router.get("/proposicoes")
 def listar_proposicoes_deputados(
     siglaTipo: str = Query(None), 
     ano: int = Query(None), 
     ementa: str = Query(None), 
+    deputado: str = Query(None),
     pagina: int = 1
 ):
     conn = db.get_connect()
@@ -33,8 +30,6 @@ def listar_proposicoes_deputados(
     
     try:
         with conn.cursor() as cursor:
-            # Modified query to remove dependency on missing 'autores' table
-            # We are now selecting only from 'proposicoes'
             query = """
                 SELECT DISTINCT ON (p.id)
                     p.id, 
@@ -44,9 +39,18 @@ def listar_proposicoes_deputados(
                     p.ementa, 
                     p.data_apresentacao
                 FROM proposicoes p
-                WHERE 1=1
             """
             params = []
+            
+            # JOIN com tabelas de votação quando filtrar por deputado
+            if deputado:
+                query += """
+                    INNER JOIN votacoes_proposicoes vp ON p.id = vp.proposicao_id
+                    INNER JOIN votacoes_votos vv ON vp.votacao_id = vv.votacao_id
+                    INNER JOIN deputados d ON vv.deputado_id = d.id
+                """
+            
+            query += " WHERE 1=1"
             
             if siglaTipo:
                 query += " AND p.sigla_tipo = %s"
@@ -57,9 +61,14 @@ def listar_proposicoes_deputados(
             if ementa:
                 query += " AND p.ementa ILIKE %s"
                 params.append(f"%{ementa}%")
+            if deputado:
+                query += " AND d.nome_civil ILIKE %s"
+                params.append(f"%{deputado}%")
                 
+            # DISTINCT ON requirement: ORDER BY must start with the DISTINCT expression
             query += " ORDER BY p.id DESC LIMIT %s OFFSET %s"
             params.extend([itens_por_pagina, offset])
+
             
             cursor.execute(query, tuple(params))
             resultados = cursor.fetchall()
@@ -79,6 +88,76 @@ def listar_proposicoes_deputados(
     except Exception as e:
         logging.error(f"Erro ao buscar proposições: {e}")
         raise HTTPException(status_code=500, detail="Erro ao processar proposições")
+    finally:
+        conn.close()
+
+
+@router.get("/proposicoes/{proposicao_id}/votos")
+def listar_votos_por_proposicao(proposicao_id: int):
+
+    conn =  db.get_connect()
+    if not conn:
+        raise HTTPException(status_code=503, detail="Banco de dados indisponível")
+
+    try:
+        with conn.cursor() as cursor:
+            query =  """
+                SELECT 
+                    v.id AS votacao_id,
+                    v.data,
+                    v.descricao,
+                    d.id AS deputado_id,
+                    d.nome_civil,
+                    vv.tipo_voto AS voto
+                FROM votacoes_proposicoes vp
+                INNER JOIN votacoes v ON vp.votacao_id = v.id
+                INNER JOIN votacoes_votos vv ON v.id = vv.votacao_id
+                INNER JOIN deputados d ON vv.deputado_id = d.id
+                WHERE vp.proposicao_id = %s
+                ORDER BY v.data DESC, d.nome_civil ASC
+            """
+
+            cursor.execute(query, (proposicao_id,))
+            resultados = cursor.fetchall()
+
+            votacoes_dict = {}
+
+            for row in resultados:
+                vot_id = row[0]
+                data_votacao = row[1]
+                descricao = row[2]
+                dep_id = row[3]
+                nome_dep = row[4]
+                voto = row[5]
+
+                if vot_id not in votacoes_dict:
+                    votacoes_dict[vot_id] = {
+                        "id_votacao": vot_id,
+                        "data": data_votacao.isoformat() if hasattr(data_votacao, 'isoformat') else str(data_votacao),
+                        "descricao": descricao,
+                        "total_votos": 0,
+                        "lista_votos": []
+                    }
+                
+                # Adiciona o voto do deputado na lista desta votação
+                votacoes_dict[vot_id]["lista_votos"].append({
+                    "deputado_id": dep_id,
+                    "nome": nome_dep,
+                    "voto": voto
+                })
+                votacoes_dict[vot_id]["total_votos"] += 1
+
+            # Transformar o dicionário em uma lista para o JSON
+            resposta_final = {
+                "proposicao_id": proposicao_id,
+                "historico_votacoes": list(votacoes_dict.values())
+            }
+
+            return resposta_final
+
+    except Exception as e:
+        logging.error(f"Erro ao buscar votos da proposição {proposicao_id}: {e}")
+        raise HTTPException(status_code=500, detail="Erro ao processar votos da proposição")
     finally:
         conn.close()
 
@@ -369,6 +448,8 @@ def buscar_despesas_deputado(deputado_id: int):
     finally:
         if conn: conn.close()        
         
+
+
 
 @router.get("/estatisticas/categorias")
 def estatisticas_categorias():

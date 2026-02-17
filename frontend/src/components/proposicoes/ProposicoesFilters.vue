@@ -1,13 +1,24 @@
 <template>
   <div class="mb-6 space-y-4">
     <div class="flex flex-col sm:flex-row gap-4">
-      <!-- Search -->
+      <!-- Search by ementa -->
       <div class="relative flex-1">
         <input
           type="text"
           placeholder="Buscar por ementa..."
           :value="store.proposicoesFilters.search"
           @input="onSearchInput"
+          class="w-full px-4 py-3 rounded-full border border-gray-300 bg-background text-foreground placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:shadow-md transition-shadow"
+        />
+      </div>
+
+      <!-- Search by deputado -->
+      <div class="relative flex-1">
+        <input
+          type="text"
+          placeholder="Buscar por deputado que votou..."
+          :value="store.proposicoesFilters.deputado"
+          @input="onDeputadoInput"
           class="w-full px-4 py-3 rounded-full border border-gray-300 bg-background text-foreground placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:shadow-md transition-shadow"
         />
       </div>
@@ -56,12 +67,21 @@ import { useDeputadosStore } from '@/stores/deputados'
 const store = useDeputadosStore()
 
 let searchTimeout: ReturnType<typeof setTimeout> | null = null
+let deputadoTimeout: ReturnType<typeof setTimeout> | null = null
 
 const onSearchInput = (event: Event) => {
   const value = (event.target as HTMLInputElement).value
   if (searchTimeout) clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
     store.setProposicoesFilter('search', value)
+  }, 500)
+}
+
+const onDeputadoInput = (event: Event) => {
+  const value = (event.target as HTMLInputElement).value
+  if (deputadoTimeout) clearTimeout(deputadoTimeout)
+  deputadoTimeout = setTimeout(() => {
+    store.setProposicoesFilter('deputado', value)
   }, 500)
 }
 
@@ -79,6 +99,7 @@ const anosDisponiveis = computed(() => {
 })
 
 const hasActiveFilters = computed(() => {
-  return store.proposicoesFilters.search || store.proposicoesFilters.siglaTipo || store.proposicoesFilters.ano
+  return store.proposicoesFilters.search || store.proposicoesFilters.siglaTipo || store.proposicoesFilters.ano || store.proposicoesFilters.deputado
 })
 </script>
+
