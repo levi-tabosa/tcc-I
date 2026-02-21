@@ -147,6 +147,8 @@ def listar_votos_por_proposicao(proposicao_id: int):
                 })
                 votacoes_dict[vot_id]["total_votos"] += 1
 
+
+
             # Transformar o dicionário em uma lista para o JSON
             resposta_final = {
                 "proposicao_id": proposicao_id,
