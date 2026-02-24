@@ -239,6 +239,37 @@ def main():
             existing = cur.fetchone()[0]
             logging.info(f"Votos ja existentes no banco: {existing}")
 
+            # Descobre a data mais recente para continuar de onde parou
+            cur.execute("""
+                SELECT MAX(v.data) FROM votacoes v
+                INNER JOIN votacoes_votos vv ON vv.votacao_id = v.id;
+            """)
+            last_date_row = cur.fetchone()
+            last_date = last_date_row[0] if last_date_row and last_date_row[0] else None
+
+        # Calcula ano e trimestre de inicio
+        start_year = 2007
+        start_quarter = 0  # indice 0-3
+
+        if last_date:
+            if isinstance(last_date, str):
+                last_date = datetime.strptime(last_date[:10], "%Y-%m-%d").date()
+            elif isinstance(last_date, datetime):
+                last_date = last_date.date()
+            start_year = last_date.year
+            month = last_date.month
+            if month <= 3:
+                start_quarter = 0
+            elif month <= 6:
+                start_quarter = 1
+            elif month <= 9:
+                start_quarter = 2
+            else:
+                start_quarter = 3
+            logging.info(f"Continuando de onde parou: {last_date} (ano {start_year}, Q{start_quarter+1})")
+        else:
+            logging.info("Nenhum voto encontrado, iniciando do zero (2007-Q1)")
+
         periodos = [
             ("-01-01", "-03-31"),
             ("-04-01", "-06-30"),
@@ -248,10 +279,15 @@ def main():
 
         total_votos_inseridos = 0
 
-        for ano in range(2007, 2026):
+        for ano in range(start_year, 2026):
             logging.info(f"{'=' * 20} Ano: {ano} {'=' * 20}")
 
-            for p_inicio, p_fim in periodos:
+            for q_idx, (p_inicio, p_fim) in enumerate(periodos):
+                # Pula trimestres anteriores ao ponto de retomada
+                if ano == start_year and q_idx < start_quarter:
+                    logging.info(f"  Pulando periodo Q{q_idx+1}/{ano} (ja processado)")
+                    continue
+
                 inicio = f"{ano}{p_inicio}"
                 fim = f"{ano}{p_fim}"
 

@@ -7,7 +7,7 @@
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h1 class="text-3xl font-bold text-foreground sm:text-4xl">Despesas e Gastos</h1>
           <p class="mt-2 text-muted-foreground max-w-2xl">
-            Acompanhe como os deputados federais utilizam a cota parlamentar. Totais, rankings e análises por bloco ideológico.
+            Acompanhe como os deputados utilizam a cota parlamentar. Totais, rankings e análises por bloco ideológico.
           </p>
         </div>
       </section>

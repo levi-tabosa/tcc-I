@@ -11,7 +11,7 @@
             <span class="font-bold text-lg text-foreground">Fiscaliza Brasil</span>
           </div>
           <p class="text-sm text-muted-foreground max-w-md">
-            Plataforma de transparência política dedicada a monitorar a atuação dos deputados federais brasileiros.
+            Plataforma de transparência política dedicada a monitorar a atuação dos deputados e senadores brasileiros.
             Fiscalize gastos, emendas e acompanhe a representação política do Brasil.
           </p>
         </div>

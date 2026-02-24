@@ -1,81 +1,368 @@
 <template>
-  <div class="min-h-screen bg-background">
+  <div class="min-h-screen flex flex-col bg-background">
     <AppHeader />
-    <div class="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
-      <div class="space-y-8">
-        <div class="text-center">
-          <h1 class="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
-            Metodologia
+    <main class="flex-1">
+      <!-- Hero -->
+      <section class="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-accent/10 py-20 lg:py-28">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
+          <span class="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary mb-6">
+            <BookOpen class="h-4 w-4" />
+            Guia &amp; Metodologia
+          </span>
+          <h1 class="text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+            Entenda como <span class="text-primary">fiscalizamos</span>
           </h1>
-          <p class="mt-4 text-lg text-muted-foreground">
-            Entenda como coletamos e analisamos os dados da transparência pública
+          <p class="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            Saiba de onde vêm os dados, como são processados e o que cada seção do Fiscaliza Brasil oferece para você acompanhar a atuação parlamentar.
           </p>
+          <div class="mt-8 flex flex-wrap justify-center gap-4">
+            <BaseButton to="/camara/deputados" size="lg">
+              <Building2 class="mr-2 h-4 w-4" />
+              Explorar Deputados
+            </BaseButton>
+            <BaseButton to="/senado/senadores" variant="outline" size="lg">
+              <Landmark class="mr-2 h-4 w-4" />
+              Explorar Senadores
+            </BaseButton>
+          </div>
         </div>
+      </section>
 
-        <div class="prose prose-lg mx-auto mt-12 space-y-8">
-          <section class="bg-card rounded-lg p-6 border border-border">
-            <h2 class="text-2xl font-bold text-foreground mb-4">Fonte dos Dados</h2>
-            <p class="text-muted-foreground leading-relaxed">
-              Todos os dados apresentados são obtidos através da API oficial da Câmara dos Deputados
-              e do Portal da Transparência do Governo Federal. As informações são atualizadas
-              periodicamente para garantir a precisão e confiabilidade dos dados.
-            </p>
-          </section>
+      <!-- Como funciona - 3 steps -->
+      <section class="py-16 bg-muted/30">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-foreground">Como funciona?</h2>
+            <p class="mt-2 text-muted-foreground">Em 3 etapas simples</p>
+          </div>
 
-          <section class="bg-card rounded-lg p-6 border border-border">
-            <h2 class="text-2xl font-bold text-foreground mb-4">Análise de Despesas</h2>
-            <p class="text-muted-foreground leading-relaxed">
-              As despesas são categorizadas de acordo com a classificação oficial da Câmara dos
-              Deputados. Realizamos análises estatísticas para identificar padrões de gastos,
-              valores médios por categoria e comparações entre deputados e partidos.
-            </p>
-          </section>
-
-          <section class="bg-card rounded-lg p-6 border border-border">
-            <h2 class="text-2xl font-bold text-foreground mb-4">Emendas Parlamentares</h2>
-            <p class="text-muted-foreground leading-relaxed">
-              Os dados de emendas parlamentares incluem tanto emendas individuais quanto de bancada.
-              Cada emenda é classificada por área de aplicação, município beneficiado e status de
-              execução. As informações são consolidadas do Sistema Integrado de Planejamento e
-              Orçamento (SIOP).
-            </p>
-          </section>
-
-          <section class="bg-card rounded-lg p-6 border border-border">
-            <h2 class="text-2xl font-bold text-foreground mb-4">Rankings e Estatísticas</h2>
-            <p class="text-muted-foreground leading-relaxed">
-              Os rankings são calculados com base em métricas objetivas como total de gastos,
-              presença em sessões, proposições apresentadas e votações. Utilizamos normalização
-              estatística para permitir comparações justas entre deputados de diferentes estados
-              e partidos.
-            </p>
-          </section>
-
-          <section class="bg-card rounded-lg p-6 border border-border">
-            <h2 class="text-2xl font-bold text-foreground mb-4">Periodicidade de Atualização</h2>
-            <p class="text-muted-foreground leading-relaxed">
-              Os dados são atualizados automaticamente a cada 24 horas. Em períodos de alta
-              atividade legislativa, como durante votações importantes, a atualização pode
-              ocorrer com maior frequência.
-            </p>
-          </section>
-
-          <section class="bg-card rounded-lg p-6 border border-border">
-            <h2 class="text-2xl font-bold text-foreground mb-4">Código Aberto</h2>
-            <p class="text-muted-foreground leading-relaxed">
-              Este projeto é de código aberto e está disponível para auditoria pública.
-              Acreditamos na transparência não apenas dos dados governamentais, mas também
-              das ferramentas que utilizamos para analisá-los.
-            </p>
-          </section>
+          <div class="grid gap-8 md:grid-cols-3">
+            <div v-for="step in steps" :key="step.title" class="text-center">
+              <h3 class="text-lg font-bold text-foreground">{{ step.title }}</h3>
+              <p class="mt-2 text-sm text-muted-foreground leading-relaxed">{{ step.description }}</p>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+      </section>
+
+      <!-- Fontes de Dados -->
+      <section class="py-16">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-foreground">Entenda os Dados</h2>
+            <p class="mt-2 text-muted-foreground">Informações sobre as fontes e tipos de dados exibidos</p>
+          </div>
+
+          <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div
+              v-for="source in dataSources"
+              :key="source.title"
+              class="bg-card rounded-xl border border-border p-6 hover:shadow-lg transition-shadow"
+            >
+              <div class="flex items-center gap-3 mb-4">
+                <div class="p-2.5 rounded-lg bg-primary/10">
+                  <component :is="source.icon" class="h-5 w-5 text-primary" />
+                </div>
+                <h3 class="font-bold text-foreground">{{ source.title }}</h3>
+              </div>
+              <ul class="space-y-2">
+                <li v-for="(item, idx) in source.items" :key="idx" class="flex items-start gap-2 text-sm text-muted-foreground">
+                  <ChevronRight class="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                  <span>{{ item }}</span>
+                </li>
+              </ul>
+              <p class="mt-4 text-xs text-muted-foreground/70 border-t border-border pt-3">
+                Fonte: {{ source.fonte }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- O que você pode fazer -->
+      <section class="py-16 bg-muted/30">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-foreground">O que você pode fazer</h2>
+            <p class="mt-2 text-muted-foreground max-w-xl mx-auto">Cada funcionalidade foi pensada para você entender o que acontece no Congresso</p>
+          </div>
+
+          <div class="space-y-12">
+            <div
+              v-for="(feature, idx) in features"
+              :key="feature.title"
+              class="grid lg:grid-cols-2 gap-8 items-center"
+            >
+              <!-- Texto -->
+              <div :class="idx % 2 !== 0 ? 'lg:order-2' : ''">
+                <div class="bg-card rounded-xl border border-border p-6 lg:p-8 hover:shadow-lg transition-shadow">
+                  <h3 class="text-xl font-bold text-foreground mb-2">{{ feature.title }}</h3>
+                  <p class="text-muted-foreground leading-relaxed mb-4">{{ feature.description }}</p>
+                  <ul class="space-y-1.5 mb-4">
+                    <li v-for="(tip, i) in feature.tips" :key="i" class="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Check class="h-4 w-4 text-primary flex-shrink-0" />
+                      {{ tip }}
+                    </li>
+                  </ul>
+                  <router-link
+                    :to="feature.href"
+                    class="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+                  >
+                    {{ feature.cta }}
+                    <ArrowRight class="h-4 w-4" />
+                  </router-link>
+                </div>
+              </div>
+              <!-- Visual -->
+              <div :class="idx % 2 !== 0 ? 'lg:order-1' : ''">
+                <div class="bg-muted/50 rounded-xl border border-border p-8 flex items-center justify-center h-full min-h-[200px]">
+                  <component :is="feature.icon" class="h-16 w-16 text-primary/30" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Dicas rápidas -->
+      <section class="py-16">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div class="text-center mb-10">
+            <h2 class="text-3xl font-bold text-foreground">Dicas Rápidas</h2>
+          </div>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div
+              v-for="tip in tips"
+              :key="tip"
+              class="flex items-start gap-3 bg-card rounded-lg border border-border p-4"
+            >
+              <Lightbulb class="h-5 w-5 text-chart-2 mt-0.5 flex-shrink-0" />
+              <p class="text-sm text-muted-foreground leading-relaxed">{{ tip }}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FAQ -->
+      <section class="py-16 bg-muted/30">
+        <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+          <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-foreground">Perguntas Frequentes</h2>
+            <p class="mt-2 text-muted-foreground">Tire suas dúvidas sobre a plataforma</p>
+          </div>
+
+          <div class="space-y-3">
+            <div
+              v-for="(faq, idx) in faqs"
+              :key="idx"
+              class="bg-card rounded-lg border border-border overflow-hidden"
+            >
+              <button
+                class="w-full flex items-center justify-between p-5 text-left hover:bg-muted/50 transition-colors"
+                @click="toggleFaq(idx)"
+              >
+                <span class="font-medium text-foreground pr-4">{{ faq.question }}</span>
+                <ChevronDown
+                  class="h-5 w-5 text-muted-foreground flex-shrink-0 transition-transform duration-200"
+                  :class="{ 'rotate-180': openFaq === idx }"
+                />
+              </button>
+              <div
+                v-if="openFaq === idx"
+                class="px-5 pb-5 text-sm text-muted-foreground leading-relaxed border-t border-border pt-4"
+              >
+                {{ faq.answer }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA -->
+      <section class="py-20">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
+          <h2 class="text-3xl font-bold text-foreground">Pronto para fiscalizar?</h2>
+          <p class="mt-3 text-muted-foreground max-w-lg mx-auto">
+            Escolha por onde começar e acompanhe o que fazem com o dinheiro público.
+          </p>
+          <div class="mt-8 flex flex-wrap justify-center gap-3">
+            <BaseButton to="/camara/deputados">Deputados</BaseButton>
+            <BaseButton to="/camara/despesas" variant="outline">Despesas</BaseButton>
+            <BaseButton to="/camara/emendas" variant="outline">Emendas</BaseButton>
+            <BaseButton to="/camara/proposicoes" variant="outline">Proposições</BaseButton>
+            <BaseButton to="/camara/comparar" variant="outline">Comparar</BaseButton>
+          </div>
+        </div>
+      </section>
+    </main>
+    <AppFooter />
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
+import {
+  BookOpen, Building2, Landmark, Database, Receipt, FileText,
+  Vote, BarChart3, ChevronRight, ChevronDown, Check, ArrowRight,
+  Lightbulb, RefreshCw, Scale, Users
+} from 'lucide-vue-next'
 import AppHeader from '@/components/layout/AppHeader.vue'
+import AppFooter from '@/components/layout/AppFooter.vue'
+import BaseButton from '@/components/ui/BaseButton.vue'
 
-// Nenhuma lógica necessária por enquanto
+// Steps
+const steps = [
+  { number: 1, title: 'Coletamos', description: 'Dados públicos oficiais da Câmara dos Deputados, Senado Federal e Portal da Transparência são coletados automaticamente via APIs.' },
+  { number: 2, title: 'Processamos', description: 'As informações são organizadas, categorizadas e armazenadas em nosso banco de dados para consulta rápida e análise.' },
+  { number: 3, title: 'Você Fiscaliza', description: 'Navegue pelos dados, compare parlamentares, analise gastos e acompanhe votações de forma clara e acessível.' },
+]
+
+// Data sources
+const dataSources = [
+  {
+    title: 'Cota Parlamentar',
+    icon: Receipt,
+    items: [
+      'Sistema de reembolso de despesas dos parlamentares',
+      'Dados com defasagem de até 90 dias para comprovação',
+      'Categorias: passagens, alimentação, combustíveis, etc.',
+    ],
+    fonte: 'API da Câmara dos Deputados',
+  },
+  {
+    title: 'Emendas Parlamentares',
+    icon: FileText,
+    items: [
+      'Emendas individuais e de bancada',
+      'Classificadas por área e município beneficiado',
+      'Status de execução e valores empenhados',
+    ],
+    fonte: 'Portal da Transparência / SIOP',
+  },
+  {
+    title: 'Votações',
+    icon: Vote,
+    items: [
+      'Registro nominal de votos dos deputados',
+      'Dados desde 2007 até a legislatura atual',
+      'Resultado completo de cada votação',
+    ],
+    fonte: 'API da Câmara dos Deputados',
+  },
+  {
+    title: 'Proposições',
+    icon: FileText,
+    items: [
+      'Projetos de lei, PECs, medidas provisórias',
+      'Autoria, tramitação e situação atual',
+      'Filtros por tipo, ano e autor',
+    ],
+    fonte: 'API da Câmara dos Deputados',
+  },
+  {
+    title: 'Perfis Parlamentares',
+    icon: Database,
+    items: [
+      'Dados biográficos e contato dos parlamentares',
+      'Partido, estado, escolaridade e mandato',
+      'Foto oficial e informações de gabinete',
+    ],
+    fonte: 'API da Câmara e do Senado',
+  },
+  {
+    title: 'Atualização',
+    icon: RefreshCw,
+    items: [
+      'Dados atualizados automaticamente a cada 24h',
+      'Maior frequência em períodos de votação',
+      'Histórico desde 2007 disponível',
+    ],
+    fonte: 'Processamento automático',
+  },
+]
+
+// Features
+const features = [
+  {
+    title: 'Veja quem mais gasta',
+    description: 'O painel de despesas mostra os deputados e partidos que mais utilizam a cota parlamentar, com rankings, totais e análises por categoria.',
+    tips: ['Filtre por partido ou estado', 'Veja gastos por categoria', 'Compare períodos diferentes'],
+    href: '/camara/despesas',
+    cta: 'Ver despesas',
+    icon: Receipt,
+  },
+  {
+    title: 'Compare deputados lado a lado',
+    description: 'Escolha dois deputados e compare perfis, gastos totais, categorias de despesas e últimas notas fiscais em uma única tela.',
+    tips: ['Compare deputados do mesmo estado', 'Veja diferença percentual de gastos', 'Analise categorias individualmente'],
+    href: '/camara/comparar',
+    cta: 'Iniciar comparação',
+    icon: Scale,
+  },
+  {
+    title: 'Acompanhe as votações',
+    description: 'Veja como cada deputado votou nas proposições legislativas. Descubra padrões de votação e alinhamento partidário.',
+    tips: ['Veja o placar completo de cada votação', 'Filtre por proposição ou deputado', 'Dados desde 2007'],
+    href: '/camara/proposicoes',
+    cta: 'Ver proposições',
+    icon: Vote,
+  },
+  {
+    title: 'Acompanhe emendas parlamentares',
+    description: 'Descubra quais parlamentares mais destinaram emendas, para quais municípios e em quais áreas como saúde, educação e infraestrutura.',
+    tips: ['Emendas individuais e de bancada', 'Valores empenhados e pagos', 'Classificação por área'],
+    href: '/camara/emendas',
+    cta: 'Ver emendas',
+    icon: FileText,
+  },
+  {
+    title: 'Conheça cada deputado a fundo',
+    description: 'Clique em qualquer deputado para ver o perfil completo: histórico de gastos, despesas detalhadas, partido e informações pessoais.',
+    tips: ['Veja a evolução dos gastos', 'Confira as últimas despesas', 'Acesse informações de contato'],
+    href: '/camara/deputados',
+    cta: 'Buscar deputado',
+    icon: Users,
+  },
+]
+
+// Tips
+const tips = [
+  'Meses recentes podem ter dados incompletos — deputados têm prazo de 90 dias para enviar comprovantes.',
+  'Use filtros por estado para comparar deputados da mesma região.',
+  'Na comparação, preste atenção nas categorias — dois deputados podem gastar o mesmo total, mas em áreas muito diferentes.',
+  'Compartilhe os dados nas redes sociais — quanto mais gente fiscalizando, melhor para a democracia.',
+]
+
+// FAQ
+const faqs = [
+  {
+    question: 'De onde vêm os dados?',
+    answer: 'Todos os dados são obtidos através das APIs oficiais da Câmara dos Deputados (dadosabertos.camara.leg.br) e do Portal da Transparência do Governo Federal. São dados públicos, disponíveis para qualquer cidadão.',
+  },
+  {
+    question: 'Com que frequência os dados são atualizados?',
+    answer: 'Os dados são atualizados automaticamente a cada 24 horas. Porém, a Câmara dos Deputados dá aos parlamentares um prazo de até 90 dias para enviar comprovantes de despesas, então meses recentes podem ter informações incompletas.',
+  },
+  {
+    question: 'O que é a Cota Parlamentar (CEAP)?',
+    answer: 'A Cota para Exercício da Atividade Parlamentar (CEAP) é um valor mensal que cada deputado pode usar para custear despesas relacionadas ao mandato, como passagens aéreas, alimentação, combustível, telefonia e materiais de escritório. O valor varia por estado.',
+  },
+  {
+    question: 'O que são emendas parlamentares?',
+    answer: 'São instrumentos pelos quais os parlamentares podem destinar recursos do orçamento federal para obras e serviços em seus estados ou municípios. Podem ser individuais, de bancada ou de comissão.',
+  },
+  {
+    question: 'Posso confiar nos dados apresentados?',
+    answer: 'Sim. Utilizamos exclusivamente fontes oficiais do governo. O projeto é de código aberto e está disponível para auditoria pública. Não fazemos nenhuma alteração nos dados originais — apenas organizamos e apresentamos de forma mais acessível.',
+  },
+  {
+    question: 'O Fiscaliza Brasil tem algum viés político?',
+    answer: 'Não. A plataforma apresenta dados objetivos sem qualquer viés partidário ou ideológico. Os rankings e comparações são baseados exclusivamente em métricas numéricas dos dados oficiais.',
+  },
+]
+
+const openFaq = ref<number | null>(null)
+const toggleFaq = (idx: number) => {
+  openFaq.value = openFaq.value === idx ? null : idx
+}
 </script>

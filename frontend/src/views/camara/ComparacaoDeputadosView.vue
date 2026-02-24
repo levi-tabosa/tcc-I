@@ -10,7 +10,7 @@
             <h1 class="text-3xl font-bold text-foreground sm:text-4xl">Comparar Deputados</h1>
           </div>
           <p class="mt-2 text-muted-foreground max-w-2xl">
-            Compare lado a lado os perfis, gastos e categorias de despesas de dois deputados federais.
+            Compare lado a lado os perfis, gastos e categorias de despesas de dois deputados.
           </p>
         </div>
       </section>

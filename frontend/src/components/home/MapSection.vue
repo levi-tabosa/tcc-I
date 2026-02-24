@@ -1,10 +1,7 @@
 <template>
-  <section class="py-16 pt-24">
+  <section class="py-16">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <div class="text-center mb-12">
-        <h2 class="text-3xl font-bold text-foreground">Distribuição por Região</h2>
-        <p class="mt-2 text-muted-foreground">Representação dos 2010 deputados federais por região do Brasil</p>
-      </div>
+      <h2 class="text-2xl font-bold text-foreground mb-8">Deputados por Região</h2>
 
       <div class="grid lg:grid-cols-2 gap-8 items-center">
         <!-- Map -->

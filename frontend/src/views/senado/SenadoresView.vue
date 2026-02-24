@@ -7,7 +7,7 @@
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h1 class="text-3xl font-bold text-foreground sm:text-4xl">Senadores</h1>
           <p class="mt-2 text-muted-foreground max-w-2xl">
-            Conheça os 81 senadores da República. Filtre por partido, estado ou região.
+            Conheça os senadores da República. Filtre por partido, estado ou região.
           </p>
         </div>
       </section>

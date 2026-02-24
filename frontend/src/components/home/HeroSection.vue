@@ -25,7 +25,7 @@
           </h1>
 
           <p class="mt-6 text-lg text-muted-foreground max-w-xl leading-relaxed">
-            Fiscalize a atuação dos <strong>Deputados Federais</strong> e <strong>Senadores</strong>. 
+            Fiscalize a atuação dos <strong>Deputados</strong> e <strong>Senadores</strong>. 
             Acompanhe gastos, emendas parlamentares e a representação política do Brasil de forma 
             transparente e acessível.
           </p>
@@ -89,7 +89,7 @@
               </div>
               <div>
                 <p class="text-xs text-muted-foreground">Senadores</p>
-                <p class="font-bold text-foreground">{{ senadoresStore.generalStats ? senadoresStore.generalStats.total_senadores : '81' }}</p>
+                <p class="font-bold text-foreground">{{ senadoresStore.generalStats ? senadoresStore.generalStats.total_senadores : '--' }}</p>
               </div>
             </div>
           </div>

@@ -31,6 +31,9 @@ export interface DeputadoDetail {
   municipio_nascimento: string
   sigla_partido: string
   foto: string
+  categorias?: { categoria: string; valor: number }[]
+  despesas?: Despesa[]
+  total_gasto?: number
 }
 
 export interface Despesa {
