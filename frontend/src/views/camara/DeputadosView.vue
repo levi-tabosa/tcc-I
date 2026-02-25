@@ -12,6 +12,9 @@
         </div>
       </section>
 
+      <!-- Stats -->
+      <DeputadosStats />
+
       <!-- Main content -->
       <section class="py-8">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -29,4 +32,5 @@ import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import DeputadosFilters from '@/components/camara/DeputadosFilters.vue'
 import DeputadosList from '@/components/camara/DeputadosList.vue'
+import DeputadosStats from '@/components/camara/DeputadosStats.vue'
 </script>

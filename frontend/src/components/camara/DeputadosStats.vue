@@ -7,19 +7,22 @@
           <template #header>
             <h3 class="text-lg font-semibold text-foreground">Gastos nos Últimos Meses</h3>
           </template>
-          <div class="space-y-4">
-            <div v-for="mes in gastosUltimosMeses" :key="mes.mes" class="flex items-center gap-4">
+          <div v-if="gastosUltimosMeses.length" class="space-y-4">
+            <div v-for="mes in gastosUltimosMeses" :key="mes.label" class="flex items-center gap-4">
               <div :class="`w-3 h-3 rounded-full ${mes.color}`" />
               <div class="flex-1">
                 <div class="flex justify-between text-sm mb-1">
-                  <span class="text-foreground font-medium">{{ mes.mes }}</span>
-                  <span class="text-muted-foreground">{{ mes.valor }}</span>
+                  <span class="text-foreground font-medium">{{ mes.label }}</span>
+                  <span class="text-muted-foreground">{{ mes.valorFormatado }}</span>
                 </div>
                 <div class="h-2 bg-muted rounded-full overflow-hidden">
                   <div :class="`h-full rounded-full ${mes.color}`" :style="{ width: `${mes.percentage}%` }" />
                 </div>
               </div>
             </div>
+          </div>
+          <div v-else class="py-8 text-center text-muted-foreground text-sm">
+            Carregando dados...
           </div>
         </BaseCard>
 
@@ -28,7 +31,7 @@
           <template #header>
             <h3 class="text-lg font-semibold text-foreground">Maiores Bancadas</h3>
           </template>
-          <div class="space-y-3">
+          <div v-if="topPartidos.length" class="space-y-3">
             <div v-for="(partido, index) in topPartidos" :key="partido.sigla" class="flex items-center justify-between">
               <div class="flex items-center gap-3">
                 <span class="text-muted-foreground text-sm w-6">{{ index + 1 }}º</span>
@@ -36,11 +39,14 @@
               </div>
               <div class="flex items-center gap-2">
                 <div class="w-24 h-2 bg-muted rounded-full overflow-hidden">
-                  <div class="h-full bg-primary rounded-full" :style="{ width: `${(partido.deputados / 99) * 100}%` }" />
+                  <div class="h-full bg-primary rounded-full" :style="{ width: `${(partido.deputados / maxBancada) * 100}%` }" />
                 </div>
                 <span class="text-sm text-muted-foreground w-8 text-right">{{ partido.deputados }}</span>
               </div>
             </div>
+          </div>
+          <div v-else class="py-8 text-center text-muted-foreground text-sm">
+            Carregando dados...
           </div>
         </BaseCard>
       </div>
@@ -49,16 +55,55 @@
 </template>
 
 <script setup lang="ts">
+import { computed, onMounted } from 'vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
-import { partidos } from '@/data/mock-data'
+import { useDeputadosStore } from '@/stores/deputados'
 
-const gastosUltimosMeses = [
-  { mes: 'Dezembro 2025', valor: 'R$ 42,5M', color: 'bg-chart-1', percentage: 95 },
-  { mes: 'Novembro 2025', valor: 'R$ 41,8M', color: 'bg-chart-2', percentage: 92 },
-  { mes: 'Outubro 2025', valor: 'R$ 44,2M', color: 'bg-chart-3', percentage: 100 },
-  { mes: 'Setembro 2025', valor: 'R$ 38,9M', color: 'bg-chart-4', percentage: 88 },
-  { mes: 'Agosto 2025', valor: 'R$ 40,1M', color: 'bg-chart-5', percentage: 90 },
-]
+const store = useDeputadosStore()
 
-const topPartidos = partidos.sort((a, b) => b.deputados - a.deputados).slice(0, 6)
+onMounted(() => {
+  store.fetchEstatisticasGerais()
+  store.fetchDeputados()
+})
+
+const mesesPtBr: Record<number, string> = {
+  1: 'Janeiro', 2: 'Fevereiro', 3: 'Março', 4: 'Abril',
+  5: 'Maio', 6: 'Junho', 7: 'Julho', 8: 'Agosto',
+  9: 'Setembro', 10: 'Outubro', 11: 'Novembro', 12: 'Dezembro',
+}
+
+const chartColors = ['bg-chart-1', 'bg-chart-2', 'bg-chart-3', 'bg-chart-4', 'bg-chart-5']
+
+const gastosUltimosMeses = computed(() => {
+  if (!store.generalStats?.gastos_por_mes) return []
+
+  const ultimos = store.generalStats.gastos_por_mes.slice(-5)
+  const maxValor = Math.max(...ultimos.map(m => m.valor), 1)
+
+  return ultimos.map((m, i) => ({
+    label: `${mesesPtBr[m.mes] || m.mes} ${m.ano}`,
+    valorFormatado: `R$ ${(m.valor / 1000000).toFixed(1)}M`,
+    color: chartColors[i % chartColors.length],
+    percentage: (m.valor / maxValor) * 100,
+  }))
+})
+
+const topPartidos = computed(() => {
+  if (!store.deputadosList.length) return []
+
+  const contagem: Record<string, number> = {}
+  store.deputadosList.forEach(d => {
+    contagem[d.partido] = (contagem[d.partido] || 0) + 1
+  })
+
+  return Object.entries(contagem)
+    .map(([sigla, deputados]) => ({ sigla, deputados }))
+    .sort((a, b) => b.deputados - a.deputados)
+    .slice(0, 6)
+})
+
+const maxBancada = computed(() => {
+  if (!topPartidos.value.length) return 1
+  return topPartidos.value[0].deputados
+})
 </script>

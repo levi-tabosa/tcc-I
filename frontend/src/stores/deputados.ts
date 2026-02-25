@@ -322,6 +322,16 @@ export const useDeputadosStore = defineStore("deputados", () => {
     fetchProposicoes(1)
   }
 
+  const partidosUnicos = computed(() => {
+    const set = new Set(deputadosList.value.map(d => d.partido))
+    return Array.from(set).sort()
+  })
+
+  const estadosUnicos = computed(() => {
+    const set = new Set(deputadosList.value.map(d => d.estado))
+    return Array.from(set).sort()
+  })
+
   const filteredDeputados = computed(() => {
     return deputadosList.value.filter((dep) => {
       if (filters.value.search && !dep.nome.toLowerCase().includes(filters.value.search.toLowerCase())) {
@@ -361,6 +371,9 @@ export const useDeputadosStore = defineStore("deputados", () => {
   return {
     filters,
     currentPage,
+    partidosUnicos,
+    estadosUnicos,
+    deputadosList,
     filteredDeputados,
     paginatedDeputados,
     totalPages,

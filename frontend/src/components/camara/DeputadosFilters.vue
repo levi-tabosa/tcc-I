@@ -19,8 +19,8 @@
         class="px-4 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
       >
         <option value="">Todos os partidos</option>
-        <option v-for="partido in partidos" :key="partido.sigla" :value="partido.sigla">
-          {{ partido.sigla }}
+        <option v-for="partido in store.partidosUnicos" :key="partido" :value="partido">
+          {{ partido }}
         </option>
       </select>
 
@@ -31,8 +31,8 @@
         class="px-4 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
       >
         <option value="">Todos os estados</option>
-        <option v-for="estado in estados" :key="estado.sigla" :value="estado.sigla">
-          {{ estado.sigla }}
+        <option v-for="estado in store.estadosUnicos" :key="estado" :value="estado">
+          {{ estado }}
         </option>
       </select>
     </div>
@@ -52,7 +52,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useDeputadosStore } from '@/stores/deputados'
-import { partidos, estados } from '@/data/mock-data'
 
 const store = useDeputadosStore()
 

@@ -203,7 +203,7 @@
 import { ref } from 'vue'
 import {
   BookOpen, Building2, Landmark, Database, Receipt, FileText,
-  Vote, BarChart3, ChevronRight, ChevronDown, Check, ArrowRight,
+  Vote, ChevronRight, ChevronDown, Check, ArrowRight,
   Lightbulb, RefreshCw, Scale, Users
 } from 'lucide-vue-next'
 import AppHeader from '@/components/layout/AppHeader.vue'
