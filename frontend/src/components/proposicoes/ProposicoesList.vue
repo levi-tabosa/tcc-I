@@ -249,11 +249,11 @@ const getVotosSummary = (votos: VotoDeputado[]) => {
 
 const getVotoBadgeClass = (voto: string) => {
   const v = voto.toLowerCase()
-  if (v === 'sim') return 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800 border'
-  if (v.includes('não') || v === 'nao') return 'bg-rose-100 text-rose-800 border-rose-200 dark:bg-rose-900/40 dark:text-rose-300 dark:border-rose-800 border'
-  if (v.includes('abstenção') || v.includes('abstencao')) return 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-800 border'
-  if (v.includes('obstrução') || v.includes('obstrucao')) return 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/40 dark:text-orange-300 dark:border-orange-800 border'
-  return 'bg-slate-100 text-slate-800 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 border'
+  if (v === 'sim') return 'bg-green-600 text-white border-green-700 dark:bg-green-700 dark:text-white dark:border-green-800 border'
+  if (v.includes('não') || v === 'nao') return 'bg-red-600 text-white border-red-700 dark:bg-red-700 dark:text-white dark:border-red-800 border'
+  if (v.includes('abstenção') || v.includes('abstencao')) return 'bg-gray-900 text-white border-gray-950 dark:bg-gray-700 dark:text-white dark:border-gray-600 border'
+  if (v.includes('obstrução') || v.includes('obstrucao')) return 'bg-orange-600 text-white border-orange-700 dark:bg-orange-700 dark:text-white dark:border-orange-800 border'
+  return 'bg-slate-600 text-white border-slate-700 dark:bg-slate-700 dark:text-white dark:border-slate-600 border'
 }
 </script>
 
