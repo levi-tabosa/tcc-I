@@ -369,6 +369,7 @@
                         <th class="py-2 px-3 font-medium text-muted-foreground">Data</th>
                         <th class="py-2 px-3 font-medium text-muted-foreground">Tipo</th>
                         <th class="py-2 px-3 font-medium text-muted-foreground text-right">Valor</th>
+                        <th class="py-2 px-3 font-medium text-muted-foreground text-center">Doc</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -376,9 +377,15 @@
                         <td class="py-2 px-3 whitespace-nowrap">{{ d.mes }}/{{ d.ano }}</td>
                         <td class="py-2 px-3 truncate max-w-[150px]">{{ d.tipo_despesa }}</td>
                         <td class="py-2 px-3 text-right whitespace-nowrap">R$ {{ d.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</td>
+                        <td class="py-2 px-3 text-center">
+                          <a v-if="d.url_documento" :href="d.url_documento" target="_blank" class="text-primary hover:underline" title="Ver comprovante">
+                            <FileText class="h-4 w-4 mx-auto" />
+                          </a>
+                          <span v-else class="text-muted-foreground">--</span>
+                        </td>
                       </tr>
                       <tr v-if="despesasA.length === 0">
-                        <td colspan="3" class="py-4 text-center text-muted-foreground">Sem despesas.</td>
+                        <td colspan="4" class="py-4 text-center text-muted-foreground">Sem despesas.</td>
                       </tr>
                     </tbody>
                   </table>
@@ -398,6 +405,7 @@
                         <th class="py-2 px-3 font-medium text-muted-foreground">Data</th>
                         <th class="py-2 px-3 font-medium text-muted-foreground">Tipo</th>
                         <th class="py-2 px-3 font-medium text-muted-foreground text-right">Valor</th>
+                        <th class="py-2 px-3 font-medium text-muted-foreground text-center">Doc</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -405,9 +413,15 @@
                         <td class="py-2 px-3 whitespace-nowrap">{{ d.mes }}/{{ d.ano }}</td>
                         <td class="py-2 px-3 truncate max-w-[150px]">{{ d.tipo_despesa }}</td>
                         <td class="py-2 px-3 text-right whitespace-nowrap">R$ {{ d.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</td>
+                        <td class="py-2 px-3 text-center">
+                          <a v-if="d.url_documento" :href="d.url_documento" target="_blank" class="text-primary hover:underline" title="Ver comprovante">
+                            <FileText class="h-4 w-4 mx-auto" />
+                          </a>
+                          <span v-else class="text-muted-foreground">--</span>
+                        </td>
                       </tr>
                       <tr v-if="despesasB.length === 0">
-                        <td colspan="3" class="py-4 text-center text-muted-foreground">Sem despesas.</td>
+                        <td colspan="4" class="py-4 text-center text-muted-foreground">Sem despesas.</td>
                       </tr>
                     </tbody>
                   </table>

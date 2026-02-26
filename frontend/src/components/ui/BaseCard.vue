@@ -1,8 +1,8 @@
 <template>
   <div
-    class="rounded-lg border border-border bg-card text-card-foreground shadow-sm transition-all duration-300"
+    class="rounded-xl glass text-card-foreground transition-all duration-300"
     :class="[
-      hover && 'hover:shadow-lg hover:-translate-y-1',
+      hover && 'hover:shadow-lg hover:-translate-y-1 hover:border-primary/30',
       clickable && 'cursor-pointer'
     ]"
   >

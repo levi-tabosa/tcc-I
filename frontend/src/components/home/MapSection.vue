@@ -1,5 +1,5 @@
 <template>
-  <section class="py-16">
+  <section class="py-16 animate-fade-in-up">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <h2 class="text-2xl font-bold text-foreground mb-8">Deputados por Região</h2>
 
@@ -12,10 +12,12 @@
         <!-- Region stats -->
         <div class="space-y-4">
           <BaseCard
-            v-for="regiao in regioes"
+            v-for="(regiao, index) in regioes"
             :key="regiao.nome"
             hover
             clickable
+            class="animate-fade-in-up"
+            :style="{ animationDelay: `${(index + 1) * 100}ms` }"
             :class="selectedRegion === regiao.nome ? 'ring-2 ring-primary shadow-lg' : ''"
             @mouseenter="highlightRegion(regiao.nome)"
             @mouseleave="unhighlightRegion()"

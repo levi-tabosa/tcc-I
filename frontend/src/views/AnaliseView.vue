@@ -13,7 +13,7 @@
       </section>
 
       <!-- Gastos por Categoria -->
-      <section class="py-12 bg-background">
+      <section class="py-12 bg-background animate-fade-in-up">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 class="text-2xl font-bold text-foreground mb-3">Gastos por Categoria</h2>
           <p class="text-muted-foreground mb-8">Distribuição das despesas por tipo de serviço</p>
@@ -44,7 +44,7 @@
       </section>
 
       <!-- Evolução Mensal de Gastos -->
-      <section class="py-12 bg-muted/30">
+      <section class="py-12 bg-muted/30 animate-fade-in-up animate-delay-100">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 class="text-2xl font-bold text-foreground mb-3">Gastos nos Últimos Meses</h2>
           <p class="text-muted-foreground mb-8">Série temporal dos últimos meses registrados</p>
@@ -70,14 +70,14 @@
       </section>
 
       <!-- Gastos por Estado -->
-      <section class="py-12 bg-background">
+      <section class="py-12 bg-background animate-fade-in-up animate-delay-200">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 class="text-2xl font-bold text-foreground mb-3">Gastos por Estado</h2>
           <p class="text-muted-foreground mb-8">Análise de despesas acumuladas por UF</p>
           <BaseCard v-if="estadosData.length">
             <div class="p-6">
               <div class="max-w-3xl mx-auto">
-                <Pie :data="chartData" :options="chartOptions" />
+                <Doughnut :data="chartData" :options="chartOptions" />
               </div>
             </div>
           </BaseCard>
@@ -93,7 +93,7 @@
 import { computed, onMounted } from 'vue'
 import { TrendingUp } from 'lucide-vue-next'
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js'
-import { Pie } from 'vue-chartjs'
+import { Doughnut } from 'vue-chartjs'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
@@ -180,6 +180,7 @@ const chartData = computed(() => ({
 const chartOptions = {
   responsive: true,
   maintainAspectRatio: true,
+  cutout: '70%',
   plugins: {
     legend: {
       position: 'right' as const,

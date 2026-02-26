@@ -89,7 +89,7 @@
               </div>
               <div>
                 <p class="text-xs text-muted-foreground">Senadores</p>
-                <p class="font-bold text-foreground">{{ senadoresStore.generalStats ? senadoresStore.generalStats.total_senadores : '--' }}</p>
+                <p class="font-bold text-foreground">--</p>
               </div>
             </div>
           </div>

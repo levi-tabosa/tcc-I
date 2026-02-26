@@ -49,7 +49,7 @@ const metrics = computed(() => [
   {
     id: 2,
     label: "Senadores",
-    value: senadoresStore.generalStats ? senadoresStore.generalStats.total_senadores : "--",
+    value: "--",
     description: "Senado Federal",
   },
   {
@@ -63,9 +63,7 @@ const metrics = computed(() => [
   {
     id: 4,
     label: "Gastos Senado",
-    value: senadoresStore.generalStats?.total_gastos_12_meses
-      ? formatCurrency(senadoresStore.generalStats.total_gastos_12_meses)
-      : "--",
+    value: "--",
     description: "Últimos 12 meses",
   }
 ])
