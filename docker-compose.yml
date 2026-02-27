@@ -6,6 +6,7 @@ services:
     container_name: camara_backend
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/camara_db
+      - API_KEY=${API_KEY} # obtido  .env na pasta raiz do projeto
     ports:
       - "8000:8000"
     volumes:
