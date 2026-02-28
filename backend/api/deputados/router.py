@@ -58,18 +58,18 @@ WHERE 1=1
 
             resultados = cursor.fetchall()  
             return [ 
-                for r in resultados:
                 {
-                "deputado": r[0],
-                "codigo": r[1],
-                "ano": r[2],
-                "tipo": r[3],
-                "valorEmpenhado": float(r[4]) if r[4] else 0,
-                "valorLiquidado": float(r[5]) if r[5] else 0,
-                "valorPago": float(r[6]) if r[6] else 0,
-                "funcao": r[7],
-                "localidade": r[8]
-              } 
+                    "deputado": r[0],
+                    "codigo": r[1],
+                    "ano": r[2],
+                    "tipo": r[3],
+                    "valorEmpenhado": float(r[4]) if r[4] else 0,
+                    "valorLiquidado": float(r[5]) if r[5] else 0,
+                    "valorPago": float(r[6]) if r[6] else 0,
+                    "funcao": r[7],
+                    "localidade": r[8]
+                } 
+                for r in resultados
             ]
     except Exception as e:
         logging.error(f"Erro ao buscar emendas: {e}")
