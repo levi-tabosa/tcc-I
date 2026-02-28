@@ -13,39 +13,42 @@
       </section>
 
       <!-- Overview -->
-      <section class="py-8 bg-muted/30">
+      <section class="py-12 bg-muted/30">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <BaseCard hover>
+          <div v-if="carregando" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <BaseCard v-for="i in 3" :key="i" class="animate-pulse h-32" />
+          </div>
+          <div v-else class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <BaseCard hover class="border-l-4 border-primary">
               <div class="flex items-center gap-4">
                 <div class="p-3 rounded-xl bg-primary/10">
                   <Users class="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <p class="text-sm text-muted-foreground">Deputados com Emendas</p>
-                  <p class="text-2xl font-bold text-foreground">487</p>
+                  <p class="text-sm font-medium text-muted-foreground uppercase tracking-wider">Deputados com Emendas</p>
+                  <p class="text-3xl font-bold text-foreground">{{ estatisticas.totais.deputados }}</p>
                 </div>
               </div>
             </BaseCard>
-            <BaseCard hover>
+            <BaseCard hover class="border-l-4 border-accent">
               <div class="flex items-center gap-4">
                 <div class="p-3 rounded-xl bg-accent/10">
                   <Landmark class="h-6 w-6 text-accent" />
                 </div>
                 <div>
-                  <p class="text-sm text-muted-foreground">Municípios Beneficiados</p>
-                  <p class="text-2xl font-bold text-foreground">4,832</p>
+                  <p class="text-sm font-medium text-muted-foreground uppercase tracking-wider">Municípios Beneficiados</p>
+                  <p class="text-3xl font-bold text-foreground">{{ estatisticas.totais.municipios }}</p>
                 </div>
               </div>
             </BaseCard>
-            <BaseCard hover class="sm:col-span-2 lg:col-span-1">
+            <BaseCard hover class="border-l-4 border-chart-2 sm:col-span-2 lg:col-span-1">
               <div class="flex items-center gap-4">
                 <div class="p-3 rounded-xl bg-chart-2/10">
                   <TrendingUp class="h-6 w-6 text-chart-2" />
                 </div>
                 <div>
-                  <p class="text-sm text-muted-foreground">Áreas Contempladas</p>
-                  <p class="text-2xl font-bold text-foreground">12</p>
+                  <p class="text-sm font-medium text-muted-foreground uppercase tracking-wider">Áreas Contempladas</p>
+                  <p class="text-3xl font-bold text-foreground">{{ estatisticas.totais.areas }}</p>
                 </div>
               </div>
             </BaseCard>
@@ -54,44 +57,53 @@
       </section>
 
       <!-- Áreas -->
-      <section class="py-8">
+      <section class="py-12">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 class="text-2xl font-bold text-foreground mb-6">Distribuição por Área</h2>
-          <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <BaseCard v-for="area in areasEmendas" :key="area.nome" hover>
-              <div class="flex items-center justify-between mb-2">
-                <span class="font-medium text-foreground">{{ area.nome }}</span>
+          <div class="flex items-center justify-between mb-8">
+            <h2 class="text-2xl font-bold text-foreground">Distribuição por Área</h2>
+            <span class="text-sm text-muted-foreground">Total: R$ {{ (estatisticas.totais.valor_total / 1000000000).toFixed(1) }} Bi</span>
+          </div>
+          <div v-if="carregando" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <BaseCard v-for="i in 6" :key="i" class="animate-pulse h-24" />
+          </div>
+          <div v-else class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <BaseCard v-for="area in estatisticas.areas" :key="area.nome" hover class="group bg-card/50 backdrop-blur-sm">
+              <div class="flex items-center justify-between mb-3">
+                <span class="font-semibold text-foreground group-hover:text-primary transition-colors">{{ area.nome }}</span>
                 <span class="text-lg font-bold text-accent">{{ area.percentual }}%</span>
               </div>
-              <div class="h-3 bg-muted rounded-full overflow-hidden mb-2">
-                <div class="h-full bg-accent rounded-full" :style="{ width: `${area.percentual}%` }" />
+              <div class="h-2 bg-muted rounded-full overflow-hidden mb-3">
+                <div class="h-full bg-accent rounded-full transition-all duration-1000" :style="{ width: `${area.percentual}%` }" />
               </div>
-              <p class="text-sm text-muted-foreground">R$ {{ (area.valor / 1000000).toFixed(0) }}M</p>
+              <p class="text-sm font-medium text-muted-foreground">R$ {{ (area.valor / 1000000).toFixed(1) }}M</p>
             </BaseCard>
           </div>
         </div>
       </section>
 
       <!-- Ranking -->
-      <section class="py-8 bg-muted/30">
+      <section class="py-12 bg-muted/30">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 class="text-2xl font-bold text-foreground mb-6">Top 10 Deputados em Emendas</h2>
-          <BaseCard>
-            <div class="space-y-4">
+          <h2 class="text-2xl font-bold text-foreground mb-8">Top 10 Deputados em Emendas</h2>
+          <BaseCard class="overflow-hidden border-none shadow-xl">
+            <div v-if="carregando" class="p-12 text-center text-muted-foreground">Carregando ranking...</div>
+            <div v-else class="divide-y divide-border">
               <div
-                v-for="(deputado, index) in topDeputadosEmendas"
+                v-for="(deputado, index) in estatisticas.ranking"
                 :key="deputado.id"
-                class="flex items-center gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors"
+                class="flex items-center gap-6 p-4 sm:p-6 hover:bg-muted/50 transition-all duration-300 group"
               >
-                <span class="text-lg font-bold text-muted-foreground w-8">{{ index + 1 }}º</span>
-                <div class="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold">
+                <span class="text-xl font-black text-muted-foreground/30 w-8 group-hover:text-primary/50 transition-colors">{{ index + 1 }}º</span>
+                <div class="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-bold text-lg group-hover:scale-110 transition-transform">
                   {{ deputado.nome.charAt(0) }}
                 </div>
-                <div class="flex-1">
-                  <p class="font-medium text-foreground">{{ deputado.nome }}</p>
-                  <p class="text-sm text-muted-foreground">{{ deputado.partido }} - {{ deputado.estado }}</p>
+                <div class="flex-1 min-w-0">
+                  <p class="font-bold text-foreground truncate text-lg">{{ deputado.nome }}</p>
+                  <p class="text-sm font-medium text-muted-foreground uppercase tracking-tight">{{ deputado.partido }} • {{ deputado.estado }}</p>
                 </div>
-                <p class="text-lg font-bold text-accent">R$ {{ (deputado.emendasTotal / 1000000).toFixed(1) }}M</p>
+                <div class="text-right">
+                  <p class="text-xl font-extrabold text-accent">R$ {{ (deputado.emendasTotal / 1000000).toFixed(1) }}M</p>
+                </div>
               </div>
             </div>
           </BaseCard>
@@ -103,11 +115,34 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import { Landmark, Users, TrendingUp } from 'lucide-vue-next'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
-import { areasEmendas, deputados } from '@/data/mock-data'
 
-const topDeputadosEmendas = deputados.sort((a, b) => b.emendasTotal - a.emendasTotal).slice(0, 10)
+const estatisticas = ref({
+  totais: { deputados: 0, municipios: 0, areas: 0, valor_total: 0 },
+  areas: [] as any[],
+  ranking: [] as any[]
+})
+
+const carregando = ref(true)
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
+async function carregarEstatisticas() {
+  try {
+    const resposta = await fetch(`${API_URL}/api/deputados/emendas/estatisticas`)
+    if (!resposta.ok) throw new Error('Erro ao buscar estatísticas')
+    estatisticas.value = await resposta.json()
+  } catch (erro) {
+    console.error('Falha ao carregar estatísticas:', erro)
+  } finally {
+    carregando.value = false
+  }
+}
+
+onMounted(() => {
+  carregarEstatisticas()
+})
 </script>

@@ -77,6 +77,91 @@ WHERE 1=1
     finally:
         conn.close()
 
+@router.get("/emendas/estatisticas")
+def estatisticas_emendas():
+    conn = db.get_connect()
+    if not conn:
+        raise HTTPException(status_code=503, detail="Banco de dados indisponível")
+    
+    try:
+        with conn.cursor() as cursor:
+            # 1. Totais Gerais
+            cursor.execute("""
+                SELECT 
+                    COUNT(DISTINCT nome_autor) as total_deputados,
+                    COUNT(DISTINCT localidade_gasto) as total_municipios,
+                    COUNT(DISTINCT funcao) as total_areas
+                FROM portal.emendas
+            """)
+            totais = cursor.fetchone()
+            
+            # 2. Distribuição por Área (Função)
+            cursor.execute("""
+                SELECT 
+                    funcao, 
+                    SUM(valor_pago) as valor_total
+                FROM portal.emendas
+                GROUP BY funcao
+                ORDER BY valor_total DESC
+            """)
+            areas_raw = cursor.fetchall()
+            valor_total_global = sum(float(r[1]) for r in areas_raw) if areas_raw else 1
+            
+            areas_formatadas = [
+                {
+                    "nome": r[0] if r[0] else "Outros",
+                    "valor": float(r[1]),
+                    "percentual": round((float(r[1]) / valor_total_global) * 100, 1)
+                }
+                for r in areas_raw
+            ]
+            
+            # 3. Top 10 Deputados
+            cursor.execute("""
+                SELECT 
+                    d.id,
+                    d.nome_civil,
+                    m.sigla_partido,
+                    m.sigla_uf,
+                    SUM(e.valor_pago) as total_valor
+                FROM portal.emendas e
+                JOIN public.deputados d ON lower(e.nome_autor) = lower(d.nome_civil)
+                LEFT JOIN (
+                    SELECT DISTINCT ON (deputado_id) deputado_id, sigla_partido, sigla_uf
+                    FROM public.deputados_mandatos
+                    ORDER BY deputado_id, id DESC
+                ) m ON d.id = m.deputado_id
+                GROUP BY d.id, d.nome_civil, m.sigla_partido, m.sigla_uf
+                ORDER BY total_valor DESC
+                LIMIT 10
+            """)
+            top_deputados = cursor.fetchall()
+            
+            return {
+                "totais": {
+                    "deputados": totais[0],
+                    "municipios": totais[1],
+                    "areas": totais[2],
+                    "valor_total": valor_total_global
+                },
+                "areas": areas_formatadas,
+                "ranking": [
+                    {
+                        "id": r[0],
+                        "nome": r[1],
+                        "partido": r[2] if r[2] else "S/P",
+                        "estado": r[3] if r[3] else "BR",
+                        "emendasTotal": float(r[4])
+                    }
+                    for r in top_deputados
+                ]
+            }
+    except Exception as e:
+        logging.error(f"Erro ao buscar estatísticas de emendas: {e}")
+        raise HTTPException(status_code=500, detail="Erro ao processar estatísticas de emendas")
+    finally:
+        conn.close()
+
 @router.get("/proposicoes")
 def listar_proposicoes_deputados(
     siglaTipo: str = Query(None), 

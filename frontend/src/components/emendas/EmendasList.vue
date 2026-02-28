@@ -68,7 +68,7 @@ const carregandoMais = ref(false)
 const paginaAtual = ref(1)
 
 // URL base da sua API
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 // Função que busca do backend Python
 async function carregarEmendas(pagina = 1) {
@@ -79,7 +79,7 @@ async function carregarEmendas(pagina = 1) {
   }
 
   try {
-    const resposta = await fetch(`${API_URL}/deputados/emendas?pagina=${pagina}`)
+    const resposta = await fetch(`${API_URL}/api/deputados/emendas?pagina=${pagina}`)
     
     if (!resposta.ok) {
         throw new Error(`HTTP error! status: ${resposta.status}`);
