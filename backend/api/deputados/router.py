@@ -12,6 +12,70 @@ router = APIRouter(
 )
 
 
+@router.get("/emendas")
+def listar_emendas(
+    nome_deputado: str = Query(None),
+    ano: int = Query(None),
+    pagina: int = 1
+):
+    conn = db.get_connect()
+    if not conn:
+        raise HTTPException(status_code=503, detail="Banco de dados indisponível")
+    
+
+    itens_por_pagina = 15
+    offset = (pagina - 1) * itens_por_pagina
+
+    try:
+        with conn.cursor() as cursor:
+            query = """SELECT 
+    d.nome_civil,
+    e.codigo_emenda,
+    e.ano,
+    e.tipo_emenda,
+    e.valor_empenhado,
+    e.valor_liquidado,
+    e.valor_pago,
+    e.funcao,
+    e.localidade_gasto
+FROM portal.emendas e
+JOIN public.deputados d ON lower(e.nome_autor) = lower(d.nome_civil)
+WHERE 1=1
+            """
+            params = []
+            
+            if nome_deputado:
+                query += " AND d.nome_civil ILIKE %s"
+                params.append(f"%{nome_deputado}%")
+            if ano:
+                query += " AND e.ano = %s"
+                params.append(ano)
+                
+            query += " ORDER BY e.ano DESC, e.valor_pago DESC LIMIT %s OFFSET %s"
+            params.extend([itens_por_pagina, offset])
+
+            cursor.execute(query, tuple(params))  
+
+            resultados = cursor.fetchall()  
+            return [ 
+                for r in resultados:
+                {
+                "deputado": r[0],
+                "codigo": r[1],
+                "ano": r[2],
+                "tipo": r[3],
+                "valorEmpenhado": float(r[4]) if r[4] else 0,
+                "valorLiquidado": float(r[5]) if r[5] else 0,
+                "valorPago": float(r[6]) if r[6] else 0,
+                "funcao": r[7],
+                "localidade": r[8]
+              } 
+            ]
+    except Exception as e:
+        logging.error(f"Erro ao buscar emendas: {e}")
+        raise HTTPException(status_code=500, detail="Erro ao processar emendas")
+    finally:
+        conn.close()
 
 @router.get("/proposicoes")
 def listar_proposicoes_deputados(

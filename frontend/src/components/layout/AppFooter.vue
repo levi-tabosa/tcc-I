@@ -16,18 +16,6 @@
           </p>
         </div>
 
-        <!-- Links -->
-        <div>
-          <h3 class="text-sm font-semibold text-foreground mb-4">Navegação</h3>
-          <ul class="space-y-3">
-            <li v-for="link in navLinks" :key="link.href">
-              <router-link :to="link.href" class="text-sm text-muted-foreground hover:text-primary transition-colors">
-                {{ link.name }}
-              </router-link>
-            </li>
-          </ul>
-        </div>
-
         <!-- Data Sources -->
         <div>
           <h3 class="text-sm font-semibold text-foreground mb-4">Fontes de Dados</h3>
@@ -67,15 +55,8 @@
 <script setup lang="ts">
 import { Github, Twitter } from 'lucide-vue-next'
 
-const navLinks = [
-  { name: 'Deputados', href: '/deputados' },
-  { name: 'Despesas', href: '/despesas' },
-  { name: 'Emendas', href: '/emendas' },
-]
-
 const dataSources = [
   { name: 'Dados Abertos da Câmara', url: 'https://dadosabertos.camara.leg.br' },
   { name: 'Portal da Transparência', url: 'https://portaldatransparencia.gov.br' },
-  { name: 'TSE', url: 'https://tse.jus.br' },
 ]
 </script>
