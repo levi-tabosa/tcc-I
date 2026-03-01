@@ -66,9 +66,18 @@ def br_money_to_decimal(value):
         logging.warning(f"Não foi possível converter o valor: '{value}'")
         return 0.0
 
-
 def parse_date(date_str):
-    return datetime.strptime(date_str, "%d/%m/%Y").date()
+    # Verifica se o valor é nulo, vazio ou a string de erro da API
+    if not date_str or date_str in ["Sem informação", "S/I", ""]:
+        return None
+        
+    try:
+        # Tenta converter no formato esperado
+        return datetime.strptime(date_str, "%d/%m/%Y").date()
+    except (ValueError, TypeError):
+        # Se houver qualquer erro de formato, loga o aviso e retorna None
+        logging.warning(f"Data inválida ignorada: {date_str}")
+        return None
 
 def fetch_all(endpoint, extra_params):
     page = 1
@@ -147,7 +156,7 @@ def ingest():
     conn = db.get_connect()
     
     # Intervalo definido para teste com inicio baseado na grande quantidade de emendas sem informação (S/I) de 2014 
-    for ano in range(2014, 2017):
+    for ano in range(2020, 2027):
         logging.info(f"Iniciando ano {ano}")
         emendas_raw = fetch_all("/emendas", {"ano": ano})
 
@@ -165,9 +174,9 @@ def ingest():
                 conn.rollback()
                 continue
 
-            # 3. Buscar Documentos (se o código não for S/I)
+            # 3. Buscar Documentos (se o código não for S/I) TODO: usar regex para buscar documentos com codigos de emenda validos
             codigo = e.get("codigoEmenda")
-            if codigo and codigo != "S/I":
+            if codigo and codigo != "S/I" and codigo != "REL. GERAL.":
                 logging.info(f"Buscando docs para emenda {codigo}")
                 docs_raw = fetch_all(f"/emendas/documentos/{codigo}", {})
                 
@@ -178,7 +187,7 @@ def ingest():
                 
                 time.sleep(INTERVAL)
             else:
-                logging.info(f"Pulando busca de docs: Sem informacao)")
+                logging.info(f"Pulando busca de docs: Sem informacao:{codigo})")
 
     conn.close()
 
