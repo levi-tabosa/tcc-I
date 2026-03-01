@@ -1,16 +1,17 @@
 <template>
   <section class="py-12 bg-muted/30">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <div class="grid grid-cols-2 gap-6 lg:grid-cols-4">
-        <div
+      <div class="grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-6">
+        <BaseCard
           v-for="metric in metrics"
           :key="metric.id"
-          class="bg-card rounded-lg p-5 border border-border"
+          variant="flat"
+          class="hover:border-primary/20"
         >
           <p class="text-sm text-muted-foreground">{{ metric.label }}</p>
           <p class="mt-1 text-2xl font-bold text-foreground">{{ metric.value }}</p>
           <p class="text-xs text-muted-foreground mt-1">{{ metric.description }}</p>
-        </div>
+        </BaseCard>
       </div>
     </div>
   </section>
@@ -20,6 +21,7 @@
 import { computed, onMounted } from 'vue'
 import { useDeputadosStore } from '@/stores/deputados'
 import { useSenadoresStore } from '@/stores/senadores'
+import BaseCard from '@/components/ui/BaseCard.vue'
 
 const store = useDeputadosStore()
 const senadoresStore = useSenadoresStore()

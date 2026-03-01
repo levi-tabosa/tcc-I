@@ -18,10 +18,30 @@ module.exports = {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          50: "hsl(var(--primary-50))",
+          100: "hsl(var(--primary-100))",
+          200: "hsl(var(--primary-200))",
+          300: "hsl(var(--primary-300))",
+          400: "hsl(var(--primary-400))",
+          500: "hsl(var(--primary-500))",
+          600: "hsl(var(--primary-600))",
+          700: "hsl(var(--primary-700))",
+          800: "hsl(var(--primary-800))",
+          900: "hsl(var(--primary-900))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
+          50: "hsl(var(--secondary-50))",
+          100: "hsl(var(--secondary-100))",
+          200: "hsl(var(--secondary-200))",
+          300: "hsl(var(--secondary-300))",
+          400: "hsl(var(--secondary-400))",
+          500: "hsl(var(--secondary-500))",
+          600: "hsl(var(--secondary-600))",
+          700: "hsl(var(--secondary-700))",
+          800: "hsl(var(--secondary-800))",
+          900: "hsl(var(--secondary-900))",
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
@@ -30,10 +50,26 @@ module.exports = {
         muted: {
           DEFAULT: "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))",
+          50: "hsl(var(--muted-50))",
+          100: "hsl(var(--muted-100))",
+          200: "hsl(var(--muted-200))",
+          300: "hsl(var(--muted-300))",
+          400: "hsl(var(--muted-400))",
+          500: "hsl(var(--muted-500))",
         },
         accent: {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
+          50: "hsl(var(--accent-50))",
+          100: "hsl(var(--accent-100))",
+          200: "hsl(var(--accent-200))",
+          300: "hsl(var(--accent-300))",
+          400: "hsl(var(--accent-400))",
+          500: "hsl(var(--accent-500))",
+          600: "hsl(var(--accent-600))",
+          700: "hsl(var(--accent-700))",
+          800: "hsl(var(--accent-800))",
+          900: "hsl(var(--accent-900))",
         },
         popover: {
           DEFAULT: "hsl(var(--popover))",
@@ -60,6 +96,7 @@ module.exports = {
       animation: {
         "fade-in-up": "fadeInUp 0.6s ease-out forwards",
         "pulse-glow": "pulseGlow 2s ease-in-out infinite",
+        "shimmer": "shimmer 2s linear infinite",
       },
       keyframes: {
         fadeInUp: {
@@ -69,6 +106,10 @@ module.exports = {
         pulseGlow: {
           "0%, 100%": { boxShadow: "0 0 20px rgba(34, 139, 34, 0.3)" },
           "50%": { boxShadow: "0 0 40px rgba(34, 139, 34, 0.5)" },
+        },
+        shimmer: {
+          "0%": { backgroundPosition: "200% 0" },
+          "100%": { backgroundPosition: "-200% 0" },
         },
       },
     },

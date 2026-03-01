@@ -192,12 +192,28 @@ const mobileMenuOpen = ref(false)
 </script>
 
 <style scoped>
-.slide-enter-active,
+.slide-enter-active {
+  transition: opacity 0.25s ease;
+}
+.slide-enter-active .fixed.inset-y-0 {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
 .slide-leave-active {
   transition: opacity 0.2s ease;
 }
-.slide-enter-from,
+.slide-leave-active .fixed.inset-y-0 {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.slide-enter-from {
+  opacity: 0;
+}
+.slide-enter-from .fixed.inset-y-0 {
+  transform: translateX(100%);
+}
 .slide-leave-to {
   opacity: 0;
+}
+.slide-leave-to .fixed.inset-y-0 {
+  transform: translateX(100%);
 }
 </style>

@@ -5,9 +5,23 @@
       {{ store.proposicoesList.length }} proposições encontradas
     </p>
 
-    <!-- Loading State -->
-    <div v-if="store.loadingProposicoes && store.proposicoesList.length === 0" class="text-center py-12">
-      <p class="text-muted-foreground">Carregando proposições...</p>
+    <div v-if="store.loadingProposicoes && store.proposicoesList.length === 0" class="py-12">
+      <div class="space-y-4">
+        <div v-for="i in 3" :key="i" class="card-default p-6">
+          <div class="flex items-start gap-4">
+            <div class="skeleton-rect h-12 w-12 flex-shrink-0"></div>
+            <div class="flex-1 space-y-2">
+              <div class="flex gap-2">
+                <div class="skeleton-text w-24"></div>
+                <div class="skeleton-text-sm w-16"></div>
+              </div>
+              <div class="skeleton-text w-full"></div>
+              <div class="skeleton-text w-3/4"></div>
+              <div class="skeleton-text-sm w-32 mt-2"></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Error State -->
@@ -134,18 +148,18 @@
                 v-if="expandedVotacaoIds.has(votacao.id_votacao)"
                 class="px-4 pb-4 pl-12 animate-slideDown"
               >
-                <div class="max-h-60 overflow-y-auto rounded-lg border border-border">
-                  <table class="w-full text-sm">
-                    <thead class="bg-muted sticky top-0">
+                <div class="max-h-60 overflow-y-auto rounded-lg border border-border/60">
+                  <table class="table-professional">
+                    <thead>
                       <tr>
-                        <th class="text-left py-2 px-3 font-medium text-muted-foreground">Deputado(a)</th>
-                        <th class="text-center py-2 px-3 font-medium text-muted-foreground w-32">Voto</th>
+                        <th>Deputado(a)</th>
+                        <th class="text-center w-32">Voto</th>
                       </tr>
                     </thead>
-                    <tbody class="divide-y divide-border">
-                      <tr v-for="voto in votacao.lista_votos" :key="voto.deputado_id" class="hover:bg-muted/50">
-                        <td class="py-2 px-3 text-foreground">{{ voto.nome }}</td>
-                        <td class="py-2 px-3 text-center">
+                    <tbody>
+                      <tr v-for="voto in votacao.lista_votos" :key="voto.deputado_id">
+                        <td>{{ voto.nome }}</td>
+                        <td class="text-center">
                           <span
                             class="inline-block px-2 py-0.5 rounded-full text-xs font-medium border"
                             :class="getVotoBadgeClass(voto.voto)"
@@ -258,6 +272,10 @@ const getVotoBadgeClass = (voto: string) => {
 </script>
 
 <style scoped>
+.animate-slideDown {
+  animation: slideDown 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
 @keyframes slideDown {
   from {
     opacity: 0;
@@ -269,9 +287,5 @@ const getVotoBadgeClass = (voto: string) => {
     max-height: 2000px;
     transform: translateY(0);
   }
-}
-
-.animate-slideDown {
-  animation: slideDown 0.3s ease-out forwards;
 }
 </style>

@@ -30,16 +30,24 @@
                     <p class="text-sm font-bold text-foreground">{{ categoria.valor }}</p>
                   </div>
                 </div>
-                <div class="h-2 bg-muted rounded-full overflow-hidden">
+                <div class="progress-bar">
                   <div
-                    class="h-full bg-gradient-to-r from-primary to-chart-2 rounded-full transition-all duration-500 group-hover:from-chart-1 group-hover:to-primary"
+                    class="progress-fill group-hover:opacity-90"
                     :style="{ width: `${categoria.percentual}%` }"
                   ></div>
                 </div>
               </div>
             </div>
           </BaseCard>
-          <div v-else class="h-64 animate-pulse bg-muted rounded-xl"></div>
+          <div v-else class="space-y-4 p-6">
+            <div v-for="i in 5" :key="i" class="space-y-2">
+              <div class="flex justify-between">
+                <div class="skeleton-text" :style="{ width: `${60 + i * 5}%` }"></div>
+                <div class="skeleton-text w-20"></div>
+              </div>
+              <div class="skeleton-rect h-2"></div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -64,7 +72,15 @@
             </BaseCard>
           </div>
           <div v-else class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            <div v-for="i in 3" :key="i" class="h-32 animate-pulse bg-muted rounded-xl"></div>
+            <div v-for="i in 3" :key="i" class="card-default p-6">
+              <div class="flex items-start gap-4">
+                <div class="skeleton-circle h-12 w-12 flex-shrink-0"></div>
+                <div class="flex-1 space-y-2">
+                  <div class="skeleton-text-sm w-20"></div>
+                  <div class="skeleton-text w-24 h-7"></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -81,7 +97,9 @@
               </div>
             </div>
           </BaseCard>
-          <div v-else class="h-96 animate-pulse bg-muted rounded-xl"></div>
+          <div v-else class="flex items-center justify-center h-96">
+            <div class="skeleton-circle h-64 w-64"></div>
+          </div>
         </div>
       </section>
     </main>
@@ -173,6 +191,7 @@ const chartData = computed(() => ({
       backgroundColor: generateColors(estadosData.value.length),
       borderColor: 'rgba(255, 255, 255, 1)',
       borderWidth: 2,
+      borderRadius: 4,
     }
   ]
 }))

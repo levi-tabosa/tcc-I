@@ -30,7 +30,7 @@
                       v-model="searchA"
                       type="text"
                       placeholder="Buscar deputado por nome..."
-                      class="w-full rounded-lg border border-border bg-background pl-10 pr-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                      class="input-base pl-10 pr-4 py-2.5 rounded-lg"
                       @focus="showDropdownA = true"
                       @blur="hideDropdown('A')"
                     />
@@ -94,7 +94,7 @@
                       v-model="searchB"
                       type="text"
                       placeholder="Buscar deputado por nome..."
-                      class="w-full rounded-lg border border-border bg-background pl-10 pr-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                      class="input-base pl-10 pr-4 py-2.5 rounded-lg"
                       @focus="showDropdownB = true"
                       @blur="hideDropdown('B')"
                     />
@@ -161,9 +161,11 @@
         </div>
       </section>
 
-      <!-- Loading state -->
       <div v-if="loadingComparison" class="flex items-center justify-center py-20">
-        <p class="text-muted-foreground">Carregando dados para comparação...</p>
+        <div class="flex flex-col items-center gap-3">
+          <div class="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <p class="text-muted-foreground">Carregando dados para comparação...</p>
+        </div>
       </div>
 
       <!-- Comparison Results -->
@@ -357,35 +359,35 @@
             </h2>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <!-- Table A -->
-              <BaseCard>
+                <BaseCard variant="elevated">
                 <h3 class="font-semibold text-foreground mb-4 flex items-center gap-2">
                   <div class="h-3 w-3 rounded-full bg-primary"></div>
                   {{ deputadoA.nome_civil }}
                 </h3>
                 <div class="overflow-x-auto">
-                  <table class="w-full text-sm">
+                  <table class="table-professional">
                     <thead>
-                      <tr class="border-b border-border text-left">
-                        <th class="py-2 px-3 font-medium text-muted-foreground">Data</th>
-                        <th class="py-2 px-3 font-medium text-muted-foreground">Tipo</th>
-                        <th class="py-2 px-3 font-medium text-muted-foreground text-right">Valor</th>
-                        <th class="py-2 px-3 font-medium text-muted-foreground text-center">Doc</th>
+                      <tr>
+                        <th>Data</th>
+                        <th>Tipo</th>
+                        <th class="text-right">Valor</th>
+                        <th class="text-center">Doc</th>
                       </tr>
                     </thead>
                     <tbody>
-                      <tr v-for="(d, i) in despesasA.slice(0, 8)" :key="i" class="border-b border-border hover:bg-muted/50">
-                        <td class="py-2 px-3 whitespace-nowrap">{{ d.mes }}/{{ d.ano }}</td>
-                        <td class="py-2 px-3 truncate max-w-[150px]">{{ d.tipo_despesa }}</td>
-                        <td class="py-2 px-3 text-right whitespace-nowrap">R$ {{ d.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</td>
-                        <td class="py-2 px-3 text-center">
-                          <a v-if="d.url_documento" :href="d.url_documento" target="_blank" class="text-primary hover:underline" title="Ver comprovante">
+                      <tr v-for="(d, i) in despesasA.slice(0, 8)" :key="i">
+                        <td class="whitespace-nowrap">{{ d.mes }}/{{ d.ano }}</td>
+                        <td class="truncate max-w-[150px]">{{ d.tipo_despesa }}</td>
+                        <td class="text-right whitespace-nowrap font-medium">R$ {{ d.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</td>
+                        <td class="text-center">
+                          <a v-if="d.url_documento" :href="d.url_documento" target="_blank" class="text-primary hover:text-primary-700 transition-colors" title="Ver comprovante">
                             <FileText class="h-4 w-4 mx-auto" />
                           </a>
                           <span v-else class="text-muted-foreground">--</span>
                         </td>
                       </tr>
                       <tr v-if="despesasA.length === 0">
-                        <td colspan="4" class="py-4 text-center text-muted-foreground">Sem despesas.</td>
+                        <td colspan="4" class="py-6 text-center text-muted-foreground">Sem despesas.</td>
                       </tr>
                     </tbody>
                   </table>
@@ -393,35 +395,35 @@
               </BaseCard>
 
               <!-- Table B -->
-              <BaseCard>
+              <BaseCard variant="elevated">
                 <h3 class="font-semibold text-foreground mb-4 flex items-center gap-2">
                   <div class="h-3 w-3 rounded-full bg-accent"></div>
                   {{ deputadoB.nome_civil }}
                 </h3>
                 <div class="overflow-x-auto">
-                  <table class="w-full text-sm">
+                  <table class="table-professional">
                     <thead>
-                      <tr class="border-b border-border text-left">
-                        <th class="py-2 px-3 font-medium text-muted-foreground">Data</th>
-                        <th class="py-2 px-3 font-medium text-muted-foreground">Tipo</th>
-                        <th class="py-2 px-3 font-medium text-muted-foreground text-right">Valor</th>
-                        <th class="py-2 px-3 font-medium text-muted-foreground text-center">Doc</th>
+                      <tr>
+                        <th>Data</th>
+                        <th>Tipo</th>
+                        <th class="text-right">Valor</th>
+                        <th class="text-center">Doc</th>
                       </tr>
                     </thead>
                     <tbody>
-                      <tr v-for="(d, i) in despesasB.slice(0, 8)" :key="i" class="border-b border-border hover:bg-muted/50">
-                        <td class="py-2 px-3 whitespace-nowrap">{{ d.mes }}/{{ d.ano }}</td>
-                        <td class="py-2 px-3 truncate max-w-[150px]">{{ d.tipo_despesa }}</td>
-                        <td class="py-2 px-3 text-right whitespace-nowrap">R$ {{ d.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</td>
-                        <td class="py-2 px-3 text-center">
-                          <a v-if="d.url_documento" :href="d.url_documento" target="_blank" class="text-primary hover:underline" title="Ver comprovante">
+                      <tr v-for="(d, i) in despesasB.slice(0, 8)" :key="i">
+                        <td class="whitespace-nowrap">{{ d.mes }}/{{ d.ano }}</td>
+                        <td class="truncate max-w-[150px]">{{ d.tipo_despesa }}</td>
+                        <td class="text-right whitespace-nowrap font-medium">R$ {{ d.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</td>
+                        <td class="text-center">
+                          <a v-if="d.url_documento" :href="d.url_documento" target="_blank" class="text-primary hover:text-primary-700 transition-colors" title="Ver comprovante">
                             <FileText class="h-4 w-4 mx-auto" />
                           </a>
                           <span v-else class="text-muted-foreground">--</span>
                         </td>
                       </tr>
                       <tr v-if="despesasB.length === 0">
-                        <td colspan="4" class="py-4 text-center text-muted-foreground">Sem despesas.</td>
+                        <td colspan="4" class="py-6 text-center text-muted-foreground">Sem despesas.</td>
                       </tr>
                     </tbody>
                   </table>

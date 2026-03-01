@@ -12,8 +12,35 @@
         </div>
       </div>
 
-      <div v-if="store.loadingDetail" class="flex-1 flex items-center justify-center min-h-[400px]">
-        <p class="text-muted-foreground">Carregando detalhes...</p>
+      <div v-if="store.loadingDetail" class="flex-1 min-h-[400px]">
+        <section class="py-8">
+          <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col lg:flex-row gap-8">
+              <div class="lg:w-80 flex-shrink-0">
+                <div class="card-default p-6 text-center">
+                  <div class="skeleton-circle h-32 w-32 mx-auto"></div>
+                  <div class="skeleton-text w-48 mx-auto mt-4"></div>
+                  <div class="flex justify-center gap-2 mt-3">
+                    <div class="skeleton-text w-16"></div>
+                    <div class="skeleton-text w-12"></div>
+                  </div>
+                  <div class="space-y-3 mt-6">
+                    <div class="skeleton-text w-full"></div>
+                    <div class="skeleton-text w-3/4"></div>
+                    <div class="skeleton-text w-2/3"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="flex-1 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div v-for="i in 3" :key="i" class="card-default p-6">
+                  <div class="skeleton-text-sm w-24 mb-2"></div>
+                  <div class="skeleton-text w-32 h-8"></div>
+                  <div class="skeleton-text-sm w-40 mt-2"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
 
       <div v-else-if="store.error" class="flex-1 flex items-center justify-center min-h-[400px]">
@@ -98,9 +125,9 @@
                         <span class="text-muted-foreground">{{ item.categoria }}</span>
                         <span class="font-medium text-foreground">R$ {{ (item.valor / 1000).toFixed(0) }}K</span>
                       </div>
-                      <div class="h-2 bg-muted rounded-full overflow-hidden">
+                      <div class="progress-bar">
                         <div
-                          class="h-full bg-primary rounded-full"
+                          class="progress-fill"
                           :style="{ width: `${item.percentage}%` }"
                         />
                       </div>
@@ -116,31 +143,31 @@
         <section class="py-8">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <h3 class="text-xl font-bold text-foreground mb-4">Histórico de Despesas</h3>
-                <BaseCard>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm">
+                <BaseCard variant="elevated">
+                    <div class="overflow-x-auto max-h-[500px]">
+                        <table class="table-professional">
                             <thead>
-                                <tr class="border-b border-border text-left">
-                                    <th class="py-3 px-4 font-medium text-muted-foreground">Data</th>
-                                    <th class="py-3 px-4 font-medium text-muted-foreground">Descrição</th>
-                                    <th class="py-3 px-4 font-medium text-muted-foreground text-right">Valor</th>
-                                    <th class="py-3 px-4 font-medium text-muted-foreground text-center">Doc</th>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Descrição</th>
+                                    <th class="text-right">Valor</th>
+                                    <th class="text-center">Doc</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="(despesa, index) in store.currentDespesas.slice(0, 10)" :key="index" class="border-b border-border hover:bg-muted/50">
-                                    <td class="py-3 px-4">{{ despesa.mes }}/{{ despesa.ano }}</td>
-                                    <td class="py-3 px-4 truncate max-w-xs">{{ despesa.tipo_despesa }}</td>
-                                    <td class="py-3 px-4 text-right whitespace-nowrap">R$ {{ despesa.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</td>
-                                    <td class="py-3 px-4 text-center">
-                                        <a v-if="despesa.url_documento" :href="despesa.url_documento" target="_blank" class="text-primary hover:underline" title="Ver documento">
+                                <tr v-for="(despesa, index) in store.currentDespesas.slice(0, 10)" :key="index">
+                                    <td class="whitespace-nowrap">{{ despesa.mes }}/{{ despesa.ano }}</td>
+                                    <td class="truncate max-w-xs">{{ despesa.tipo_despesa }}</td>
+                                    <td class="text-right whitespace-nowrap font-medium">R$ {{ despesa.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</td>
+                                    <td class="text-center">
+                                        <a v-if="despesa.url_documento" :href="despesa.url_documento" target="_blank" class="text-primary hover:text-primary-700 transition-colors" title="Ver documento">
                                             <FileText class="h-4 w-4 mx-auto" />
                                         </a>
                                         <span v-else class="text-muted-foreground">--</span>
                                     </td>
                                 </tr>
                                 <tr v-if="store.currentDespesas.length === 0">
-                                    <td colspan="4" class="py-6 text-center text-muted-foreground">Nenhuma despesa encontrada.</td>
+                                    <td colspan="4" class="py-8 text-center text-muted-foreground">Nenhuma despesa encontrada.</td>
                                 </tr>
                             </tbody>
                         </table>

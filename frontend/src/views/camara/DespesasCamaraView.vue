@@ -103,9 +103,9 @@
                 <span class="text-sm font-medium text-foreground">{{ categoria.nome }}</span>
                 <span class="text-sm text-muted-foreground">R$ {{ (categoria.total / 1000000).toFixed(1) }}M</span>
               </div>
-              <div class="h-2 bg-muted rounded-full overflow-hidden">
+              <div class="progress-bar">
                 <div
-                  class="h-full bg-primary rounded-full"
+                  class="progress-fill"
                   :style="{ width: `${categoria.percentual}%` }"
                 />
               </div>

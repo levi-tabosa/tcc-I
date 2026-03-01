@@ -1,7 +1,7 @@
 <template>
   <div
-    class="rounded-xl glass text-card-foreground transition-all duration-300"
     :class="[
+      variantClass,
       hover && 'hover:shadow-lg hover:-translate-y-1 hover:border-primary/30',
       clickable && 'cursor-pointer'
     ]"
@@ -19,8 +19,26 @@
 </template>
 
 <script setup lang="ts">
-defineProps<{
+import { computed } from 'vue'
+
+const props = withDefaults(defineProps<{
   hover?: boolean
   clickable?: boolean
-}>()
+  variant?: 'default' | 'kpi' | 'flat' | 'elevated'
+}>(), {
+  variant: 'default'
+})
+
+const variantClass = computed(() => {
+  switch (props.variant) {
+    case 'kpi':
+      return 'card-kpi'
+    case 'flat':
+      return 'card-flat'
+    case 'elevated':
+      return 'card-elevated'
+    default:
+      return 'card-default'
+  }
+})
 </script>
