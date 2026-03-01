@@ -94,11 +94,16 @@
                 class="flex items-center gap-6 p-4 sm:p-6 hover:bg-muted/50 transition-all duration-300 group"
               >
                 <span class="text-xl font-black text-muted-foreground/30 w-8 group-hover:text-primary/50 transition-colors">{{ index + 1 }}º</span>
-                <div class="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-bold text-lg group-hover:scale-110 transition-transform">
-                  {{ deputado.nome.charAt(0) }}
+                <div class="h-14 w-14 rounded-2xl bg-muted overflow-hidden border-2 border-primary/20 group-hover:border-primary/50 group-hover:scale-110 transition-all duration-300 shadow-sm flex-shrink-0">
+                  <img 
+                    :src="deputado.foto" 
+                    :alt="deputado.nome"
+                    class="h-full w-full object-cover object-top"
+                    @error="(e: any) => e.target.src = `https://ui-avatars.com/api/?name=${deputado.nome}&background=random`"
+                  />
                 </div>
                 <div class="flex-1 min-w-0">
-                  <p class="font-bold text-foreground truncate text-lg">{{ deputado.nome }}</p>
+                  <p class="font-bold text-foreground truncate text-lg uppercase">{{ deputado.nome }}</p>
                   <p class="text-sm font-medium text-muted-foreground uppercase tracking-tight">{{ deputado.partido }} • {{ deputado.estado }}</p>
                 </div>
                 <div class="text-right">

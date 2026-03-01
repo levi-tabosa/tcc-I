@@ -25,7 +25,7 @@
             </div>
             <p class="text-sm text-muted-foreground mb-2">{{ emenda.tipo }} (Código: {{ emenda.codigo }})</p>
             <div class="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
-              <span>Autor: <span class="font-medium text-foreground">{{ emenda.deputado }}</span></span>
+              <span>Autor: <span class="font-medium text-foreground uppercase">{{ emenda.deputado }}</span></span>
               <span>•</span>
               <span>{{ emenda.localidade || 'Brasil' }}</span>
               <span>•</span>

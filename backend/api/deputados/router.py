@@ -107,6 +107,8 @@ def estatisticas_emendas():
             areas_raw = cursor.fetchall()
             valor_total_global = sum(float(r[1]) for r in areas_raw) if areas_raw else 1
             
+
+
             areas_formatadas = [
                 {
                     "nome": r[0] if r[0] else "Outros",
@@ -136,7 +138,8 @@ def estatisticas_emendas():
                 LIMIT 10
             """)
             top_deputados = cursor.fetchall()
-            
+    
+
             return {
                 "totais": {
                     "deputados": totais[0],
@@ -151,7 +154,8 @@ def estatisticas_emendas():
                         "nome": r[1],
                         "partido": r[2] if r[2] else "S/P",
                         "estado": r[3] if r[3] else "BR",
-                        "emendasTotal": float(r[4])
+                        "emendasTotal": float(r[4]),
+                        "foto": f"https://www.camara.leg.br/internet/deputado/bandep/{r[0]}.jpg"
                     }
                     for r in top_deputados
                 ]
