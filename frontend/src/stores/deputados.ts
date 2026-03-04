@@ -119,6 +119,7 @@ export const useDeputadosStore = defineStore("deputados", () => {
   // Detail state
   const currentDeputado = ref<DeputadoDetail | null>(null)
   const currentDespesas = ref<Despesa[]>([])
+  const currentCategorias = ref<Categoria[]>([])
   const totalDespesas = ref(0)
   const loadingDetail = ref(false)
 
@@ -144,7 +145,7 @@ export const useDeputadosStore = defineStore("deputados", () => {
     loading.value = true
     error.value = null
     try {
-      const response = await fetch(apiUrl + "/api/deputados/")
+      const response = await fetch(apiUrl + "/api/deputados/lista")
       if (!response.ok) throw new Error("Falha ao buscar deputados")
 
       const data = await response.json()
@@ -191,6 +192,7 @@ export const useDeputadosStore = defineStore("deputados", () => {
       if (!response.ok) throw new Error("Falha ao buscar despesas")
       const data = await response.json()
       currentDespesas.value = data.despesas
+      currentCategorias.value = data.categorias || []
       totalDespesas.value = data.total_despesas || 0
     } catch (e: any) {
       console.error("Erro ao buscar despesas:", e)
@@ -381,6 +383,7 @@ export const useDeputadosStore = defineStore("deputados", () => {
     error,
     currentDeputado,
     currentDespesas,
+    currentCategorias,
     totalDespesas,
     loadingDetail,
     generalStats,

@@ -54,6 +54,11 @@ const router = createRouter({
       component: () => import("@/views/senado/SenadoresView.vue"),
     },
     {
+      path: "/senado/senadores/:id",
+      name: "senador-detail",
+      component: () => import("@/views/senado/SenadorDetailView.vue"),
+    },
+    {
       path: "/senado/despesas",
       name: "despesas-senado",
       component: () => import("@/views/senado/DespesasSenadoView.vue"),

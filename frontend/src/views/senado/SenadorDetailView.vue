@@ -5,7 +5,7 @@
       <!-- Breadcrumb -->
       <div class="bg-muted/30 border-b border-border">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
-          <router-link to="/camara/deputados" class="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+          <router-link to="/senado/senadores" class="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
             <ChevronLeft class="h-4 w-4" />
             Voltar para lista
           </router-link>
@@ -47,47 +47,46 @@
         <p class="text-destructive">{{ store.error }}</p>
       </div>
 
-      <template v-else-if="store.currentDeputado">
+      <template v-else-if="store.currentSenador">
         <!-- Profile -->
-        <section class="py-8 bg-gradient-to-br from-primary/5 via-background to-accent/5">
+        <section class="py-8 bg-gradient-to-br from-purple-500/10 via-background to-accent/5">
           <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="flex flex-col lg:flex-row gap-8">
               <!-- Profile card -->
-              <BaseCard class="lg:w-80 flex-shrink-0">
+              <BaseCard class="lg:w-80 flex-shrink-0 border-purple-100">
                 <div class="text-center">
-                  <div class="h-32 w-32 mx-auto rounded-full border-4 border-primary/20 overflow-hidden bg-primary/10 flex items-center justify-center">
+                  <div class="h-32 w-32 mx-auto rounded-full border-4 border-purple-200 overflow-hidden bg-purple-50 flex items-center justify-center">
                     <img
-                      :src="store.currentDeputado.foto"
-                      :alt="store.currentDeputado.nome_civil"
+                      :src="store.currentSenador.foto"
+                      :alt="store.currentSenador.nome_civil"
                       class="w-full h-full object-cover"
                       @error="($event.target as HTMLImageElement).src = '/placeholder-user.jpg'"
                     />
                   </div>
 
-                  <h1 class="mt-4 text-xl font-bold text-foreground">{{ store.currentDeputado.nome_civil }}</h1>
+                  <h1 class="mt-4 text-xl font-bold text-foreground">{{ store.currentSenador.nome_civil }}</h1>
 
                   <div class="mt-2 flex flex-wrap items-center justify-center gap-2">
-                    <BaseBadge variant="outline">{{ store.currentDeputado.sigla_partido }}</BaseBadge>
-                    <BaseBadge v-if="store.currentDeputado.uf_nascimento" variant="outline">{{ store.currentDeputado.uf_nascimento }}</BaseBadge>
+                    <BaseBadge variant="outline">{{ store.currentSenador.sigla_partido }}</BaseBadge>
+                    <BaseBadge v-if="store.currentSenador.uf" variant="outline">{{ store.currentSenador.uf }}</BaseBadge>
                   </div>
 
                   <div class="mt-6 space-y-3 text-sm text-left">
                     <div class="flex items-center gap-3 text-muted-foreground">
-                      <Mail class="h-4 w-4 text-primary" />
-                      <span class="truncate">{{ store.currentDeputado.email || 'Indisponível' }}</span>
+                      <Mail class="h-4 w-4 text-purple-500" />
+                      <span class="truncate">{{ store.currentSenador.email || 'Indisponível' }}</span>
                     </div>
                     <div class="flex items-center gap-3 text-muted-foreground">
-                      <Calendar class="h-4 w-4 text-primary" />
-                      <span>{{ store.currentDeputado.data_nascimento ? formatDate(store.currentDeputado.data_nascimento) : 'Indisponível' }}</span>
+                      <Calendar class="h-4 w-4 text-purple-500" />
+                      <span>{{ store.currentSenador.data_nascimento ? formatDate(store.currentSenador.data_nascimento) : 'Indisponível' }}</span>
                     </div>
                     <div class="flex items-center gap-3 text-muted-foreground">
-                      <GraduationCap class="h-4 w-4 text-primary" />
-                      <span>{{ store.currentDeputado.escolaridade || 'Indisponível' }}</span>
+                      <GraduationCap class="h-4 w-4 text-purple-500" />
+                      <span>{{ store.currentSenador.escolaridade || 'Indisponível' }}</span>
                     </div>
-                    <!-- CPF masked -->
                     <div class="flex items-center gap-3 text-muted-foreground">
-                      <User class="h-4 w-4 text-primary" />
-                      <span>{{ store.currentDeputado.cpf ? `***.${store.currentDeputado.cpf.slice(3, 6)}.***-**` : 'Indisponível' }}</span>
+                      <User class="h-4 w-4 text-purple-500" />
+                      <span>{{ store.currentSenador.cpf ? `***.${store.currentSenador.cpf.slice(3, 6)}.***-**` : 'Indisponível' }}</span>
                     </div>
                   </div>
                 </div>
@@ -95,40 +94,40 @@
 
               <!-- Stats cards -->
               <div class="flex-1 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <BaseCard>
+                <BaseCard class="border-purple-100">
                   <div class="flex items-center justify-between">
                     <p class="text-sm text-muted-foreground">Gastos Totais</p>
-                    <BaseBadge variant="secondary">Mandato</BaseBadge>
+                    <BaseBadge variant="secondary" class="bg-purple-100 text-purple-800">Mandato</BaseBadge>
                   </div>
                   <p v-if="totalGastos > 0" class="mt-2 text-3xl font-bold text-foreground">R$ {{ (totalGastos / 1000).toFixed(0) }}K</p>
-                  <p v-else class="mt-2 text-xl font-bold text-muted-foreground">Dados Indisponíveis</p>
+                  <p v-else class="mt-2 text-xl font-bold text-muted-foreground">0</p>
                   <p class="mt-1 text-xs text-muted-foreground">Soma de todas despesas registradas</p>
                 </BaseCard>
 
-                 <!-- Placeholder for stats not currently in API -->
-                <BaseCard class="opacity-70">
+                <!-- Placeholder for stats not currently in API -->
+                <BaseCard class="opacity-70 border-purple-100/50">
                   <div class="flex items-center justify-between">
                     <p class="text-sm text-muted-foreground">Emendas</p>
-                    <BaseBadge variant="outline">Breve</BaseBadge>
+                    <BaseBadge variant="outline" class="border-purple-200 text-purple-700 bg-purple-50">Breve</BaseBadge>
                   </div>
                   <p class="mt-2 text-xl font-bold text-muted-foreground">Dados Indisponíveis</p>
                   <p class="mt-1 text-xs text-muted-foreground italic">Informação não integrada ao portal</p>
                 </BaseCard>
 
-                <BaseCard class="sm:col-span-2 lg:col-span-3">
+                <BaseCard class="sm:col-span-2 lg:col-span-3 border-purple-100">
                   <h3 class="font-semibold text-foreground mb-4">Principais Gastos por Categoria</h3>
                   <div class="space-y-3">
                     <div v-if="gastosCategorias.length === 0" class="py-6 text-center text-muted-foreground italic">
-                      Dados Indisponíveis
+                      Dados Indisponíveis ou Sem Gastos
                     </div>
                     <div v-for="item in gastosCategorias" :key="item.categoria">
                       <div class="flex items-center justify-between text-sm mb-1">
                         <span class="text-muted-foreground">{{ item.categoria }}</span>
                         <span class="font-medium text-foreground">R$ {{ (item.valor / 1000).toFixed(0) }}K</span>
                       </div>
-                      <div class="progress-bar">
+                      <div class="progress-bar bg-purple-100">
                         <div
-                          class="progress-fill"
+                          class="progress-fill bg-purple-500"
                           :style="{ width: `${item.percentage}%` }"
                         />
                       </div>
@@ -150,22 +149,17 @@
                             <thead class="sticky top-0 z-10 bg-card border-b shadow-sm">
                                 <tr>
                                     <th class="bg-card py-4 px-4 text-left font-bold text-xs uppercase tracking-wider text-muted-foreground border-b">Data</th>
-                                    <th class="bg-card py-4 px-4 text-left font-bold text-xs uppercase tracking-wider text-muted-foreground border-b">Descrição</th>
+                                    <th class="bg-card py-4 px-4 text-left font-bold text-xs uppercase tracking-wider text-muted-foreground border-b">Descrição / Categoria</th>
+                                    <th class="bg-card py-4 px-4 text-left font-bold text-xs uppercase tracking-wider text-muted-foreground border-b">Fornecedor</th>
                                     <th class="bg-card py-4 px-4 text-right font-bold text-xs uppercase tracking-wider text-muted-foreground border-b">Valor</th>
-                                    <th class="bg-card py-4 px-4 text-center font-bold text-xs uppercase tracking-wider text-muted-foreground border-b">Doc</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-border bg-card">
-                                <tr v-for="(despesa, index) in store.currentDespesas.slice(0, 50)" :key="index" class="hover:bg-muted/50 transition-colors">
+                                <tr v-for="(despesa, index) in store.currentDespesas" :key="index" class="hover:bg-muted/50 transition-colors">
                                     <td class="whitespace-nowrap">{{ despesa.mes }}/{{ despesa.ano }}</td>
-                                    <td class="truncate max-w-xs">{{ despesa.tipo_despesa }}</td>
-                                    <td class="text-right whitespace-nowrap font-medium">R$ {{ despesa.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</td>
-                                    <td class="text-center">
-                                        <a v-if="despesa.url_documento" :href="despesa.url_documento" target="_blank" class="text-primary hover:text-primary-700 transition-colors" title="Ver documento">
-                                            <FileText class="h-4 w-4 mx-auto" />
-                                        </a>
-                                        <span v-else class="text-muted-foreground">--</span>
-                                    </td>
+                                    <td class="truncate max-w-xs">{{ despesa.tipoDespesa || despesa.tipo_despesa }}</td>
+                                    <td class="truncate max-w-xs">{{ despesa.fornecedor || '--' }}</td>
+                                    <td class="text-right whitespace-nowrap font-medium">R$ {{ (despesa.valorReembolsado || despesa.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</td>
                                 </tr>
                                 <tr v-if="store.currentDespesas.length === 0">
                                     <td colspan="4" class="py-12 text-center text-muted-foreground italic">Dados Indisponíveis</td>
@@ -180,7 +174,7 @@
       </template>
 
       <div v-else class="flex-1 flex items-center justify-center">
-        <p class="text-muted-foreground">Deputado não encontrado.</p>
+        <p class="text-muted-foreground">Senador não encontrado.</p>
       </div>
     </main>
     <AppFooter />
@@ -190,20 +184,20 @@
 <script setup lang="ts">
 import { computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { ChevronLeft, Mail, Calendar, GraduationCap, User, FileText } from 'lucide-vue-next'
+import { ChevronLeft, Mail, Calendar, User, GraduationCap } from 'lucide-vue-next'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
-import { useDeputadosStore } from '@/stores/deputados'
+import { useSenadoresStore } from '@/stores/senadores'
 
 const route = useRoute()
-const store = useDeputadosStore()
+const store = useSenadoresStore()
 
 const loadData = () => {
     const id = Number(route.params.id)
     if (id) {
-        store.fetchDeputado(id)
+        store.fetchSenador(id)
     }
 }
 
@@ -221,13 +215,19 @@ const formatDate = (dateString: string) => {
     return date.toLocaleDateString('pt-BR')
 }
 
+watch(() => store.currentSenador, (newVal) => {
+    if (newVal) {
+        document.title = `${newVal.nome_civil} - Senado`
+    }
+}, { immediate: true })
+
 const totalGastos = computed(() => {
     return store.totalDespesas
 })
 
 const gastosCategorias = computed(() => {
     const total = totalGastos.value
-    if (total === 0 || !store.currentCategorias || store.currentCategorias.length === 0) return []
+    if (total === 0 || store.currentCategorias.length === 0) return []
 
     return store.currentCategorias
         .map(c => ({

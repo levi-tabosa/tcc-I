@@ -12,13 +12,13 @@ router = APIRouter(
 )
 
 
-@router.get("/emendas")
-def listar_emendas(
+@router.get("/emendas", summary="Busca uma lista de emendas parlamentares")
+def get_lista_emendas(
     nome_deputado: str = Query(None),
     ano: int = Query(None),
     pagina: int = 1
 ):
-    conn = db.get_connect()
+    conn = db.get_connect_camara()
     if not conn:
         raise HTTPException(status_code=503, detail="Banco de dados indisponível")
     
@@ -77,10 +77,10 @@ WHERE 1=1
     finally:
         conn.close()
 
-@router.get("/emendas/estatisticas")
-def estatisticas_emendas():
-    conn = db.get_connect()
-    if not conn:
+@router.get("/emendas/estatisticas", summary="Obtém estatísticas gerais das emendas")
+def get_estatisticas_emendas():
+    conn = db.get_connect_camara()
+    if not conn:    
         raise HTTPException(status_code=503, detail="Banco de dados indisponível")
     
     try:
@@ -166,15 +166,15 @@ def estatisticas_emendas():
     finally:
         conn.close()
 
-@router.get("/proposicoes")
-def listar_proposicoes_deputados(
+@router.get("/proposicoes", summary="Busca uma lista de proposições legislativas")
+def get_lista_proposicoes(
     siglaTipo: str = Query(None), 
     ano: int = Query(None), 
     ementa: str = Query(None), 
     deputado: str = Query(None),
     pagina: int = 1
 ):
-    conn = db.get_connect()
+    conn = db.get_connect_camara()
     if not conn:
         raise HTTPException(status_code=503, detail="Banco de dados indisponível")
     
@@ -245,10 +245,10 @@ def listar_proposicoes_deputados(
         conn.close()
 
 
-@router.get("/proposicoes/{proposicao_id}/votos")
-def listar_votos_por_proposicao(proposicao_id: int):
+@router.get("/proposicoes/{proposicao_id}/votos", summary="Obtém o histórico de votos de uma proposição")
+def get_votos_proposicao(proposicao_id: int):
 
-    conn =  db.get_connect()
+    conn =  db.get_connect_camara()
     if not conn:
         raise HTTPException(status_code=503, detail="Banco de dados indisponível")
 
@@ -317,11 +317,11 @@ def listar_votos_por_proposicao(proposicao_id: int):
         conn.close()
 
 
-@router.get("/")
-def listar_todos_deputados():
+@router.get("/lista", summary="Lista todos os deputados ativos")
+def get_todos_deputados():
 
     """Lista todos os deputados com informações básicas"""
-    conn = db.get_connect()
+    conn = db.get_connect_camara()
     if not conn:
         raise HTTPException(status_code=503, detail="Serviço indisponível: Erro de conexão com o banco de dados.")
     
@@ -360,33 +360,11 @@ def listar_todos_deputados():
         if conn: conn.close()
 
 
-@router.get("/buscar")
-def buscar_deputados(nome: str = Query(..., min_length=2)):
-    conn = db.get_connect()
-    if not conn:
-        raise HTTPException(status_code=503, detail="Serviço indisponível: Erro de conexão com o banco de dados.")
-    
-    try:
-        with conn.cursor() as cursor:
-            termo_busca = f"{nome}%"
-            query = "SELECT id, nome_civil, uf_nascimento FROM deputados WHERE nome_civil ILIKE %s"
-            
-            cursor.execute(query, (termo_busca,))
-            
-            resultados = cursor.fetchall()
-            
-            return {"resultados": [{"id": res[0], "nome_civil": res[1], "uf": res[2]} for res in resultados]}
-
-    except psycopg2.Error as e:
-        logging.error(f"Erro na query de busca: {e}")
-        raise HTTPException(status_code=500, detail="Erro interno ao processar a busca.")
-    finally:
-        if conn: conn.close()
 
 
-@router.get("/comparar")
-def comparar_deputados(id1: int, id2: int, ano: int = None):
-    conn = db.get_connect()
+@router.get("/comparar", summary="Compara perfil e gastos entre dois deputados")
+def get_comparativo_deputados(id1: int, id2: int, ano: int = None):
+    conn = db.get_connect_camara()
     if not conn:
         raise HTTPException(status_code=503, detail="Serviço indispónivel")
     
@@ -501,9 +479,9 @@ def comparar_deputados(id1: int, id2: int, ano: int = None):
     finally:
         if conn: conn.close()
 
-@router.get("/{deputado_id}")
-def buscar_perfil_por_id(deputado_id: int):
-    conn = db.get_connect()
+@router.get("/{deputado_id}", summary="Obtém os detalhes do perfil do deputado pelo ID")
+def get_perfil_deputado(deputado_id: int):
+    conn = db.get_connect_camara()
     if not conn:
         raise HTTPException(status_code=503, detail="Serviço indisponível: Erro de conexão com o banco de dados.")
     
@@ -549,18 +527,18 @@ def buscar_perfil_por_id(deputado_id: int):
         if conn: conn.close()
         
         
-@router.get("/{deputado_id}/despesas")
-def buscar_despesas_deputado(deputado_id: int):
-    conn = db.get_connect()
+@router.get("/{deputado_id}/despesas", summary="Obtém a lista de despesas de um deputado")
+def get_despesas_deputado(deputado_id: int):
+    conn = db.get_connect_camara()
     if not conn:
         raise HTTPException(status_code=503, detail="Serviço indisponível: Erro de conexão com o banco de dados.")
     
     try:
         with conn.cursor() as cursor:
             logging.info(f"Buscando despesas para deputado {deputado_id}")
-            # Query otimizada com Window Function
-            # Traz as despesas limitadas a 50, mas o total_geral considera TODAS as despesas do mandato
-            query = """
+            
+            # 1. Buscar as 50 despesas mais recentes
+            query_recente = """
                 SELECT 
                     desp.ano, 
                     desp.mes, 
@@ -574,12 +552,26 @@ def buscar_despesas_deputado(deputado_id: int):
                 ORDER BY desp.ano DESC, desp.mes DESC
                 LIMIT 50;
             """
-            cursor.execute(query, (deputado_id,))
+            cursor.execute(query_recente, (deputado_id,))
             resultados = cursor.fetchall()
-            logging.info(f"Encontradas {len(resultados)} despesas")
+            
+            # 2. Buscar o resumo por categoria (considerando TODA a história)
+            query_categorias = """
+                SELECT 
+                    desp.tipo_despesa, 
+                    SUM(desp.valor_documento) as total
+                FROM deputados_despesas AS desp
+                JOIN deputados_mandatos AS mand ON desp.mandato_id = mand.id
+                WHERE mand.deputado_id = %s
+                GROUP BY desp.tipo_despesa
+                ORDER BY total DESC;
+            """
+            cursor.execute(query_categorias, (deputado_id,))
+            categorias_raw = cursor.fetchall()
 
-            # Se houver resultados, o total está na coluna 5 (índice 5) da primeira linha
-            total_despesas = resultados[0][5] if resultados else 0.0
+            total_despesas = 0.0
+            if categorias_raw:
+                total_despesas = sum(float(c[1]) for c in categorias_raw)
             
             resultado_formatado = [
                 {
@@ -592,9 +584,15 @@ def buscar_despesas_deputado(deputado_id: int):
                 for r in resultados
             ]
             
+            categorias_formatadas = [
+                {"categoria": c[0], "valor": float(c[1])}
+                for c in categorias_raw
+            ]
+            
             return {
                 "despesas": resultado_formatado,
-                "total_despesas": float(total_despesas)
+                "total_despesas": float(total_despesas),
+                "categorias": categorias_formatadas
             }
 
     except psycopg2.Error as e:
@@ -606,9 +604,9 @@ def buscar_despesas_deputado(deputado_id: int):
 
 
 
-@router.get("/estatisticas/categorias")
-def estatisticas_categorias():
-    conn = db.get_connect()
+@router.get("/estatisticas/categorias", summary="Obtém a soma de gastos por cada categoria")
+def get_gastos_por_categoria():
+    conn = db.get_connect_camara()
     if not conn:
         raise HTTPException(status_code=503, detail="Serviço indisponível: Erro de conexão com o banco de dados.")
     
@@ -660,9 +658,9 @@ def estatisticas_categorias():
         conn.close()
          
  
-@router.get("/estatisticas/geral")
-def estatisticas_geral():    
-    conn = db.get_connect()
+@router.get("/estatisticas/geral", summary="Obtém o panorama geral de gastos da Câmara")
+def get_estatisticas_gerais():    
+    conn = db.get_connect_camara()
     if not conn:
         raise HTTPException(status_code=503, detail="Serviço indisponível: Erro de conexão com o banco de dados.")
 
@@ -779,12 +777,12 @@ def estatisticas_geral():
     
 
 
-@router.get("/empresas/estatisticas")
-def estatisticas_empresas():
+@router.get("/empresas/estatisticas", summary="Obtém as estatísticas das empresas contratadas")
+def get_estatisticas_empresas():
     """
     Retorna estatísticas gerais sobre empresas que receberam recursos
     """
-    conn = db.get_connect()
+    conn = db.get_connect_camara()
     if conn is None:
         raise HTTPException(status_code=500, detail="Erro ao conectar ao banco de dados.")
     
@@ -813,9 +811,9 @@ def estatisticas_empresas():
         conn.close()
         
         
-@router.get("/empresas/ranking")
-def ranking_empresas(limit: int = 20):
-    conn = db.get_connect()
+@router.get("/empresas/ranking", summary="Lista o ranking das empresas que mais receberam")
+def get_ranking_empresas(limit: int = 20):
+    conn = db.get_connect_camara()
     if conn is None:
         raise HTTPException(status_code=500, detail="Erro ao conectar ao banco de dados.")
     

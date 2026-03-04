@@ -5,7 +5,8 @@ services:
       dockerfile: backend/Dockerfile
     container_name: camara_backend
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/camara_db
+      - DATABASE_URL_CAMARA=postgresql://postgres:postgres@postgres:5432/camara_db
+      - DATABASE_URL_SENADO=postgresql://postgres:postgres@postgres:5432/senado_db
       - API_KEY=${API_KEY} # obtido  .env na pasta raiz do projeto
     ports:
       - "8000:8000"
@@ -40,9 +41,10 @@ services:
       POSTGRES_DB: camara_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data          # Volume persistente
-      - ./camara.sql:/docker-entrypoint-initdb.d/camara.sql  # Script de inicialização
+      - pgdata:/var/lib/postgresql/data
     networks:
       - camara-network
     healthcheck:

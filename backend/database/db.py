@@ -4,10 +4,10 @@ import os
 
 load_dotenv()
 
-def get_connect():
+def get_connect_camara():
     try:
         # Tenta pegar a URL completa primeiro (que está no seu Docker)
-        db_url = os.getenv("DATABASE_URL")
+        db_url = os.getenv("DATABASE_URL_CAMARA")
         
         if db_url:
             # Se tiver a URL, conecta direto com ela
@@ -22,6 +22,26 @@ def get_connect():
                 password=os.getenv("DB_PASSWORD")
             )
             
+        print("Conectado ao PostgreSQL com sucesso!")
+        return conn
+    except psycopg2.Error as e:
+        print(f"Erro ao conectar no PostgreSQL: {e}")
+        return None
+
+def get_connect_senado():
+    try:
+        db_url = os.getenv("DATABASE_URL_SENADO")
+
+        if db_url:
+            conn = psycopg2.connect(db_url)
+        else:
+            conn = psycopg2.connect(
+                host=os.getenv("DB_HOST_SENADO"),
+                port=os.getenv("DB_PORT_SENADO"),
+                database=os.getenv("DB_NAME_SENADO"),
+                user=os.getenv("DB_USER_SENADO"),
+                password=os.getenv("DB_PASSWORD_SENADO")
+            )
         print("Conectado ao PostgreSQL com sucesso!")
         return conn
     except psycopg2.Error as e:
