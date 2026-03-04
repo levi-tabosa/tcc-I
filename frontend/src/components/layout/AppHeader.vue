@@ -184,6 +184,7 @@ const camaraItems = [
 
 const senadoItems = [
   { name: 'Senadores', href: '/senado/senadores' },
+  { name: 'Comparar Senadores', href: '/senado/comparar' },
   { name: 'Despesas', href: '/senado/despesas' },
   { name: 'Emendas', href: '/senado/emendas' },
 ]

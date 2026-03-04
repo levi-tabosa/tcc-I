@@ -68,6 +68,11 @@ const router = createRouter({
       name: "emendas-senado",
       component: () => import("@/views/senado/EmendasSenadoView.vue"),
     },
+    {
+      path: "/senado/comparar",
+      name: "comparar-senadores",
+      component: () => import("@/views/senado/ComparacaoSenadoresView.vue"),
+    },
 
     // ========== OUTRAS PÁGINAS ==========
     {
