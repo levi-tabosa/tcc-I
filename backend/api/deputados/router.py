@@ -150,7 +150,7 @@ def get_resumo_emendas():
         ]
     }
 
-@router.get("/proposicoes", summary="Busca uma lista de proposições legislativas")
+@router.get("/proposicoes", summary="Busca uma lista de projetos legislativos")
 def get_lista_proposicoes(
     siglaTipo: str = Query(None), 
     ano: int = Query(None), 
@@ -208,7 +208,7 @@ def get_lista_proposicoes(
     return resultados
 
 
-@router.get("/proposicoes/{proposicao_id}/votos", summary="Obtém o histórico de votos de uma proposição")
+@router.get("/proposicoes/{proposicao_id}/votos", summary="Obtém o histórico de votos de um projeto legislativo")
 def get_votos_proposicao(proposicao_id: int):
     query = """
         SELECT 

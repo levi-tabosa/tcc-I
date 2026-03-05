@@ -85,9 +85,7 @@ const onDeputadoInput = (event: Event) => {
   }, 500)
 }
 
-const tiposProposicao = [
-  'PL', 'PLP', 'PEC', 'MPV', 'PDL', 'PRC', 'REQ', 'INC', 'RIC'
-]
+const tiposProposicao = computed(() => store.tiposUnicosProposicoes)
 
 const anosDisponiveis = computed(() => {
   const currentYear = new Date().getFullYear()

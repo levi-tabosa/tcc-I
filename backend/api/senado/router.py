@@ -459,3 +459,53 @@ WHERE data_despesa >= CURRENT_DATE - INTERVAL '12 months';
     finally:
         if 'conn' in locals() and conn:
             conn.close()
+            
+            
+@router.get("/materia/votacao", summary="Obtém o histórico de votações de um projeto legislativo")
+def get_votacao_materia(codigo_materia: int):
+    try:
+        conn = db.get_connect_senado()
+        if not conn:
+            raise HTTPException(status_code=503, detail="Banco de dados indisponível")
+        
+        with conn.cursor() as cursor:
+            query = """
+            SELECT 
+    m.sigla || ' ' || m.numero || '/' || m.ano AS materia,
+    m.ementa,
+    p.nome_parlamentar,
+    p.sigla_partido,
+    p.uf,
+    vp.sigla_descricao_voto AS voto,
+    vp.descricao_resultado AS resultado
+FROM votacao_parlamentar vp
+JOIN materia m ON vp.codigo_materia = m.codigo
+JOIN parlamentar p ON vp.codigo_parlamentar = p.codigo
+ORDER BY m.ano DESC, m.sigla, m.numero, p.nome_parlamentar;
+        """
+        cursor.execute(query, (codigo_materia,))
+        resultados = cursor.fetchall()
+        return {
+            "votacao": [
+                {
+                    "materia": r[0],
+                    "ementa": r[1],
+                    "nomeParlamentar": r[2],
+                    "siglaPartido": r[3],
+                    "uf": r[4],
+                    "voto": r[5],
+                    "resultado": r[6]
+                }
+                for r in resultados
+            ]
+        }
+    
+    except Exception as e:
+        logging.error(f"Erro ao buscar histórico de votação: {e}")
+        raise HTTPException(status_code=500, detail="Erro ao processar histórico de votação")
+    finally:
+        if 'conn' in locals() and conn:
+            conn.close()    
+    
+            
+ 

@@ -189,7 +189,7 @@
             <BaseButton to="/camara/deputados">Deputados</BaseButton>
             <BaseButton to="/camara/despesas" variant="outline">Despesas</BaseButton>
             <BaseButton to="/camara/emendas" variant="outline">Emendas</BaseButton>
-            <BaseButton to="/camara/proposicoes" variant="outline">Proposições</BaseButton>
+            <BaseButton to="/camara/proposicoes" variant="outline">Projetos Legislativos</BaseButton>
             <BaseButton to="/camara/comparar" variant="outline">Comparar</BaseButton>
           </div>
         </div>
@@ -250,7 +250,7 @@ const dataSources = [
     fonte: 'API da Câmara dos Deputados',
   },
   {
-    title: 'Proposições',
+    title: 'Projetos Legislativos',
     icon: FileText,
     items: [
       'Projetos de lei, PECs, medidas provisórias',
@@ -301,10 +301,10 @@ const features = [
   },
   {
     title: 'Acompanhe as votações',
-    description: 'Veja como cada deputado votou nas proposições legislativas. Descubra padrões de votação e alinhamento partidário.',
-    tips: ['Veja o placar completo de cada votação', 'Filtre por proposição ou deputado', 'Dados desde 2007'],
+    description: 'Veja como cada deputado votou nos projetos legislativos. Descubra padrões de votação e alinhamento partidário.',
+    tips: ['Veja o placar completo de cada votação', 'Filtre por projeto legislativo ou deputado', 'Dados desde 2007'],
     href: '/camara/proposicoes',
-    cta: 'Ver proposições',
+    cta: 'Ver projetos legislativos',
     icon: Vote,
   },
   {

@@ -243,7 +243,7 @@ export const useDeputadosStore = defineStore("deputados", () => {
       }
 
       const response = await fetch(`${apiUrl}/api/deputados/proposicoes?${params.toString()}`)
-      if (!response.ok) throw new Error("Falha ao buscar proposições")
+      if (!response.ok) throw new Error("Falha ao buscar projetos legislativos")
 
       const data: Proposicao[] = await response.json()
 
@@ -256,8 +256,8 @@ export const useDeputadosStore = defineStore("deputados", () => {
       proposicoesPage.value = pagina
       hasMoreProposicoes.value = data.length === 15
     } catch (e: any) {
-      console.error("Erro ao buscar proposições:", e)
-      error.value = "Erro ao carregar proposições."
+      console.error("Erro ao buscar projetos legislativos:", e)
+      error.value = "Erro ao carregar projetos legislativos."
     } finally {
       loadingProposicoes.value = false
     }
@@ -297,7 +297,7 @@ export const useDeputadosStore = defineStore("deputados", () => {
       if (!response.ok) throw new Error("Falha ao buscar votos")
       currentVotos.value = await response.json()
     } catch (e: any) {
-      console.error("Erro ao buscar votos da proposição:", e)
+      console.error("Erro ao buscar votos do projeto legislativo:", e)
     } finally {
       loadingVotos.value = false
     }

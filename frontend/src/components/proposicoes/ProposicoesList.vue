@@ -2,7 +2,7 @@
   <div>
     <!-- Results count -->
     <p class="text-sm text-muted-foreground mb-4">
-      {{ store.proposicoesList.length }} proposições encontradas
+      {{ store.proposicoesList.length }} projetos legislativos encontrados
     </p>
 
     <div v-if="store.loadingProposicoes && store.proposicoesList.length === 0" class="py-12">
@@ -99,7 +99,7 @@
             class="py-8 text-center"
           >
             <Vote class="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-            <p class="text-sm text-muted-foreground">Sem votos nominais registrados para esta proposição.</p>
+            <p class="text-sm text-muted-foreground">Sem votos nominais registrados para este projeto legislativo.</p>
           </div>
 
           <!-- Lista de Votações (Accordion) -->
@@ -181,7 +181,7 @@
     <!-- Empty state -->
     <div v-if="!store.loadingProposicoes && !store.error && store.proposicoesList.length === 0" class="text-center py-12">
       <FileText class="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-      <p class="text-muted-foreground">Nenhuma proposição encontrada com os filtros selecionados.</p>
+      <p class="text-muted-foreground">Nenhum projeto legislativo encontrado com os filtros selecionados.</p>
     </div>
 
     <!-- Load more -->
