@@ -37,7 +37,7 @@ const router = createRouter({
       component: () => import("@/views/camara/EmpresasView.vue"),
     },
     {
-      path: "/camara/proposicoes",
+      path: "/camara/projetos-legislativos",
       name: "projetos-legislativos-camara",
       component: () => import("@/views/camara/ProjetosLegislativosCamaraView.vue"),
     },
@@ -69,7 +69,7 @@ const router = createRouter({
       component: () => import("@/views/senado/EmendasSenadoView.vue"),
     },
     {
-      path: "/senado/proposicoes",
+      path: "/senado/projetos-legislativos",
       name: "projetos-legislativos-senado",
       component: () => import("@/views/senado/ProjetosLegislativosSenadoView.vue"),
     },
