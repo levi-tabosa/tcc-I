@@ -176,7 +176,7 @@ import { Menu, X, ChevronDown } from 'lucide-vue-next'
 const camaraItems = [
   { name: 'Deputados', href: '/camara/deputados' },
   { name: 'Comparar Deputados', href: '/camara/comparar' },
-  { name: 'Projetos Legislativos', href: '/camara/proposicoes' },
+  { name: 'Projetos Legislativos', href: '/camara/projetos-legislativos' },
   { name: 'Despesas', href: '/camara/despesas' },
   { name: 'Emendas', href: '/camara/emendas' },
   { name: 'Empresas', href: '/camara/empresas' },
@@ -185,7 +185,7 @@ const camaraItems = [
 const senadoItems = [
   { name: 'Senadores', href: '/senado/senadores' },
   { name: 'Comparar Senadores', href: '/senado/comparar' },
-  { name: 'Projetos Legislativos', href: '/senado/proposicoes' },
+  { name: 'Projetos Legislativos', href: '/senado/projetos-legislativos' },
   { name: 'Despesas', href: '/senado/despesas' },
   { name: 'Emendas', href: '/senado/emendas' },
 ]
