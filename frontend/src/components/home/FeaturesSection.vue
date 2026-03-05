@@ -72,8 +72,11 @@ import { Users, Receipt, Landmark, Building2, ArrowRight } from 'lucide-vue-next
 import { useSenadoresStore } from '@/stores/senadores'
 
 const senadoresStore = useSenadoresStore()
-onMounted(() => senadoresStore.fetchEstatisticasGerais())
-const senadoresCount = computed(() => senadoresStore.generalStats?.total_senadores ?? '--')
+onMounted(() => {
+  senadoresStore.fetchEstatisticasGerais()
+  senadoresStore.fetchEstatisticasSenadores()
+})
+const senadoresCount = computed(() => senadoresStore.senadorStats?.total_senadores ?? '--')
 
 const camaraItems = [
   {

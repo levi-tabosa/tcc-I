@@ -1,7 +1,62 @@
 <template>
   <section class="py-8 bg-muted/30">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <div class="grid gap-6 lg:grid-cols-2">
+      <!-- Resumo Principal -->
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+        <BaseCard hover>
+          <div class="flex items-center gap-4">
+            <div class="p-3 rounded-xl bg-primary/10">
+              <Users class="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <p class="text-sm text-muted-foreground">Total de Deputados</p>
+              <p class="text-2xl font-bold text-foreground">
+                {{ store.deputadoStats?.total_deputados || '...' }}
+              </p>
+            </div>
+          </div>
+        </BaseCard>
+
+        <BaseCard hover>
+          <div class="flex items-center gap-4">
+            <div class="p-3 rounded-xl bg-accent/10">
+              <MapPin class="h-6 w-6 text-accent" />
+            </div>
+            <div>
+              <p class="text-sm text-muted-foreground">Regiões</p>
+              <p class="text-2xl font-bold text-foreground">5</p>
+            </div>
+          </div>
+        </BaseCard>
+
+        <BaseCard hover>
+          <div class="flex items-center gap-4">
+            <div class="p-3 rounded-xl bg-chart-1/10">
+              <Briefcase class="h-6 w-6 text-chart-1" />
+            </div>
+            <div>
+              <p class="text-sm text-muted-foreground">Partidos Ativos</p>
+              <p class="text-2xl font-bold text-foreground">
+                {{ store.partidosUnicos.length || '...' }}
+              </p>
+            </div>
+          </div>
+        </BaseCard>
+
+        <BaseCard hover>
+          <div class="flex items-center gap-4">
+            <div class="p-3 rounded-xl bg-chart-2/10">
+              <Globe class="h-6 w-6 text-chart-2" />
+            </div>
+            <div>
+              <p class="text-sm text-muted-foreground">Estados (UF)</p>
+              <p class="text-2xl font-bold text-foreground">27</p>
+            </div>
+          </div>
+        </BaseCard>
+      </div>
+
+      <div class="grid gap-6 lg:grid-cols-3">
         <!-- Gastos nos Últimos Meses -->
         <BaseCard>
           <template #header>
@@ -21,7 +76,7 @@
               </div>
             </div>
           </div>
-          <div v-else class="py-8 text-center text-muted-foreground text-sm">
+          <div v-else class="py-12 text-center text-muted-foreground text-sm">
             Carregando dados...
           </div>
         </BaseCard>
@@ -44,8 +99,37 @@
                 <span class="text-sm text-muted-foreground w-8 text-right">{{ partido.deputados }}</span>
               </div>
             </div>
+            <div class="pt-2 text-center">
+              <p class="text-xs text-muted-foreground">Top 6 partidos com mais deputados</p>
+            </div>
           </div>
-          <div v-else class="py-8 text-center text-muted-foreground text-sm">
+          <div v-else class="py-12 text-center text-muted-foreground text-sm">
+            Carregando dados...
+          </div>
+        </BaseCard>
+
+        <!-- Distribuição por Região -->
+        <BaseCard>
+          <template #header>
+            <h3 class="text-lg font-semibold text-foreground">Distribuição por Região</h3>
+          </template>
+          <div v-if="store.deputadoStats?.deputados_por_regiao" class="space-y-4">
+            <div v-for="regiao in store.deputadoStats.deputados_por_regiao" :key="regiao.name" class="flex items-center gap-4">
+              <div class="flex-1">
+                <div class="flex justify-between text-sm mb-1">
+                  <span class="text-foreground font-medium">{{ regiao.name }}</span>
+                  <span class="text-muted-foreground">{{ regiao.value }} deputados</span>
+                </div>
+                <div class="h-2 bg-muted rounded-full overflow-hidden">
+                  <div 
+                    class="h-full rounded-full bg-accent" 
+                    :style="{ width: `${(regiao.value / store.deputadoStats.total_deputados) * 100}%` }" 
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-else class="py-12 text-center text-muted-foreground text-sm">
             Carregando dados...
           </div>
         </BaseCard>
@@ -56,6 +140,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
+import { Users, MapPin, Briefcase, Globe } from 'lucide-vue-next'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import { useDeputadosStore } from '@/stores/deputados'
 
@@ -63,7 +148,10 @@ const store = useDeputadosStore()
 
 onMounted(() => {
   store.fetchEstatisticasGerais()
-  store.fetchDeputados()
+  store.fetchEstatisticasDeputados()
+  if (store.deputadosList.length === 0) {
+    store.fetchDeputados()
+  }
 })
 
 const mesesPtBr: Record<number, string> = {
@@ -77,7 +165,7 @@ const chartColors = ['bg-chart-1', 'bg-chart-2', 'bg-chart-3', 'bg-chart-4', 'bg
 const gastosUltimosMeses = computed(() => {
   if (!store.generalStats?.gastos_por_mes) return []
 
-  const ultimos = store.generalStats.gastos_por_mes.slice(-5)
+  const ultimos = [...store.generalStats.gastos_por_mes].reverse().slice(0, 5).reverse()
   const maxValor = Math.max(...ultimos.map(m => m.valor), 1)
 
   return ultimos.map((m, i) => ({
@@ -93,7 +181,9 @@ const topPartidos = computed(() => {
 
   const contagem: Record<string, number> = {}
   store.deputadosList.forEach(d => {
-    contagem[d.partido] = (contagem[d.partido] || 0) + 1
+    if (d.partido) {
+      contagem[d.partido] = (contagem[d.partido] || 0) + 1
+    }
   })
 
   return Object.entries(contagem)
@@ -107,3 +197,4 @@ const maxBancada = computed(() => {
   return topPartidos.value[0].deputados
 })
 </script>
+

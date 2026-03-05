@@ -60,6 +60,41 @@ ORDER BY nome_parlamentar ASC;""")
             conn.close()
 
 
+@router.get("/estatisticas")
+def get_estatisticas_senado():
+    try:
+        conn = db.get_connect_senado()
+        if not conn:
+            raise HTTPException(status_code=503, detail="Banco de dados indisponível")
+        
+        with conn.cursor() as cursor:
+            query = """SELECT 
+    COUNT(DISTINCT codigo) as total_senadores
+FROM public.parlamentar;
+"""
+            cursor.execute(query)
+            total_senadores = cursor.fetchone()[0]
+
+            query = """SELECT 
+    SUM(valor_reembolsado) as total_gastos 
+FROM public.despesa_ceaps
+WHERE data_despesa >= CURRENT_DATE - INTERVAL '12 months';
+"""
+            cursor.execute(query)
+            total_gastos = cursor.fetchone()[0]
+            
+            return {
+                "total_senadores": total_senadores,
+                "total_gastos": total_gastos
+            }
+    except Exception as e:
+        logging.error(f"Erro ao buscar estatísticas: {e}")
+        raise HTTPException(status_code=500, detail="Erro ao processar estatísticas")
+    finally:
+        if 'conn' in locals() and conn:
+            conn.close()
+
+
 @router.get("/comparar")
 def get_comparativo_senadores(id1: int, id2: int, ano: int = None):
   
@@ -378,10 +413,19 @@ LIMIT 10;
 """
             cursor.execute(query)
             top_10 = cursor.fetchall()
+
+            query = """SELECT 
+    SUM(valor_reembolsado) AS total_geral
+FROM public.despesa_ceaps
+WHERE data_despesa >= CURRENT_DATE - INTERVAL '12 months';
+"""
+            cursor.execute(query)
+            total_12_meses = cursor.fetchone()[0]
             
             return {
                 "total_gastos": float(total_gastos),
                 "media_por_senador": float(media_por_senador),
+                "total_12_meses": float(total_12_meses),
                 "partidos": [
                     {
                         "partido": r[0],

@@ -25,6 +25,11 @@ export interface SenadorDetail {
     foto: string
 }
 
+export interface EstatisticasSenadoGerais {
+    total_senadores: number
+    total_gastos: number
+}
+
 export interface EstatisticasSenado {
     total_gastos: number
     media_por_senador: number
@@ -64,6 +69,7 @@ export const useSenadoresStore = defineStore("senadores", () => {
 
     // General Stats state
     const generalStats = ref<EstatisticasSenado | null>(null)
+    const senadorStats = ref<EstatisticasSenadoGerais | null>(null)
 
     const fetchSenadores = async () => {
         loading.value = true
@@ -152,6 +158,16 @@ export const useSenadoresStore = defineStore("senadores", () => {
         }
     }
 
+    const fetchEstatisticasSenadores = async () => {
+        try {
+            const response = await fetch(`${apiUrl}/api/senado/estatisticas`)
+            if (!response.ok) throw new Error('Falha ao buscar estatísticas gerais do Senado')
+            senadorStats.value = await response.json()
+        } catch (e: any) {
+            console.error('Erro ao buscar estatísticas gerais do senado:', e)
+        }
+    }
+
     const partidosUnicos = computed(() => {
         const set = new Set(senadoresList.value.map(s => s.partido).filter(Boolean))
         return Array.from(set).sort()
@@ -215,10 +231,12 @@ export const useSenadoresStore = defineStore("senadores", () => {
         totalDespesas,
         loadingDetail,
         generalStats,
+        senadorStats,
         fetchSenadores,
         fetchSenador,
         fetchDespesasSenador,
         fetchEstatisticasGerais,
+        fetchEstatisticasSenadores,
         setFilter,
         setPage,
         resetFilters

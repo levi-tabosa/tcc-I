@@ -123,7 +123,6 @@ const store = useDeputadosStore()
 
 onMounted(() => {
   store.fetchEstatisticasGerais()
-  store.fetchCategorias()
 })
 
 const categorias = computed(() => {

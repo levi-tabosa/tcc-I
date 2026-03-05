@@ -99,7 +99,7 @@
                       <div :class="`w-3 h-10 rounded ${getBgColorClass(index)}`" />
                       <div class="flex-1 min-w-0">
                         <h3 class="font-semibold text-foreground truncate">{{ partido.partido }}</h3>
-                        <p class="text-xs text-muted-foreground">{{ partido.percentual }}% do total • {{ partido.senadores }} senator(es)</p>
+                        <p class="text-xs text-muted-foreground">{{ partido.percentual }}% do total</p>
                       </div>
                     </div>
                     <p class="text-lg font-bold text-foreground ml-2">{{ partido.valorFormatado }}</p>

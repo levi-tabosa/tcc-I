@@ -28,7 +28,9 @@ const senadoresStore = useSenadoresStore()
 
 onMounted(() => {
   store.fetchEstatisticasGerais()
+  store.fetchEstatisticasDeputados()
   senadoresStore.fetchEstatisticasGerais()
+  senadoresStore.fetchEstatisticasSenadores()
 })
 
 const formatCurrency = (value: number) => {
@@ -45,13 +47,13 @@ const metrics = computed(() => [
   {
     id: 1,
     label: "Deputados",
-    value: store.generalStats ? store.generalStats.total_deputados : "--",
+    value: store.deputadoStats ? store.deputadoStats.total_deputados : "--",
     description: "Câmara dos Deputados",
   },
   {
     id: 2,
     label: "Senadores",
-    value: "--",
+    value: senadoresStore.senadorStats ? senadoresStore.senadorStats.total_senadores : "--",
     description: "Senado Federal",
   },
   {
@@ -65,7 +67,9 @@ const metrics = computed(() => [
   {
     id: 4,
     label: "Gastos Senado",
-    value: "--",
+    value: senadoresStore.senadorStats
+      ? formatCurrency(senadoresStore.senadorStats.total_gastos)
+      : "--",
     description: "Últimos 12 meses",
   }
 ])

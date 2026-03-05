@@ -77,7 +77,7 @@
               </div>
               <div>
                 <p class="text-xs text-muted-foreground">Deputados</p>
-                <p class="font-bold text-foreground">{{ store.generalStats ? store.generalStats.total_deputados : '--' }}</p>
+                <p class="font-bold text-foreground">{{ store.deputadoStats ? store.deputadoStats.total_deputados : '--' }}</p>
               </div>
             </div>
           </div>
@@ -89,7 +89,7 @@
               </div>
               <div>
                 <p class="text-xs text-muted-foreground">Senadores</p>
-                <p class="font-bold text-foreground">--</p>
+                <p class="font-bold text-foreground">{{ senadoresStore.senadorStats ? senadoresStore.senadorStats.total_senadores : '--' }}</p>
               </div>
             </div>
           </div>
@@ -111,7 +111,9 @@ const senadoresStore = useSenadoresStore()
 
 onMounted(() => {
   store.fetchEstatisticasGerais()
+  store.fetchEstatisticasDeputados()
   senadoresStore.fetchEstatisticasGerais()
+  senadoresStore.fetchEstatisticasSenadores()
 })
 
 const backgroundStyle = computed(() => ({

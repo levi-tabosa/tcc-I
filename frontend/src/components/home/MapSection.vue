@@ -61,15 +61,16 @@ const regionLayers: Record<string, L.GeoJSON> = {}
 // Fetch stats on mount
 onMounted(() => {
   store.fetchEstatisticasGerais()
+  store.fetchEstatisticasDeputados()
 })
 
 // Calculate percentages dynamically
 const regioes = computed(() => {
-    if (!store.generalStats || !store.generalStats.deputados_por_regiao) return []
+    if (!store.deputadoStats || !store.deputadoStats.deputados_por_regiao) return []
     
-    const total = store.generalStats.total_deputados || 1
+    const total = store.deputadoStats.total_deputados || 1
     
-    return store.generalStats.deputados_por_regiao.map(r => ({
+    return store.deputadoStats.deputados_por_regiao.map((r: any) => ({
         nome: r.name,
         deputados: r.value,
         percentual: ((r.value / total) * 100).toFixed(1)

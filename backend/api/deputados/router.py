@@ -271,6 +271,35 @@ def get_todos_deputados():
     return resultados
 
 
+@router.get("/estatisticas", summary="Obtém estatísticas gerais dos deputados")
+def get_estatisticas_gerais():
+    # 1. Total de Deputados
+    total_deputados = _execute_query("SELECT COUNT(DISTINCT deputado_id) as total from deputados_mandatos", fetch_one=True)["total"] or 0
+
+    # 2. Distribuição por Região
+    deputados_regiao_raw = _execute_query("""
+        SELECT 
+            CASE
+                WHEN m.sigla_uf IN ('AC', 'AP', 'AM', 'PA', 'RO', 'RR', 'TO') THEN 'Norte'
+                WHEN m.sigla_uf IN ('AL', 'BA', 'CE', 'MA', 'PB', 'PE', 'PI', 'RN', 'SE') THEN 'Nordeste'
+                WHEN m.sigla_uf IN ('DF', 'GO', 'MT', 'MS') THEN 'Centro-Oeste'
+                WHEN m.sigla_uf IN ('ES', 'MG', 'RJ', 'SP') THEN 'Sudeste'
+                WHEN m.sigla_uf IN ('PR', 'RS', 'SC') THEN 'Sul'
+                ELSE 'Outros'
+            END AS regiao,
+            COUNT(DISTINCT m.deputado_id) as quantidade
+        FROM deputados_mandatos m
+        WHERE m.sigla_uf IS NOT NULL
+        GROUP BY regiao
+        ORDER BY quantidade DESC
+    """)
+    deputados_regiao = [{"name": r["regiao"], "value": int(r["quantidade"])} for r in deputados_regiao_raw]
+
+    return {
+        "total_deputados": int(total_deputados),
+        "deputados_por_regiao": deputados_regiao
+    }
+
 
 
 @router.get("/comparar", summary="Compara perfil e gastos entre dois deputados")
@@ -445,35 +474,6 @@ def get_despesas_deputado(deputado_id: int):
         
 
 
-
-@router.get("/estatisticas", summary="Obtém estatísticas gerais dos deputados")
-def get_estatisticas_gerais():
-    # 1. Total de Deputados
-    total_deputados = _execute_query("SELECT COUNT(DISTINCT deputado_id) as total from deputados_mandatos", fetch_one=True)["total"] or 0
-
-    # 2. Distribuição por Região
-    deputados_regiao_raw = _execute_query("""
-        SELECT 
-            CASE
-                WHEN m.sigla_uf IN ('AC', 'AP', 'AM', 'PA', 'RO', 'RR', 'TO') THEN 'Norte'
-                WHEN m.sigla_uf IN ('AL', 'BA', 'CE', 'MA', 'PB', 'PE', 'PI', 'RN', 'SE') THEN 'Nordeste'
-                WHEN m.sigla_uf IN ('DF', 'GO', 'MT', 'MS') THEN 'Centro-Oeste'
-                WHEN m.sigla_uf IN ('ES', 'MG', 'RJ', 'SP') THEN 'Sudeste'
-                WHEN m.sigla_uf IN ('PR', 'RS', 'SC') THEN 'Sul'
-                ELSE 'Outros'
-            END AS regiao,
-            COUNT(DISTINCT m.deputado_id) as quantidade
-        FROM deputados_mandatos m
-        WHERE m.sigla_uf IS NOT NULL
-        GROUP BY regiao
-        ORDER BY quantidade DESC
-    """)
-    deputados_regiao = [{"name": r["regiao"], "value": int(r["quantidade"])} for r in deputados_regiao_raw]
-
-    return {
-        "total_deputados": int(total_deputados),
-        "deputados_por_regiao": deputados_regiao
-    }
 
 @router.get("/despesas/estatisticas", summary="Obtém o panorama geral de gastos da Câmara")
 def get_estatisticas_despesas():    
