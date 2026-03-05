@@ -174,10 +174,12 @@ export const useDeputadosStore = defineStore("deputados", () => {
     try {
       const response = await fetch(`${apiUrl}/api/deputados/${id}`)
       if (!response.ok) throw new Error("Falha ao buscar detalhes do deputado")
-      currentDeputado.value = await response.json()
 
-      // Also fetch expenses
-      await fetchDespesas(id)
+      const data = await response.json()
+      currentDeputado.value = data
+      currentDespesas.value = data.despesas || []
+      currentCategorias.value = data.categorias || []
+      totalDespesas.value = data.total_despesas || 0
     } catch (e: any) {
       console.error("Erro ao buscar detalhes:", e)
       error.value = "Erro ao carregar detalhes do deputado."
@@ -186,22 +188,10 @@ export const useDeputadosStore = defineStore("deputados", () => {
     }
   }
 
-  const fetchDespesas = async (id: number) => {
-    try {
-      const response = await fetch(`${apiUrl}/api/deputados/${id}/despesas`)
-      if (!response.ok) throw new Error("Falha ao buscar despesas")
-      const data = await response.json()
-      currentDespesas.value = data.despesas
-      currentCategorias.value = data.categorias || []
-      totalDespesas.value = data.total_despesas || 0
-    } catch (e: any) {
-      console.error("Erro ao buscar despesas:", e)
-    }
-  }
 
   const fetchEstatisticasGerais = async () => {
     try {
-      const response = await fetch(`${apiUrl}/api/deputados/estatisticas/geral`)
+      const response = await fetch(`${apiUrl}/api/deputados/despesas/estatisticas/geral`)
       if (!response.ok) throw new Error("Falha ao buscar estatísticas")
       generalStats.value = await response.json()
     } catch (e: any) {
@@ -212,7 +202,7 @@ export const useDeputadosStore = defineStore("deputados", () => {
   const fetchCategorias = async () => {
     loadingCategorias.value = true
     try {
-      const response = await fetch(`${apiUrl}/api/deputados/estatisticas/categorias`)
+      const response = await fetch(`${apiUrl}/api/deputados/despesas/estatisticas/categorias`)
       if (!response.ok) throw new Error("Falha ao buscar categorias")
       categorias.value = await response.json()
     } catch (e: any) {

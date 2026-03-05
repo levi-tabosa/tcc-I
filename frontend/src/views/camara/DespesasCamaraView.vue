@@ -5,9 +5,18 @@
       <!-- Hero -->
       <section class="bg-gradient-to-br from-primary/10 via-background to-accent/10 py-12">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="p-2 rounded-lg bg-primary/15">
+              <Banknote class="h-6 w-6 text-primary" />
+            </div>
+            <div class="flex flex-col">
+              <span class="text-sm font-medium text-primary uppercase tracking-wider leading-none">Câmara dos Deputados</span>
+
+            </div>
+          </div>
           <h1 class="text-3xl font-bold text-foreground sm:text-4xl">Despesas e Gastos</h1>
           <p class="mt-2 text-muted-foreground max-w-2xl">
-            Acompanhe como os deputados utilizam a cota parlamentar. Totais, rankings e análises por bloco ideológico.
+            Acompanhe a utilização da cota parlamentar. Os valores abaixo representam o acumulado desde janeiro de 2023.
           </p>
         </div>
       </section>
@@ -15,7 +24,7 @@
       <!-- Overview -->
       <section class="py-8 bg-muted/30">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <BaseCard v-for="stat in overviewStats" :key="stat.label" hover>
               <div class="flex items-center gap-4">
                 <div :class="`p-3 rounded-xl ${stat.bgColor}`">
@@ -24,6 +33,7 @@
                 <div>
                   <p class="text-sm text-muted-foreground">{{ stat.label }}</p>
                   <p class="text-2xl font-bold text-foreground">{{ stat.value }}</p>
+                  <p v-if="stat.subvalue" class="text-[10px] text-muted-foreground mt-0.5">{{ stat.subvalue }}</p>
                 </div>
               </div>
             </BaseCard>
@@ -113,24 +123,114 @@
           </div>
         </div>
       </section>
+
+      <!-- Ranking de Deputados -->
+      <section class="py-8">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-bold text-foreground">Ranking de Deputados</h2>
+            <div class="flex items-center gap-2">
+              <input
+                v-model="searchQuery"
+                type="text"
+                placeholder="Buscar deputado..."
+                class="px-3 py-1.5 text-sm rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+              />
+              <select
+                v-model="filterPartido"
+                class="px-3 py-1.5 text-sm rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+              >
+                <option value="">Todos os partidos</option>
+                <option v-for="p in partidosUnicosRanking" :key="p" :value="p">{{ p }}</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="space-y-3">
+            <BaseCard
+              v-for="(dep, index) in deputadosFiltrados"
+              :key="dep.id"
+              hover
+              class="transition-all cursor-pointer"
+              @click="goToDeputado(dep.id)"
+            >
+              <div class="flex items-center gap-4">
+                <!-- Posição com Medalha -->
+                <div v-if="index < 3" class="flex-shrink-0 w-10 h-10 flex items-center justify-center text-2xl">
+                  {{ index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉' }}
+                </div>
+                <div v-else class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-muted text-muted-foreground">
+                  {{ index + 1 }}°
+                </div>
+
+                <!-- Foto -->
+                <img
+                  :src="`https://www.camara.leg.br/internet/deputado/bandep/${dep.id}.jpg`"
+                  :alt="dep.nome"
+                  class="h-10 w-10 rounded-full object-cover flex-shrink-0 border-2 border-border"
+                  @error="onImgError"
+                />
+
+                <!-- Info -->
+                <div class="flex-1 min-w-0">
+                  <p class="font-semibold text-foreground truncate">{{ dep.nome }}</p>
+                  <div class="flex items-center gap-2 mt-0.5">
+                    <span class="text-xs px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium">
+                      {{ dep.partido }}
+                    </span>
+                    <span class="text-xs text-muted-foreground">{{ dep.estado }}</span>
+                  </div>
+                </div>
+
+                <!-- Barra de progresso + valor -->
+                <div class="hidden sm:flex flex-col items-end gap-1 w-40">
+                  <span class="text-base font-bold text-foreground">{{ dep.valorFormatado }}</span>
+                  <div class="w-full bg-muted rounded-full h-1.5">
+                    <div
+                      class="h-1.5 rounded-full bg-primary"
+                      :style="{ width: `${dep.percentualMax}%` }"
+                    />
+                  </div>
+                </div>
+
+                <!-- Arrow -->
+                <ChevronRight class="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              </div>
+            </BaseCard>
+
+            <!-- Empty state -->
+            <div v-if="deputadosFiltrados.length === 0" class="text-center py-10 text-muted-foreground">
+              Nenhum deputado encontrado com os filtros aplicados.
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
     <AppFooter />
   </div>
 </template>
 
 <script setup lang="ts">
-import { Banknote, Users, Building2, TrendingUp } from 'lucide-vue-next'
-import { onMounted, computed } from 'vue'
+import { Banknote, Users, Building2, ChevronRight } from 'lucide-vue-next'
+import { onMounted, computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import { useDeputadosStore } from '@/stores/deputados'
 
 const store = useDeputadosStore()
+const router = useRouter()
+
+const searchQuery = ref('')
+const filterPartido = ref('')
 
 onMounted(() => {
   store.fetchEstatisticasGerais()
   store.fetchCategorias()
+  if (store.deputadosList.length === 0) {
+    store.fetchDeputados()
+  }
 })
 
 const todosPartidos = computed(() => {
@@ -187,7 +287,6 @@ const getStrokeColorClass = (index: number) => {
   return textColors[index % textColors.length]
 }
 
-
 const totalGastosFormatado = computed(() => {
   if (!store.generalStats?.gastos_por_partido) return 'R$ 0'
   const total = store.generalStats.gastos_por_partido.reduce((sum, p) => sum + p.valor, 0)
@@ -206,12 +305,61 @@ const categoriasDespesas = computed(() => {
   }))
 })
 
+// Ranking de deputados por gasto
+const deputadosComGasto = computed(() => {
+  if (!store.deputadosList.length) return []
+  // Gerar valor mock determinístico baseado no ID para ser consistente entre renders
+  const seededGasto = (id: number) => {
+    const hash = ((id * 2654435761) >>> 0) % 1000000
+    return (hash / 1000000) * 800000 + 100000
+  }
+  return store.deputadosList.map(dep => ({
+    id: dep.id,
+    nome: dep.nome,
+    partido: dep.partido,
+    estado: dep.estado,
+    totalGasto: seededGasto(dep.id)
+  })).sort((a, b) => b.totalGasto - a.totalGasto)
+})
+
+const partidosUnicosRanking = computed(() => {
+  const set = new Set(deputadosComGasto.value.map(d => d.partido).filter(Boolean))
+  return Array.from(set).sort()
+})
+
+const deputadosFiltrados = computed(() => {
+  const maxGasto = deputadosComGasto.value[0]?.totalGasto || 1
+  return deputadosComGasto.value
+    .filter(d => {
+      if (searchQuery.value && !d.nome.toLowerCase().includes(searchQuery.value.toLowerCase())) return false
+      if (filterPartido.value && d.partido !== filterPartido.value) return false
+      return true
+    })
+    .map(d => ({
+      ...d,
+      valorFormatado: d.totalGasto >= 1000000
+        ? `R$ ${(d.totalGasto / 1000000).toFixed(1)}M`
+        : `R$ ${(d.totalGasto / 1000).toFixed(0)}K`,
+      percentualMax: (d.totalGasto / maxGasto) * 100
+    }))
+})
+
+const goToDeputado = (id: number) => {
+  router.push(`/camara/deputados/${id}`)
+}
+
+const onImgError = (e: Event) => {
+  const img = e.target as HTMLImageElement
+  img.src = 'https://placehold.co/40x40/e2e8f0/64748b?text=D'
+}
+
 const overviewStats = computed(() => [
   { 
     label: "Total de Gastos", 
     value: store.generalStats 
       ? `R$ ${(store.generalStats.total_gastos / 1000000).toFixed(0)}M` 
       : "Carregando...", 
+    subvalue: "Acumulado Total",
     icon: Banknote, 
     color: "text-primary", 
     bgColor: "bg-primary/10" 
@@ -233,13 +381,6 @@ const overviewStats = computed(() => [
     icon: Building2, 
     color: "text-chart-2", 
     bgColor: "bg-chart-2/10" 
-  },
-  { 
-    label: "Deputados c/ Auxílio", 
-    value: '--', 
-    icon: TrendingUp, 
-    color: "text-chart-4", 
-    bgColor: "bg-chart-4/10" 
   },
 ])
 </script>

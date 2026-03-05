@@ -137,7 +137,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 async function carregarEstatisticas() {
   try {
-    const resposta = await fetch(`${API_URL}/api/deputados/emendas/estatisticas`)
+    const resposta = await fetch(`${API_URL}/api/deputados/emendas/resumo`)
     if (!resposta.ok) throw new Error('Erro ao buscar estatísticas')
     estatisticas.value = await resposta.json()
   } catch (erro) {

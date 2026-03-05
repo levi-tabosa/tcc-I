@@ -301,4 +301,117 @@ ORDER BY data_despesa DESC; """
         if 'conn' in locals() and conn:
             conn.close()
 
+@router.get("/despesas/estatisticas")
+def get_despesas_estatisticas():
+    try:
+        conn = db.get_connect_senado()
+        if not conn:
+            raise HTTPException(status_code=503, detail="Banco de dados indisponível")
+        
+        with conn.cursor() as cursor:
+            query = """
+           SELECT COALESCE(SUM(valor_reembolsado), 0) AS total_gastos
+           FROM public.despesa_ceaps;
+"""
+            cursor.execute(query)
+            res_total = cursor.fetchone()
+            total_gastos = res_total[0] if res_total else 0
 
+            query = """SELECT 
+    COALESCE(SUM(valor_reembolsado) / NULLIF(COUNT(DISTINCT cod_senador), 0), 0) AS media_por_senador
+FROM public.despesa_ceaps;
+"""
+            cursor.execute(query)
+            res_media = cursor.fetchone()
+            media_por_senador = res_media[0] if res_media else 0
+            
+            query = """WITH total_geral AS (
+    SELECT COALESCE(SUM(valor_reembolsado), 1) as soma_total 
+    FROM public.despesa_ceaps 
+)
+SELECT 
+    p.sigla_partido,
+    SUM(d.valor_reembolsado) AS total_valor,
+    ROUND(
+        (SUM(d.valor_reembolsado) / (SELECT soma_total FROM total_geral)) * 100, 
+        2
+    ) AS percentual
+FROM public.despesa_ceaps d
+JOIN public.parlamentar p ON d.cod_senador = p.codigo
+GROUP BY p.sigla_partido
+ORDER BY total_valor DESC;
+"""
+            cursor.execute(query)
+            partidos = cursor.fetchall()
+            
+            query = """WITH ranking_categorias AS (
+    SELECT 
+        tipo_despesa, 
+        SUM(valor_reembolsado) AS valor,
+        ROW_NUMBER() OVER (ORDER BY SUM(valor_reembolsado) DESC) as rank
+    FROM public.despesa_ceaps
+    GROUP BY tipo_despesa
+)
+SELECT 
+    CASE WHEN rank <= 9 THEN tipo_despesa ELSE 'Outros' END AS categoria,
+    SUM(valor) AS total_valor
+FROM ranking_categorias
+GROUP BY 1
+ORDER BY (CASE WHEN rank <= 9 THEN tipo_despesa ELSE 'Outros' END = 'Outros'), total_valor DESC;
+"""
+            # Refined the ORDER BY slightly for Postgres compatibility and used GROUP BY index
+            cursor.execute(query.replace("GROUP BY categoria", "GROUP BY 1").replace("(categoria = 'Outros')", "(CASE WHEN rank <= 9 THEN tipo_despesa ELSE 'Outros' END = 'Outros')"))
+            categorias = cursor.fetchall()
+            
+            query = """SELECT 
+    p.codigo, 
+    p.nome_parlamentar, 
+    p.sigla_partido, 
+    p.uf, 
+    p.url_foto,
+    SUM(d.valor_reembolsado) AS total_valor
+FROM public.despesa_ceaps d
+JOIN public.parlamentar p ON d.cod_senador = p.codigo
+GROUP BY p.codigo, p.nome_parlamentar, p.sigla_partido, p.uf, p.url_foto
+ORDER BY total_valor DESC
+LIMIT 10;
+"""
+            cursor.execute(query)
+            top_10 = cursor.fetchall()
+            
+            return {
+                "total_gastos": float(total_gastos),
+                "media_por_senador": float(media_por_senador),
+                "partidos": [
+                    {
+                        "partido": r[0],
+                        "total": float(r[1]),
+                        "percentual": float(r[2])
+                    }
+                    for r in partidos
+                ],
+                "categorias": [
+                    {
+                        "categoria": r[0],
+                        "total": float(r[1])
+                    }
+                    for r in categorias
+                ],
+                "top_10": [
+                    {
+                        "codigo": r[0],
+                        "nome": r[1],
+                        "partido": r[2],
+                        "uf": r[3],
+                        "foto": r[4],
+                        "total": float(r[5])
+                    }
+                    for r in top_10
+                ]
+            }
+    except Exception as e:
+        logging.error(f"Erro ao buscar estatísticas: {e}")
+        raise HTTPException(status_code=500, detail="Erro ao processar estatísticas")
+    finally:
+        if 'conn' in locals() and conn:
+            conn.close()

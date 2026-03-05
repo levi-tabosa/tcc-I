@@ -26,8 +26,11 @@ export interface SenadorDetail {
 }
 
 export interface EstatisticasSenado {
-    total_gastos_12_meses: number
-    total_senadores: number
+    total_gastos: number
+    media_por_senador: number
+    partidos: { partido: string; total: number; percentual: number }[]
+    categorias: { categoria: string; total: number }[]
+    top_10: { codigo: number; nome: string; partido: string; uf: string; foto: string; total: number }[]
 }
 
 export interface SenadoresFilters {
@@ -60,10 +63,7 @@ export const useSenadoresStore = defineStore("senadores", () => {
     const loadingDetail = ref(false)
 
     // General Stats state
-    const generalStats = ref<EstatisticasSenado | null>({
-        total_gastos_12_meses: 0,
-        total_senadores: 81
-    })
+    const generalStats = ref<EstatisticasSenado | null>(null)
 
     const fetchSenadores = async () => {
         loading.value = true
@@ -143,7 +143,13 @@ export const useSenadoresStore = defineStore("senadores", () => {
     }
 
     const fetchEstatisticasGerais = async () => {
-        // ... placeholder 
+        try {
+            const response = await fetch(`${apiUrl}/api/senado/despesas/estatisticas`)
+            if (!response.ok) throw new Error('Falha ao buscar estatísticas do Senado')
+            generalStats.value = await response.json()
+        } catch (e: any) {
+            console.error('Erro ao buscar estatísticas do senado:', e)
+        }
     }
 
     const partidosUnicos = computed(() => {
