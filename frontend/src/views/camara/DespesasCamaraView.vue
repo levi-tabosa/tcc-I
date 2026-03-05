@@ -227,7 +227,6 @@ const filterPartido = ref('')
 
 onMounted(() => {
   store.fetchEstatisticasGerais()
-  store.fetchCategorias()
   if (store.deputadosList.length === 0) {
     store.fetchDeputados()
   }
@@ -294,11 +293,11 @@ const totalGastosFormatado = computed(() => {
 })
 
 const categoriasDespesas = computed(() => {
-  if (!store.categorias.length) return []
+  if (!store.generalStats?.gastos_por_categoria) return []
   
-  const maxValor = Math.max(...store.categorias.map(c => c.valor))
+  const maxValor = Math.max(...store.generalStats.gastos_por_categoria.map(c => c.valor))
   
-  return store.categorias.map(c => ({
+  return store.generalStats.gastos_por_categoria.map(c => ({
     nome: c.categoria,
     total: c.valor,
     percentual: (c.valor / maxValor) * 100

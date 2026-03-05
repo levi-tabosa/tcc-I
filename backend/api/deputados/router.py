@@ -446,45 +446,31 @@ def get_despesas_deputado(deputado_id: int):
 
 
 
-@router.get("/despesas/estatisticas/categorias", summary="Obtém a soma de gastos por cada categoria")
-def get_gastos_por_categoria():
-    query = """
-        SELECT tipo_despesa as categoria, SUM(valor_documento) as valor
-        FROM deputados_despesas
-        GROUP BY tipo_despesa
-        ORDER BY valor DESC
-    """
-    resultados = _execute_query(query)
-    
-    dados_formatados = []
-    total_outros = 0.0
-    LIMITE_TOP = 9
-    
-    for i, row in enumerate(resultados):
-        nome_bonito = row["categoria"].title().replace("_", " ")
-        valor = float(row["valor"])
-        
-        if i < LIMITE_TOP:
-            dados_formatados.append({"categoria": nome_bonito, "valor": valor})
-        else:
-            total_outros += valor
-    
-    if total_outros > 0:
-        dados_formatados.append({"categoria": "Outros", "valor": total_outros})
-    
-    return dados_formatados
-         
- 
-@router.get("/despesas/estatisticas/geral", summary="Obtém o panorama geral de gastos da Câmara")
-def get_estatisticas_gerais_despesas():    
-    # 1. Gastos por Categoria
-    gastos_categoria = _execute_query("""
+@router.get("/despesas/estatisticas", summary="Obtém o panorama geral de gastos da Câmara")
+def get_estatisticas_despesas():    
+    # 1. Gastos por Categoria (com formatação Top 9 + Outros)
+    resultados_categoria = _execute_query("""
         SELECT tipo_despesa as categoria, SUM(valor_documento) as valor
         FROM deputados_despesas
         GROUP BY tipo_despesa
         ORDER BY valor DESC
     """)
-    for g in gastos_categoria: g["valor"] = float(g["valor"])
+    
+    gastos_categoria = []
+    total_outros = 0.0
+    LIMITE_TOP = 9
+    
+    for i, row in enumerate(resultados_categoria):
+        nome_formatado = row["categoria"].title().replace("_", " ")
+        valor = float(row["valor"])
+        
+        if i < LIMITE_TOP:
+            gastos_categoria.append({"categoria": nome_formatado, "valor": valor})
+        else:
+            total_outros += valor
+    
+    if total_outros > 0:
+        gastos_categoria.append({"categoria": "Outros", "valor": total_outros})
 
     # 2. Evolução Mensal
     gastos_mensais = _execute_query("""

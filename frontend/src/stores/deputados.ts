@@ -191,7 +191,7 @@ export const useDeputadosStore = defineStore("deputados", () => {
 
   const fetchEstatisticasGerais = async () => {
     try {
-      const response = await fetch(`${apiUrl}/api/deputados/despesas/estatisticas/geral`)
+      const response = await fetch(`${apiUrl}/api/deputados/despesas/estatisticas`)
       if (!response.ok) throw new Error("Falha ao buscar estatísticas")
       generalStats.value = await response.json()
     } catch (e: any) {
@@ -199,18 +199,6 @@ export const useDeputadosStore = defineStore("deputados", () => {
     }
   }
 
-  const fetchCategorias = async () => {
-    loadingCategorias.value = true
-    try {
-      const response = await fetch(`${apiUrl}/api/deputados/despesas/estatisticas/categorias`)
-      if (!response.ok) throw new Error("Falha ao buscar categorias")
-      categorias.value = await response.json()
-    } catch (e: any) {
-      console.error("Erro ao buscar categorias:", e)
-    } finally {
-      loadingCategorias.value = false
-    }
-  }
 
   const fetchProposicoes = async (pagina = 1) => {
     loadingProposicoes.value = true
@@ -382,7 +370,6 @@ export const useDeputadosStore = defineStore("deputados", () => {
     fetchDeputados,
     fetchDeputado,
     fetchEstatisticasGerais,
-    fetchCategorias,
     proposicoesList,
     loadingProposicoes,
     proposicoesPage,
