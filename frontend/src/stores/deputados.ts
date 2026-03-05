@@ -52,13 +52,11 @@ export interface Categoria {
 export interface EstatisticasGerais {
   total_gastos_12_meses: number
   total_gastos: number
-  total_deputados: number
   total_empresas_contratadas: number
   gastos_por_categoria: { categoria: string; valor: number }[]
   gastos_por_mes: { ano: number; mes: number; valor: number }[]
   gastos_por_estado: { estado: string; valor: number }[]
   gastos_por_partido: { partido: string; valor: number }[]
-  deputados_por_regiao: { name: string; value: number }[]
   gastos_deputados: {
     deputado_id: number
     nome_civil: string
@@ -66,6 +64,11 @@ export interface EstatisticasGerais {
     estado: string
     total_gasto: number
   }[]
+}
+
+export interface EstatisticasDeputado {
+  total_deputados: number
+  deputados_por_regiao: { name: string; value: number }[]
 }
 
 export interface Filters {
@@ -132,6 +135,7 @@ export const useDeputadosStore = defineStore("deputados", () => {
 
   // General Stats state
   const generalStats = ref<EstatisticasGerais | null>(null)
+  const deputadoStats = ref<EstatisticasDeputado | null>(null)
 
   // Categories state
   const categorias = ref<Categoria[]>([])
@@ -199,10 +203,20 @@ export const useDeputadosStore = defineStore("deputados", () => {
   const fetchEstatisticasGerais = async () => {
     try {
       const response = await fetch(`${apiUrl}/api/deputados/despesas/estatisticas`)
-      if (!response.ok) throw new Error("Falha ao buscar estatísticas")
+      if (!response.ok) throw new Error("Falha ao buscar estatísticas de despesas")
       generalStats.value = await response.json()
     } catch (e: any) {
-      console.error("Erro ao buscar estatísticas gerais:", e)
+      console.error("Erro ao buscar estatísticas gerais de despesas:", e)
+    }
+  }
+
+  const fetchEstatisticasDeputados = async () => {
+    try {
+      const response = await fetch(`${apiUrl}/api/deputados/estatisticas`)
+      if (!response.ok) throw new Error("Falha ao buscar estatísticas de deputados")
+      deputadoStats.value = await response.json()
+    } catch (e: any) {
+      console.error("Erro ao buscar estatísticas gerais de deputados:", e)
     }
   }
 
@@ -372,11 +386,13 @@ export const useDeputadosStore = defineStore("deputados", () => {
     totalDespesas,
     loadingDetail,
     generalStats,
+    deputadoStats,
     categorias,
     loadingCategorias,
     fetchDeputados,
     fetchDeputado,
     fetchEstatisticasGerais,
+    fetchEstatisticasDeputados,
     proposicoesList,
     loadingProposicoes,
     proposicoesPage,

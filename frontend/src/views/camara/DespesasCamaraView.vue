@@ -227,6 +227,7 @@ const filterPartido = ref('')
 
 onMounted(() => {
   store.fetchEstatisticasGerais()
+  store.fetchEstatisticasDeputados()
   if (store.deputadosList.length === 0) {
     store.fetchDeputados()
   }
@@ -360,8 +361,8 @@ const overviewStats = computed(() => [
   },
   { 
     label: "Média por Deputado", 
-    value: store.generalStats && store.generalStats.total_deputados > 0
-      ? `R$ ${(store.generalStats.total_gastos / store.generalStats.total_deputados / 1000).toFixed(0)}K`
+    value: store.generalStats && store.deputadoStats && store.deputadoStats.total_deputados > 0
+      ? `R$ ${(store.generalStats.total_gastos / store.deputadoStats.total_deputados / 1000).toFixed(0)}K`
       : "Carregando...", 
     icon: Users, 
     color: "text-accent", 

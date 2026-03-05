@@ -446,6 +446,35 @@ def get_despesas_deputado(deputado_id: int):
 
 
 
+@router.get("/estatisticas", summary="Obtém estatísticas gerais dos deputados")
+def get_estatisticas_gerais():
+    # 1. Total de Deputados
+    total_deputados = _execute_query("SELECT COUNT(DISTINCT deputado_id) as total from deputados_mandatos", fetch_one=True)["total"] or 0
+
+    # 2. Distribuição por Região
+    deputados_regiao_raw = _execute_query("""
+        SELECT 
+            CASE
+                WHEN m.sigla_uf IN ('AC', 'AP', 'AM', 'PA', 'RO', 'RR', 'TO') THEN 'Norte'
+                WHEN m.sigla_uf IN ('AL', 'BA', 'CE', 'MA', 'PB', 'PE', 'PI', 'RN', 'SE') THEN 'Nordeste'
+                WHEN m.sigla_uf IN ('DF', 'GO', 'MT', 'MS') THEN 'Centro-Oeste'
+                WHEN m.sigla_uf IN ('ES', 'MG', 'RJ', 'SP') THEN 'Sudeste'
+                WHEN m.sigla_uf IN ('PR', 'RS', 'SC') THEN 'Sul'
+                ELSE 'Outros'
+            END AS regiao,
+            COUNT(DISTINCT m.deputado_id) as quantidade
+        FROM deputados_mandatos m
+        WHERE m.sigla_uf IS NOT NULL
+        GROUP BY regiao
+        ORDER BY quantidade DESC
+    """)
+    deputados_regiao = [{"name": r["regiao"], "value": int(r["quantidade"])} for r in deputados_regiao_raw]
+
+    return {
+        "total_deputados": int(total_deputados),
+        "deputados_por_regiao": deputados_regiao
+    }
+
 @router.get("/despesas/estatisticas", summary="Obtém o panorama geral de gastos da Câmara")
 def get_estatisticas_despesas():    
     # 1. Gastos por Categoria (com formatação Top 9 + Outros)
@@ -504,26 +533,7 @@ def get_estatisticas_despesas():
     """)
     for g in gastos_partido: g["valor"] = float(g["valor"])
 
-    # 5. Região
-    deputados_regiao_raw = _execute_query("""
-        SELECT 
-            CASE
-                WHEN m.sigla_uf IN ('AC', 'AP', 'AM', 'PA', 'RO', 'RR', 'TO') THEN 'Norte'
-                WHEN m.sigla_uf IN ('AL', 'BA', 'CE', 'MA', 'PB', 'PE', 'PI', 'RN', 'SE') THEN 'Nordeste'
-                WHEN m.sigla_uf IN ('DF', 'GO', 'MT', 'MS') THEN 'Centro-Oeste'
-                WHEN m.sigla_uf IN ('ES', 'MG', 'RJ', 'SP') THEN 'Sudeste'
-                WHEN m.sigla_uf IN ('PR', 'RS', 'SC') THEN 'Sul'
-                ELSE 'Outros'
-            END AS regiao,
-            COUNT(DISTINCT m.deputado_id) as quantidade
-        FROM deputados_mandatos m
-        WHERE m.sigla_uf IS NOT NULL
-        GROUP BY regiao
-        ORDER BY quantidade DESC
-    """)
-    deputados_regiao = [{"name": r["regiao"], "value": int(r["quantidade"])} for r in deputados_regiao_raw]
-
-    # 6. Totais
+    # 5. Totais
     total_12_meses = _execute_query("""
         SELECT SUM(valor_documento) as total
         FROM deputados_despesas
@@ -531,9 +541,7 @@ def get_estatisticas_despesas():
     """, fetch_one=True)["total"] or 0
 
     total_geral = _execute_query("SELECT SUM(valor_documento) as total from deputados_despesas", fetch_one=True)["total"] or 0
-    total_deputados = _execute_query("SELECT COUNT(DISTINCT deputado_id) as total from deputados_mandatos", fetch_one=True)["total"] or 0
     total_empresas = _execute_query("SELECT COUNT(DISTINCT cnpj_cpf_fornecedor) as total FROM deputados_despesas", fetch_one=True)["total"] or 0
-
 
     query = """
     SELECT 
@@ -555,13 +563,11 @@ def get_estatisticas_despesas():
     return {
         "total_gastos_12_meses": float(total_12_meses),
         "total_gastos": float(total_geral),
-        "total_deputados": int(total_deputados),
         "total_empresas_contratadas": int(total_empresas),
         "gastos_por_categoria": gastos_categoria,
         "gastos_por_mes": gastos_mensais,
         "gastos_por_estado": gastos_estado,
         "gastos_por_partido": gastos_partido,
-        "deputados_por_regiao": deputados_regiao,
         "gastos_deputados": gastos_deputados
     }
     
