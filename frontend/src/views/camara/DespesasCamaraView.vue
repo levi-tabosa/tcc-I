@@ -306,19 +306,14 @@ const categoriasDespesas = computed(() => {
 
 // Ranking de deputados por gasto
 const deputadosComGasto = computed(() => {
-  if (!store.deputadosList.length) return []
-  // Gerar valor mock determinístico baseado no ID para ser consistente entre renders
-  const seededGasto = (id: number) => {
-    const hash = ((id * 2654435761) >>> 0) % 1000000
-    return (hash / 1000000) * 800000 + 100000
-  }
-  return store.deputadosList.map(dep => ({
-    id: dep.id,
-    nome: dep.nome,
-    partido: dep.partido,
+  if (!store.generalStats?.gastos_deputados) return []
+  return store.generalStats.gastos_deputados.map(dep => ({
+    id: dep.deputado_id,
+    nome: dep.nome_civil,
+    partido: dep.sigla_partido,
     estado: dep.estado,
-    totalGasto: seededGasto(dep.id)
-  })).sort((a, b) => b.totalGasto - a.totalGasto)
+    totalGasto: dep.total_gasto
+  }))
 })
 
 const partidosUnicosRanking = computed(() => {

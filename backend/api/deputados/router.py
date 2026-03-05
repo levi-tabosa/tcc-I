@@ -534,6 +534,24 @@ def get_estatisticas_despesas():
     total_deputados = _execute_query("SELECT COUNT(DISTINCT deputado_id) as total from deputados_mandatos", fetch_one=True)["total"] or 0
     total_empresas = _execute_query("SELECT COUNT(DISTINCT cnpj_cpf_fornecedor) as total FROM deputados_despesas", fetch_one=True)["total"] or 0
 
+
+    query = """
+    SELECT 
+        d.id AS deputado_id,
+        d.nome_civil,
+        m.sigla_partido,
+        m.sigla_uf AS estado,
+        SUM(desp.valor_documento) AS total_gasto
+    FROM public.deputados_despesas desp
+    JOIN public.deputados_mandatos m ON desp.mandato_id = m.id
+    JOIN public.deputados d ON m.deputado_id = d.id
+    GROUP BY d.id, d.nome_civil, m.sigla_partido, m.sigla_uf
+    ORDER BY total_gasto DESC
+    LIMIT 10;
+    """
+    gastos_deputados = _execute_query(query)
+    for g in gastos_deputados: g["total_gasto"] = float(g["total_gasto"])
+
     return {
         "total_gastos_12_meses": float(total_12_meses),
         "total_gastos": float(total_geral),
@@ -543,13 +561,15 @@ def get_estatisticas_despesas():
         "gastos_por_mes": gastos_mensais,
         "gastos_por_estado": gastos_estado,
         "gastos_por_partido": gastos_partido,
-        "deputados_por_regiao": deputados_regiao
+        "deputados_por_regiao": deputados_regiao,
+        "gastos_deputados": gastos_deputados
     }
     
 
 
-@router.get("/empresas/estatisticas", summary="Obtém as estatísticas das empresas contratadas")
-def get_estatisticas_empresas():
+@router.get("/empresas/estatisticas", summary="Obtém as estatísticas e ranking das empresas contratadas")
+def get_estatisticas_empresas(limit: int = 20):
+    # 1. Estatísticas Gerais
     stats = _execute_query("""
         SELECT 
             COUNT(DISTINCT cnpj_cpf_fornecedor) as total_empresas,
@@ -559,22 +579,10 @@ def get_estatisticas_empresas():
         WHERE LENGTH(cnpj_cpf_fornecedor) > 11
     """, fetch_one=True)
     
-    return {
-        "total_empresas": stats["total_empresas"] or 0,
-        "total_pago": float(stats["total_pago"]) if stats["total_pago"] else 0,
-        "total_contratos": stats["total_contratos"] or 0
-    }
-        
-        
-@router.get("/empresas/ranking", summary="Lista o ranking das empresas que mais receberam")
-def get_ranking_empresas(limit: int = 20):
-    total_geral_empresas = _execute_query("""
-        SELECT SUM(valor_documento) as total 
-        FROM deputados_despesas 
-        WHERE LENGTH(cnpj_cpf_fornecedor) > 11
-    """, fetch_one=True)["total"] or 1.0
-    
-    query = """
+    total_geral_empresas = float(stats["total_pago"]) if stats["total_pago"] else 1.0
+
+    # 2. Ranking de Empresas
+    query_ranking = """
     WITH top_fornecedores AS (
         SELECT 
             cnpj_cpf_fornecedor,
@@ -615,16 +623,16 @@ def get_ranking_empresas(limit: int = 20):
     FROM top_fornecedores tf
     ORDER BY tf.total_valor DESC
     """
-    resultados = _execute_query(query, (limit,))
+    resultados_ranking = _execute_query(query_ranking, (limit,))
     
-    lista_formatada = []
-    for i, row in enumerate(resultados):
+    ranking_formatado = []
+    for i, row in enumerate(resultados_ranking):
         nome_bruto = row["nome"]
         nome_limpo = nome_bruto.split("-")[0].strip().title() if nome_bruto else "Não Informado"
         valor_empresa = float(row["total_valor"]) 
-        percentual = (valor_empresa / float(total_geral_empresas)) * 100
+        percentual = (valor_empresa / total_geral_empresas) * 100
                          
-        lista_formatada.append({
+        ranking_formatado.append({
             "rank": i + 1,
             "cnpj": row["cnpj_cpf_fornecedor"],
             "nome": nome_limpo,
@@ -633,8 +641,15 @@ def get_ranking_empresas(limit: int = 20):
             "principais_partidos": row["principais_partidos"] if row["principais_partidos"] else "N/A",
             "percentual": round(percentual, 2)
         })
-    
-    return lista_formatada
+
+    return {
+        "geral": {
+            "total_empresas": stats["total_empresas"] or 0,
+            "total_pago": float(stats["total_pago"]) if stats["total_pago"] else 0,
+            "total_contratos": stats["total_contratos"] or 0
+        },
+        "ranking": ranking_formatado
+    }
 
 
 

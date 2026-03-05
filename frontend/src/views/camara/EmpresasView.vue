@@ -182,17 +182,18 @@ const error = ref<string | null>(null)
 
 onMounted(async () => {
   try {
-    const [statsRes, rankingRes] = await Promise.all([
-      fetch(`${apiUrl}/api/deputados/empresas/estatisticas`),
-      fetch(`${apiUrl}/api/deputados/empresas/ranking?limit=20`)
-    ])
+    const response = await fetch(`${apiUrl}/api/deputados/empresas/estatisticas?limit=20`)
     
-    if (statsRes.ok) {
-      stats.value = await statsRes.json()
+    if (!response.ok) throw new Error(`Erro na API: ${response.status}`)
+    
+    const data = await response.json()
+    
+    if (data.geral) {
+      stats.value = data.geral
     }
     
-    if (rankingRes.ok) {
-      topEmpresas.value = await rankingRes.json()
+    if (data.ranking) {
+      topEmpresas.value = data.ranking
     }
   } catch (err: any) {
     console.error('Erro ao buscar dados:', err)

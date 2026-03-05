@@ -59,6 +59,13 @@ export interface EstatisticasGerais {
   gastos_por_estado: { estado: string; valor: number }[]
   gastos_por_partido: { partido: string; valor: number }[]
   deputados_por_regiao: { name: string; value: number }[]
+  gastos_deputados: {
+    deputado_id: number
+    nome_civil: string
+    sigla_partido: string
+    estado: string
+    total_gasto: number
+  }[]
 }
 
 export interface Filters {
