@@ -9,7 +9,7 @@ export interface Deputado {
   foto: string
 }
 
-export interface Proposicao {
+export interface ProjetoLegislativo {
   id: number
   siglaTipo: string
   numero: number
@@ -77,7 +77,7 @@ export interface Filters {
   estado: string
 }
 
-export interface ProposicoesFilters {
+export interface ProjetosLegislativosFilters {
   search: string
   siglaTipo: string
   ano: string
@@ -98,7 +98,7 @@ export interface Votacao {
   lista_votos: VotoDeputado[]
 }
 
-export interface VotosProposicao {
+export interface VotosProjetoLegislativo {
   proposicao_id: number
   historico_votacoes: Votacao[]
 }
@@ -110,7 +110,7 @@ export const useDeputadosStore = defineStore("deputados", () => {
     estado: "",
   })
 
-  const proposicoesFilters = ref<ProposicoesFilters>({
+  const projetosLegislativosFilters = ref<ProjetosLegislativosFilters>({
     search: "",
     siglaTipo: "",
     ano: "",
@@ -141,16 +141,16 @@ export const useDeputadosStore = defineStore("deputados", () => {
   const categorias = ref<Categoria[]>([])
   const loadingCategorias = ref(false)
 
-  // Propositions state
-  const proposicoesList = ref<Proposicao[]>([])
-  const loadingProposicoes = ref(false)
-  const proposicoesPage = ref(1)
-  const hasMoreProposicoes = ref(true)
+  // Projetos Legislativos state
+  const projetosLegislativosList = ref<ProjetoLegislativo[]>([])
+  const loadingProjetosLegislativos = ref(false)
+  const projetosLegislativosPage = ref(1)
+  const hasMoreProjetosLegislativos = ref(true)
 
   // Votos state
-  const currentVotos = ref<VotosProposicao | null>(null)
+  const currentVotos = ref<VotosProjetoLegislativo | null>(null)
   const loadingVotos = ref(false)
-  const selectedProposicaoId = ref<number | null>(null)
+  const selectedProjetoLegislativoId = ref<number | null>(null)
 
   const fetchDeputados = async () => {
     loading.value = true
@@ -221,67 +221,67 @@ export const useDeputadosStore = defineStore("deputados", () => {
   }
 
 
-  const fetchProposicoes = async (pagina = 1) => {
-    loadingProposicoes.value = true
+  const fetchProjetosLegislativos = async (pagina = 1) => {
+    loadingProjetosLegislativos.value = true
     error.value = null
 
     try {
       const params = new URLSearchParams()
       params.append("pagina", String(pagina))
 
-      if (proposicoesFilters.value.siglaTipo) {
-        params.append("siglaTipo", proposicoesFilters.value.siglaTipo)
+      if (projetosLegislativosFilters.value.siglaTipo) {
+        params.append("siglaTipo", projetosLegislativosFilters.value.siglaTipo)
       }
-      if (proposicoesFilters.value.ano) {
-        params.append("ano", proposicoesFilters.value.ano)
+      if (projetosLegislativosFilters.value.ano) {
+        params.append("ano", projetosLegislativosFilters.value.ano)
       }
-      if (proposicoesFilters.value.search) {
-        params.append("ementa", proposicoesFilters.value.search)
+      if (projetosLegislativosFilters.value.search) {
+        params.append("ementa", projetosLegislativosFilters.value.search)
       }
-      if (proposicoesFilters.value.deputado) {
-        params.append("deputado", proposicoesFilters.value.deputado)
+      if (projetosLegislativosFilters.value.deputado) {
+        params.append("deputado", projetosLegislativosFilters.value.deputado)
       }
 
       const response = await fetch(`${apiUrl}/api/deputados/proposicoes?${params.toString()}`)
       if (!response.ok) throw new Error("Falha ao buscar projetos legislativos")
 
-      const data: Proposicao[] = await response.json()
+      const data: ProjetoLegislativo[] = await response.json()
 
       if (pagina === 1) {
-        proposicoesList.value = data
+        projetosLegislativosList.value = data
       } else {
-        proposicoesList.value = [...proposicoesList.value, ...data]
+        projetosLegislativosList.value = [...projetosLegislativosList.value, ...data]
       }
 
-      proposicoesPage.value = pagina
-      hasMoreProposicoes.value = data.length === 15
+      projetosLegislativosPage.value = pagina
+      hasMoreProjetosLegislativos.value = data.length === 15
     } catch (e: any) {
       console.error("Erro ao buscar projetos legislativos:", e)
       error.value = "Erro ao carregar projetos legislativos."
     } finally {
-      loadingProposicoes.value = false
+      loadingProjetosLegislativos.value = false
     }
   }
 
-  const loadMoreProposicoes = async () => {
-    if (!loadingProposicoes.value && hasMoreProposicoes.value) {
-      await fetchProposicoes(proposicoesPage.value + 1)
+  const loadMoreProjetosLegislativos = async () => {
+    if (!loadingProjetosLegislativos.value && hasMoreProjetosLegislativos.value) {
+      await fetchProjetosLegislativos(projetosLegislativosPage.value + 1)
     }
   }
 
-  const tiposUnicosProposicoes = computed(() => {
-    const tipos = new Set(proposicoesList.value.map((p) => p.siglaTipo))
+  const tiposUnicosProjetosLegislativos = computed(() => {
+    const tipos = new Set(projetosLegislativosList.value.map((p) => p.siglaTipo))
     return Array.from(tipos).sort()
   })
 
-  const anosUnicosProposicoes = computed(() => {
-    const anos = new Set(proposicoesList.value.map((p) => p.ano))
+  const anosUnicosProjetosLegislativos = computed(() => {
+    const anos = new Set(projetosLegislativosList.value.map((p) => p.ano))
     return Array.from(anos).sort((a, b) => b - a)
   })
 
-  const proposicoesPorTipo = computed(() => {
+  const projetosLegislativosPorTipo = computed(() => {
     const contagem: Record<string, number> = {}
-    proposicoesList.value.forEach((p) => {
+    projetosLegislativosList.value.forEach((p) => {
       contagem[p.siglaTipo] = (contagem[p.siglaTipo] || 0) + 1
     })
     return Object.entries(contagem)
@@ -289,7 +289,7 @@ export const useDeputadosStore = defineStore("deputados", () => {
       .sort((a, b) => b.quantidade - a.quantidade)
   })
 
-  const fetchVotosProposicao = async (id: number) => {
+  const fetchVotosProjetoLegislativo = async (id: number) => {
     loadingVotos.value = true
     currentVotos.value = null
     try {
@@ -303,24 +303,24 @@ export const useDeputadosStore = defineStore("deputados", () => {
     }
   }
 
-  const toggleProposicaoVotos = async (id: number) => {
-    if (selectedProposicaoId.value === id) {
-      selectedProposicaoId.value = null
+  const toggleProjetoLegislativoVotos = async (id: number) => {
+    if (selectedProjetoLegislativoId.value === id) {
+      selectedProjetoLegislativoId.value = null
       currentVotos.value = null
     } else {
-      selectedProposicaoId.value = id
-      await fetchVotosProposicao(id)
+      selectedProjetoLegislativoId.value = id
+      await fetchVotosProjetoLegislativo(id)
     }
   }
 
-  const setProposicoesFilter = (key: keyof ProposicoesFilters, value: string) => {
-    proposicoesFilters.value[key] = value
-    fetchProposicoes(1)
+  const setProjetosLegislativosFilter = (key: keyof ProjetosLegislativosFilters, value: string) => {
+    projetosLegislativosFilters.value[key] = value
+    fetchProjetosLegislativos(1)
   }
 
-  const resetProposicoesFilters = () => {
-    proposicoesFilters.value = { search: "", siglaTipo: "", ano: "", deputado: "" }
-    fetchProposicoes(1)
+  const resetProjetosLegislativosFilters = () => {
+    projetosLegislativosFilters.value = { search: "", siglaTipo: "", ano: "", deputado: "" }
+    fetchProjetosLegislativos(1)
   }
 
   const partidosUnicos = computed(() => {
@@ -393,23 +393,23 @@ export const useDeputadosStore = defineStore("deputados", () => {
     fetchDeputado,
     fetchEstatisticasGerais,
     fetchEstatisticasDeputados,
-    proposicoesList,
-    loadingProposicoes,
-    proposicoesPage,
-    hasMoreProposicoes,
-    proposicoesFilters,
-    fetchProposicoes,
-    loadMoreProposicoes,
-    tiposUnicosProposicoes,
-    anosUnicosProposicoes,
-    proposicoesPorTipo,
-    setProposicoesFilter,
-    resetProposicoesFilters,
+    projetosLegislativosList,
+    loadingProjetosLegislativos,
+    projetosLegislativosPage,
+    hasMoreProjetosLegislativos,
+    projetosLegislativosFilters,
+    fetchProjetosLegislativos,
+    loadMoreProjetosLegislativos,
+    tiposUnicosProjetosLegislativos,
+    anosUnicosProjetosLegislativos,
+    projetosLegislativosPorTipo,
+    setProjetosLegislativosFilter,
+    resetProjetosLegislativosFilters,
     currentVotos,
     loadingVotos,
-    selectedProposicaoId,
-    fetchVotosProposicao,
-    toggleProposicaoVotos,
+    selectedProjetoLegislativoId,
+    fetchVotosProjetoLegislativo,
+    toggleProjetoLegislativoVotos,
     setFilter,
     setPage,
     resetFilters,

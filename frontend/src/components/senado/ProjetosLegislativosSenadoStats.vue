@@ -8,8 +8,8 @@
               <FileText class="h-6 w-6 text-primary" />
             </div>
             <div>
-              <p class="text-sm text-muted-foreground">Total Carregadas</p>
-              <p class="text-2xl font-bold text-foreground">{{ store.proposicoesList.length }}</p>
+              <p class="text-sm text-muted-foreground">Total de Projetos Legislativos</p>
+              <p class="text-2xl font-bold text-foreground">{{ store.filteredProjetosLegislativos.length }}</p>
             </div>
           </div>
         </BaseCard>
@@ -21,7 +21,7 @@
             </div>
             <div>
               <p class="text-sm text-muted-foreground">Tipos Diferentes</p>
-              <p class="text-2xl font-bold text-foreground">{{ store.proposicoesPorTipo.length }}</p>
+              <p class="text-2xl font-bold text-foreground">{{ store.projetosLegislativosPorTipo.length }}</p>
             </div>
           </div>
         </BaseCard>
@@ -34,7 +34,7 @@
             <div>
               <p class="text-sm text-muted-foreground">Tipo Mais Frequente</p>
               <p class="text-2xl font-bold text-foreground">
-                {{ store.proposicoesPorTipo.length > 0 ? store.proposicoesPorTipo[0].tipo : '--' }}
+                {{ store.projetosLegislativosPorTipo.length > 0 ? store.projetosLegislativosPorTipo[0].tipo : '--' }}
               </p>
             </div>
           </div>
@@ -42,11 +42,11 @@
       </div>
 
       <!-- Distribuição por Tipo -->
-      <div v-if="store.proposicoesPorTipo.length > 0" class="mt-6">
+      <div v-if="store.projetosLegislativosPorTipo.length > 0" class="mt-6">
         <h3 class="text-lg font-semibold text-foreground mb-4">Distribuição por Tipo</h3>
         <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <div
-            v-for="tipo in store.proposicoesPorTipo"
+            v-for="tipo in store.projetosLegislativosPorTipo"
             :key="tipo.tipo"
             class="flex items-center justify-between p-3 rounded-lg bg-background border border-border"
           >
@@ -66,20 +66,18 @@
 import { FileText, BarChart3, TrendingUp } from 'lucide-vue-next'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
-import { useDeputadosStore } from '@/stores/deputados'
+import { useSenadoresStore } from '@/stores/senadores'
 
-const store = useDeputadosStore()
+const store = useSenadoresStore()
 
 const tiposNomes: Record<string, string> = {
-  PL: 'Projeto de Lei',
-  PLP: 'Projeto de Lei Complementar',
+  PLS: 'Projeto de Lei do Senado',
+  PLC: 'Projeto de Lei da Câmara',
   PEC: 'Proposta de Emenda à Constituição',
   MPV: 'Medida Provisória',
-  PDL: 'Projeto de Decreto Legislativo',
-  PRC: 'Projeto de Resolução',
+  PRS: 'Projeto de Resolução do Senado',
   REQ: 'Requerimento',
-  INC: 'Indicação',
-  RIC: 'Requerimento de Informação',
+  RQS: 'Requerimento do Senado',
 }
 
 const getTipoNome = (sigla: string) => {

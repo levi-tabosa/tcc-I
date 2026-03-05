@@ -2,10 +2,10 @@
   <div>
     <!-- Results count -->
     <p class="text-sm text-muted-foreground mb-4">
-      {{ store.proposicoesList.length }} projetos legislativos encontrados
+      {{ store.projetosLegislativosList.length }} projetos legislativos encontrados
     </p>
 
-    <div v-if="store.loadingProposicoes && store.proposicoesList.length === 0" class="py-12">
+    <div v-if="store.loadingProjetosLegislativos && store.projetosLegislativosList.length === 0" class="py-12">
       <div class="space-y-4">
         <div v-for="i in 3" :key="i" class="card-default p-6">
           <div class="flex items-start gap-4">
@@ -32,14 +32,14 @@
     <!-- Lista -->
     <div v-else class="space-y-4">
       <div
-        v-for="proposicao in store.proposicoesList"
-        :key="proposicao.id"
+        v-for="projeto in store.projetosLegislativosList"
+        :key="projeto.id"
       >
         <BaseCard
           hover
           class="overflow-hidden cursor-pointer transition-all duration-200"
-          :class="{ 'ring-2 ring-primary/50': store.selectedProposicaoId === proposicao.id }"
-          @click="store.toggleProposicaoVotos(proposicao.id)"
+          :class="{ 'ring-2 ring-primary/50': store.selectedProjetoLegislativoId === projeto.id }"
+          @click="store.toggleProjetoLegislativoVotos(projeto.id)"
         >
           <div class="flex items-start gap-4">
             <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-lg bg-primary/10">
@@ -47,20 +47,20 @@
             </div>
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 mb-1 flex-wrap">
-                <BaseBadge>{{ proposicao.siglaTipo }} {{ proposicao.numero }}/{{ proposicao.ano }}</BaseBadge>
-                <span v-if="proposicao.dataApresentacao" class="text-xs text-muted-foreground">
-                  {{ formatDate(proposicao.dataApresentacao) }}
+                <BaseBadge>{{ projeto.siglaTipo }} {{ projeto.numero }}/{{ projeto.ano }}</BaseBadge>
+                <span v-if="projeto.dataApresentacao" class="text-xs text-muted-foreground">
+                  {{ formatDate(projeto.dataApresentacao) }}
                 </span>
               </div>
-              <p class="text-sm text-foreground line-clamp-2">{{ proposicao.ementa }}</p>
+              <p class="text-sm text-foreground line-clamp-2">{{ projeto.ementa }}</p>
               <div class="flex items-center gap-2 mt-2">
                 <User class="h-3 w-3 text-muted-foreground" />
-                <span class="text-xs text-muted-foreground">{{ proposicao.autor_principal }}</span>
+                <span class="text-xs text-muted-foreground">{{ projeto.autor_principal }}</span>
               </div>
             </div>
             <div class="flex items-center gap-3 flex-shrink-0">
               <a
-                :href="`https://www.camara.leg.br/proposicoesWeb/fichadetramitacao?idProposicao=${proposicao.id}`"
+                :href="`https://www.camara.leg.br/proposicoesWeb/fichadetramitacao?idProposicao=${projeto.id}`"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="inline-flex items-center gap-1 text-sm text-primary hover:underline group"
@@ -71,7 +71,7 @@
               </a>
               <ChevronDown
                 class="h-4 w-4 text-muted-foreground transition-transform duration-200"
-                :class="{ 'rotate-180': store.selectedProposicaoId === proposicao.id }"
+                :class="{ 'rotate-180': store.selectedProjetoLegislativoId === projeto.id }"
               />
             </div>
           </div>
@@ -79,7 +79,7 @@
 
         <!-- Painel de Votos Expansível -->
         <div
-          v-if="store.selectedProposicaoId === proposicao.id"
+          v-if="store.selectedProjetoLegislativoId === projeto.id"
           class="mt-1 rounded-lg border border-border bg-muted/30 overflow-hidden animate-slideDown"
         >
           <!-- Loading votos -->
@@ -179,21 +179,21 @@
     </div>
 
     <!-- Empty state -->
-    <div v-if="!store.loadingProposicoes && !store.error && store.proposicoesList.length === 0" class="text-center py-12">
+    <div v-if="!store.loadingProjetosLegislativos && !store.error && store.projetosLegislativosList.length === 0" class="text-center py-12">
       <FileText class="h-12 w-12 text-muted-foreground mx-auto mb-4" />
       <p class="text-muted-foreground">Nenhum projeto legislativo encontrado com os filtros selecionados.</p>
     </div>
 
     <!-- Load more -->
-    <div v-if="store.hasMoreProposicoes && store.proposicoesList.length > 0" class="flex justify-center mt-8">
+    <div v-if="store.hasMoreProjetosLegislativos && store.projetosLegislativosList.length > 0" class="flex justify-center mt-8">
       <button
-        @click="store.loadMoreProposicoes()"
-        :disabled="store.loadingProposicoes"
+        @click="store.loadMoreProjetosLegislativos()"
+        :disabled="store.loadingProjetosLegislativos"
         class="px-6 py-3 rounded-lg border border-border bg-background text-foreground font-medium hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
       >
-        <span v-if="store.loadingProposicoes">Carregando...</span>
+        <span v-if="store.loadingProjetosLegislativos">Carregando...</span>
         <span v-else>Carregar mais</span>
-        <ChevronDown v-if="!store.loadingProposicoes" class="h-4 w-4" />
+        <ChevronDown v-if="!store.loadingProjetosLegislativos" class="h-4 w-4" />
       </button>
     </div>
   </div>
@@ -211,8 +211,8 @@ const store = useDeputadosStore()
 const expandedVotacaoIds = ref<Set<string>>(new Set())
 
 onMounted(() => {
-  if (store.proposicoesList.length === 0) {
-    store.fetchProposicoes()
+  if (store.projetosLegislativosList.length === 0) {
+    store.fetchProjetosLegislativos()
   }
 })
 

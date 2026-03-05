@@ -6,7 +6,7 @@
         <input
           type="text"
           placeholder="Buscar por ementa..."
-          :value="store.proposicoesFilters.search"
+          :value="store.projetosLegislativosFilters.search"
           @input="onSearchInput"
           class="w-full px-4 py-3 rounded-full border border-gray-300 bg-background text-foreground placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:shadow-md transition-shadow"
         />
@@ -17,7 +17,7 @@
         <input
           type="text"
           placeholder="Buscar por deputado que votou..."
-          :value="store.proposicoesFilters.deputado"
+          :value="store.projetosLegislativosFilters.deputado"
           @input="onDeputadoInput"
           class="w-full px-4 py-3 rounded-full border border-gray-300 bg-background text-foreground placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:shadow-md transition-shadow"
         />
@@ -25,20 +25,20 @@
 
       <!-- Tipo -->
       <select
-        :value="store.proposicoesFilters.siglaTipo"
-        @change="store.setProposicoesFilter('siglaTipo', ($event.target as HTMLSelectElement).value)"
+        :value="store.projetosLegislativosFilters.siglaTipo"
+        @change="store.setProjetosLegislativosFilter('siglaTipo', ($event.target as HTMLSelectElement).value)"
         class="px-4 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
       >
         <option value="">Todos os tipos</option>
-        <option v-for="tipo in tiposProposicao" :key="tipo" :value="tipo">
+        <option v-for="tipo in tiposProjetoLegislativo" :key="tipo" :value="tipo">
           {{ tipo }}
         </option>
       </select>
 
       <!-- Ano -->
       <select
-        :value="store.proposicoesFilters.ano"
-        @change="store.setProposicoesFilter('ano', ($event.target as HTMLSelectElement).value)"
+        :value="store.projetosLegislativosFilters.ano"
+        @change="store.setProjetosLegislativosFilter('ano', ($event.target as HTMLSelectElement).value)"
         class="px-4 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
       >
         <option value="">Todos os anos</option>
@@ -51,7 +51,7 @@
     <div v-if="hasActiveFilters" class="flex items-center gap-2">
       <span class="text-sm text-muted-foreground">Filtros ativos:</span>
       <button
-        @click="store.resetProposicoesFilters()"
+        @click="store.resetProjetosLegislativosFilters()"
         class="text-sm text-primary hover:underline"
       >
         Limpar todos
@@ -73,7 +73,7 @@ const onSearchInput = (event: Event) => {
   const value = (event.target as HTMLInputElement).value
   if (searchTimeout) clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
-    store.setProposicoesFilter('search', value)
+    store.setProjetosLegislativosFilter('search', value)
   }, 500)
 }
 
@@ -81,11 +81,11 @@ const onDeputadoInput = (event: Event) => {
   const value = (event.target as HTMLInputElement).value
   if (deputadoTimeout) clearTimeout(deputadoTimeout)
   deputadoTimeout = setTimeout(() => {
-    store.setProposicoesFilter('deputado', value)
+    store.setProjetosLegislativosFilter('deputado', value)
   }, 500)
 }
 
-const tiposProposicao = computed(() => store.tiposUnicosProposicoes)
+const tiposProjetoLegislativo = computed(() => store.tiposUnicosProjetosLegislativos)
 
 const anosDisponiveis = computed(() => {
   const currentYear = new Date().getFullYear()
@@ -97,7 +97,7 @@ const anosDisponiveis = computed(() => {
 })
 
 const hasActiveFilters = computed(() => {
-  return store.proposicoesFilters.search || store.proposicoesFilters.siglaTipo || store.proposicoesFilters.ano || store.proposicoesFilters.deputado
+  return store.projetosLegislativosFilters.search || store.projetosLegislativosFilters.siglaTipo || store.projetosLegislativosFilters.ano || store.projetosLegislativosFilters.deputado
 })
 </script>
 

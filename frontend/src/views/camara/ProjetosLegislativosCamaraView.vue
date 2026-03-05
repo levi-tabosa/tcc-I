@@ -13,13 +13,13 @@
       </section>
 
       <!-- Stats -->
-      <ProposicoesStats />
+      <ProjetosLegislativosStats />
 
       <!-- Main content -->
       <section class="py-8">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <ProposicoesFilters />
-          <ProposicoesList />
+          <ProjetosLegislativosFilters />
+          <ProjetosLegislativosList />
         </div>
       </section>
     </main>
@@ -30,7 +30,7 @@
 <script setup lang="ts">
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
-import ProposicoesFilters from '@/components/proposicoes/ProposicoesFilters.vue'
-import ProposicoesList from '@/components/proposicoes/ProposicoesList.vue'
-import ProposicoesStats from '@/components/proposicoes/ProposicoesStats.vue'
+import ProjetosLegislativosFilters from '@/components/projetosLegislativos/ProjetosLegislativosFilters.vue'
+import ProjetosLegislativosList from '@/components/projetosLegislativos/ProjetosLegislativosList.vue'
+import ProjetosLegislativosStats from '@/components/projetosLegislativos/ProjetosLegislativosStats.vue'
 </script>

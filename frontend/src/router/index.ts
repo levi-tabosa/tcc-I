@@ -38,8 +38,8 @@ const router = createRouter({
     },
     {
       path: "/camara/proposicoes",
-      name: "proposicoes-camara",
-      component: () => import("@/views/camara/ProposicoesCamaraView.vue"),
+      name: "projetos-legislativos-camara",
+      component: () => import("@/views/camara/ProjetosLegislativosCamaraView.vue"),
     },
     {
       path: "/camara/comparar",
@@ -67,6 +67,11 @@ const router = createRouter({
       path: "/senado/emendas",
       name: "emendas-senado",
       component: () => import("@/views/senado/EmendasSenadoView.vue"),
+    },
+    {
+      path: "/senado/proposicoes",
+      name: "projetos-legislativos-senado",
+      component: () => import("@/views/senado/ProjetosLegislativosSenadoView.vue"),
     },
     {
       path: "/senado/comparar",
