@@ -10,7 +10,7 @@
             <Building2 class="h-5 w-5 text-primary" />
             <div>
               <h3 class="font-bold text-foreground">Câmara dos Deputados</h3>
-              <p class="text-sm text-muted-foreground">513 Deputados</p>
+
             </div>
           </div>
           
@@ -39,7 +39,6 @@
             <Landmark class="h-5 w-5 text-muted-foreground" />
             <div>
               <h3 class="font-bold text-foreground">Senado Federal</h3>
-              <p class="text-sm text-muted-foreground">{{ senadoresCount }} Senadores</p>
             </div>
           </div>
           
@@ -68,7 +67,16 @@
 
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
-import { Users, Receipt, Landmark, Building2, ArrowRight } from 'lucide-vue-next'
+import { 
+  Users, 
+  Receipt, 
+  Landmark, 
+  Building2, 
+  ArrowRight, 
+  FileText, 
+  GitCompare, 
+  Store 
+} from 'lucide-vue-next'
 import { useSenadoresStore } from '@/stores/senadores'
 
 const senadoresStore = useSenadoresStore()
@@ -81,7 +89,7 @@ const senadoresCount = computed(() => senadoresStore.senadorStats?.total_senador
 const camaraItems = [
   {
     title: "Deputados",
-    description: "Perfis de todos os deputados",
+    description: "Perfis e atuação parlamentar",
     icon: Users,
     href: "/camara/deputados",
   },
@@ -93,22 +101,40 @@ const camaraItems = [
   },
   {
     title: "Emendas",
-    description: "Emendas parlamentares",
+    description: "Verbas destinadas pelos deputados",
     icon: Landmark,
     href: "/camara/emendas",
+  },
+  {
+    title: "Projetos",
+    description: "Projetos de lei e proposições",
+    icon: FileText,
+    href: "/camara/projetos-legislativos",
+  },
+  {
+    title: "Comparar",
+    description: "Compare atuação entre parlamentares",
+    icon: GitCompare,
+    href: "/camara/comparar",
+  },
+  {
+    title: "Empresas",
+    description: "Maiores fornecedores e recebedores",
+    icon: Store,
+    href: "/camara/empresas",
   },
 ]
 
 const senadoItems = [
   {
     title: "Senadores",
-    description: "Perfis dos senadores",
+    description: "Perfis e atuação no Senado",
     icon: Users,
     href: "/senado/senadores",
   },
   {
     title: "Despesas",
-    description: "Gastos do Senado",
+    description: "Gastos e reembolsos do Senado",
     icon: Receipt,
     href: "/senado/despesas",
   },
@@ -117,6 +143,18 @@ const senadoItems = [
     description: "Emendas dos senadores",
     icon: Landmark,
     href: "/senado/emendas",
+  },
+  {
+    title: "Projetos",
+    description: "Matérias e projetos legislativos",
+    icon: FileText,
+    href: "/senado/projetos-legislativos",
+  },
+  {
+    title: "Comparar",
+    description: "Análise comparativa de senadores",
+    icon: GitCompare,
+    href: "/senado/comparar",
   },
 ]
 </script>
