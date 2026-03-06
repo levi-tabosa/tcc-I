@@ -45,8 +45,8 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./camara.sql:/docker-entrypoint-initdb.d/camara.sql
-      - ./senado.sql:/docker-entrypoint-initdb.d/senado.sql
+      - ./init-db/01-init-databases.sh:/docker-entrypoint-initdb.d/01-init-databases.sh
+      - ./sql-auto:/docker-entrypoint-initdb.d/sql-auto/
     networks:
       - camara-network
     healthcheck:

@@ -238,4 +238,10 @@ const gastosCategorias = computed(() => {
         .slice(0, 5) // Top 5
 })
 
+watch(() => store.currentDeputado, (newVal) => {
+    if (newVal) {
+        document.title = `${newVal.nome_civil} - Câmara | Fiscaliza Brasil`
+    }
+}, { immediate: true })
+
 </script>

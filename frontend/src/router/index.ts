@@ -8,6 +8,7 @@ const router = createRouter({
       path: "/",
       name: "home",
       component: HomeView,
+      meta: { title: "Página Inicial" },
     },
 
     // ========== CÂMARA DOS DEPUTADOS ==========
@@ -15,36 +16,43 @@ const router = createRouter({
       path: "/camara/deputados",
       name: "deputados",
       component: () => import("@/views/camara/DeputadosView.vue"),
+      meta: { title: "Deputados" },
     },
     {
       path: "/camara/deputados/:id",
       name: "deputado-detail",
       component: () => import("@/views/camara/DeputadoDetailView.vue"),
+      meta: { title: "Detalhes do Deputado" },
     },
     {
       path: "/camara/despesas",
       name: "despesas-camara",
       component: () => import("@/views/camara/DespesasCamaraView.vue"),
+      meta: { title: "Despesas da Câmara" },
     },
     {
       path: "/camara/emendas",
       name: "emendas-camara",
       component: () => import("@/views/camara/EmendasCamaraView.vue"),
+      meta: { title: "Emendas da Câmara" },
     },
     {
       path: "/camara/empresas",
       name: "empresas-camara",
       component: () => import("@/views/camara/EmpresasView.vue"),
+      meta: { title: "Empresas e Fornecedores" },
     },
     {
       path: "/camara/projetos-legislativos",
       name: "projetos-legislativos-camara",
       component: () => import("@/views/camara/ProjetosLegislativosCamaraView.vue"),
+      meta: { title: "Projetos Legislativos" },
     },
     {
       path: "/camara/comparar",
       name: "comparar-deputados",
       component: () => import("@/views/camara/ComparacaoDeputadosView.vue"),
+      meta: { title: "Comparar Deputados" },
     },
 
     // ========== SENADO FEDERAL ==========
@@ -52,31 +60,37 @@ const router = createRouter({
       path: "/senado/senadores",
       name: "senadores",
       component: () => import("@/views/senado/SenadoresView.vue"),
+      meta: { title: "Senadores" },
     },
     {
       path: "/senado/senadores/:id",
       name: "senador-detail",
       component: () => import("@/views/senado/SenadorDetailView.vue"),
+      meta: { title: "Detalhes do Senador" },
     },
     {
       path: "/senado/despesas",
       name: "despesas-senado",
       component: () => import("@/views/senado/DespesasSenadoView.vue"),
+      meta: { title: "Despesas do Senado" },
     },
     {
       path: "/senado/emendas",
       name: "emendas-senado",
       component: () => import("@/views/senado/EmendasSenadoView.vue"),
+      meta: { title: "Emendas do Senado" },
     },
     {
       path: "/senado/projetos-legislativos",
       name: "projetos-legislativos-senado",
       component: () => import("@/views/senado/ProjetosLegislativosSenadoView.vue"),
+      meta: { title: "Projetos do Senado" },
     },
     {
       path: "/senado/comparar",
       name: "comparar-senadores",
       component: () => import("@/views/senado/ComparacaoSenadoresView.vue"),
+      meta: { title: "Comparar Senadores" },
     },
 
     // ========== OUTRAS PÁGINAS ==========
@@ -84,6 +98,7 @@ const router = createRouter({
       path: "/metodologia",
       name: "metodologia",
       component: () => import("@/views/MetodologiaView.vue"),
+      meta: { title: "Metodologia" },
     },
     {
       path: "/rankings",
@@ -111,6 +126,17 @@ const router = createRouter({
   scrollBehavior() {
     return { top: 0 }
   },
+})
+
+router.afterEach((to) => {
+  const baseTitle = 'Fiscaliza Brasil'
+  const pageTitle = to.meta.title as string
+  
+  if (pageTitle) {
+    document.title = `${pageTitle} | ${baseTitle}`
+  } else if (!document.title.includes(baseTitle)) {
+    document.title = baseTitle
+  }
 })
 
 export default router

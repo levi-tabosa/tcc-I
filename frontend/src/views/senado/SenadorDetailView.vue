@@ -217,7 +217,7 @@ const formatDate = (dateString: string) => {
 
 watch(() => store.currentSenador, (newVal) => {
     if (newVal) {
-        document.title = `${newVal.nome_civil} - Senado`
+        document.title = `${newVal.nome_civil} - Senado | Fiscaliza Brasil`
     }
 }, { immediate: true })
 
