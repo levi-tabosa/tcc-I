@@ -68,31 +68,6 @@
               <p class="text-white text-sm font-medium">Congresso Nacional, Brasília - DF</p>
             </div>
           </div>
-
-          <!-- Floating cards -->
-          <div class="absolute -left-4 top-1/4 bg-card rounded-xl shadow-lg p-4 border border-border animate-pulse-glow">
-            <div class="flex items-center gap-3">
-              <div class="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <Users class="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p class="text-xs text-muted-foreground">Deputados</p>
-                <p class="font-bold text-foreground">{{ store.deputadoStats ? store.deputadoStats.total_deputados : '--' }}</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="absolute -right-4 bottom-1/4 bg-card rounded-xl shadow-lg p-4 border border-purple-500/30 animate-pulse-glow">
-            <div class="flex items-center gap-3">
-              <div class="h-10 w-10 rounded-full bg-purple-500/10 flex items-center justify-center">
-                <Landmark class="h-5 w-5 text-purple-500" />
-              </div>
-              <div>
-                <p class="text-xs text-muted-foreground">Senadores</p>
-                <p class="font-bold text-foreground">{{ senadoresStore.senadorStats ? senadoresStore.senadorStats.total_senadores : '--' }}</p>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -100,21 +75,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
-import { Eye, ArrowRight, Building2, Landmark, Users } from 'lucide-vue-next'
+import { computed } from 'vue'
+import { Eye, ArrowRight, Building2, Landmark } from 'lucide-vue-next'
 import BaseButton from '@/components/ui/BaseButton.vue'
-import { useDeputadosStore } from '@/stores/deputados'
-import { useSenadoresStore } from '@/stores/senadores'
-
-const store = useDeputadosStore()
-const senadoresStore = useSenadoresStore()
-
-onMounted(() => {
-  store.fetchEstatisticasGerais()
-  store.fetchEstatisticasDeputados()
-  senadoresStore.fetchEstatisticasGerais()
-  senadoresStore.fetchEstatisticasSenadores()
-})
 
 const backgroundStyle = computed(() => ({
   backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fillRule=\'evenodd\'%3E%3Cg fill=\'%23228B22\' fillOpacity=\'0.4\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")'

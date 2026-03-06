@@ -4,7 +4,7 @@
     <main class="flex-1">
       <HeroSection />
       <StatsSection />
-      <MapSection />
+
       <FeaturesSection />
     </main>
     <AppFooter />
@@ -16,6 +16,6 @@ import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import HeroSection from '@/components/home/HeroSection.vue'
 import StatsSection from '@/components/home/StatsSection.vue'
-import MapSection from '@/components/home/MapSection.vue'
+
 import FeaturesSection from '@/components/home/FeaturesSection.vue'
 </script>
