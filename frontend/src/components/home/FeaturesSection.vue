@@ -12,7 +12,7 @@
             </div>
             <div>
               <h3 class="text-xl font-bold text-foreground">Câmara dos Deputados</h3>
-              <p class="text-sm text-muted-foreground">513 Deputados Federais</p>
+           
             </div>
           </div>
           
@@ -45,7 +45,7 @@
             </div>
             <div>
               <h3 class="text-xl font-bold text-foreground">Senado Federal</h3>
-              <p class="text-sm text-muted-foreground">{{ senadoresCount }} Senadores</p>
+          
             </div>
           </div>
           
