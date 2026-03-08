@@ -30,7 +30,7 @@
 <script setup lang="ts">
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
-import ProjetosLegislativosFilters from '@/components/projetosLegislativos/ProjetosLegislativosFilters.vue'
-import ProjetosLegislativosList from '@/components/projetosLegislativos/ProjetosLegislativosList.vue'
-import ProjetosLegislativosStats from '@/components/projetosLegislativos/ProjetosLegislativosStats.vue'
+import ProjetosLegislativosFilters from '@/components/camara/ProjetosLegislativosFilters.vue'
+import ProjetosLegislativosList from '@/components/camara/ProjetosLegislativosList.vue'
+import ProjetosLegislativosStats from '@/components/camara/ProjetosLegislativosStats.vue'
 </script>

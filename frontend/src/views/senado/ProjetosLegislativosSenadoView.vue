@@ -40,7 +40,7 @@ const store = useSenadoresStore()
 
 onMounted(() => {
   if (store.projetosLegislativosList.length === 0) {
-    store.loadMockProjetosLegislativos()
+    store.fetchProjetosLegislativos()
   }
 })
 </script>

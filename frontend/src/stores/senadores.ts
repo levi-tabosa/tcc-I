@@ -48,6 +48,20 @@ export interface ProjetoLegislativoSenado {
     autor_principal: string
 }
 
+export interface VotoSenador {
+    materia: string
+    ementa: string
+    nomeParlamentar: string
+    siglaPartido: string
+    uf: string
+    voto: string
+    resultado: string
+}
+
+export interface VotacaoMateriaSenado {
+    votacao: VotoSenador[]
+}
+
 export interface ProjetosLegislativosSenadoFilters {
     search: string
     siglaTipo: string
@@ -95,6 +109,9 @@ export const useSenadoresStore = defineStore("senadores", () => {
     })
     const projetosLegislativosList = ref<ProjetoLegislativoSenado[]>([])
     const loadingProjetosLegislativos = ref(false)
+    const selectedProjetoLegislativoId = ref<number | null>(null)
+    const currentVotos = ref<VotacaoMateriaSenado | null>(null)
+    const loadingVotos = ref(false)
 
     const fetchSenadores = async () => {
         loading.value = true
@@ -239,32 +256,51 @@ export const useSenadoresStore = defineStore("senadores", () => {
         currentPage.value = 1
     }
 
-    // ========== Projetos Legislativos Mock Data ==========
-    const mockProjetosLegislativosSenado: ProjetoLegislativoSenado[] = [
-        { id: 1001, siglaTipo: "PLS", numero: 123, ano: 2024, ementa: "Dispõe sobre a regulamentação do uso de inteligência artificial em processos judiciais.", dataApresentacao: "2024-03-15", autor_principal: "Senador Rodrigo Pacheco" },
-        { id: 1002, siglaTipo: "PEC", numero: 45, ano: 2023, ementa: "Altera dispositivos da Constituição Federal para estabelecer piso salarial nacional para enfermeiros.", dataApresentacao: "2023-06-20", autor_principal: "Senadora Simone Tebet" },
-        { id: 1003, siglaTipo: "PLS", numero: 567, ano: 2024, ementa: "Institui o Programa Nacional de Combate ao Desperdício de Alimentos.", dataApresentacao: "2024-05-10", autor_principal: "Senador Flávio Dino" },
-        { id: 1004, siglaTipo: "PLC", numero: 89, ano: 2023, ementa: "Regulamenta o teletrabalho no serviço público federal, estabelecendo diretrizes para sua implementação.", dataApresentacao: "2023-09-01", autor_principal: "Senadora Eliziane Gama" },
-        { id: 1005, siglaTipo: "MPV", numero: 1200, ano: 2024, ementa: "Abre crédito extraordinário em favor do Ministério da Integração e do Desenvolvimento Regional.", dataApresentacao: "2024-01-22", autor_principal: "Poder Executivo" },
-        { id: 1006, siglaTipo: "PEC", numero: 12, ano: 2024, ementa: "Propõe a redução da jornada de trabalho semanal de 44 para 36 horas sem redução de salário.", dataApresentacao: "2024-02-14", autor_principal: "Senador Randolfe Rodrigues" },
-        { id: 1007, siglaTipo: "PLS", numero: 890, ano: 2023, ementa: "Estabelece normas gerais para a proteção de dados pessoais de crianças e adolescentes.", dataApresentacao: "2023-11-05", autor_principal: "Senador Eduardo Braga" },
-        { id: 1008, siglaTipo: "PLC", numero: 234, ano: 2024, ementa: "Altera a Lei de Diretrizes e Bases da Educação para incluir educação financeira no currículo escolar.", dataApresentacao: "2024-04-18", autor_principal: "Senadora Soraya Thronicke" },
-        { id: 1009, siglaTipo: "REQ", numero: 456, ano: 2024, ementa: "Requer a realização de audiência pública para debater a reforma tributária.", dataApresentacao: "2024-03-28", autor_principal: "Senador Omar Aziz" },
-        { id: 1010, siglaTipo: "PLS", numero: 321, ano: 2023, ementa: "Dispõe sobre incentivos fiscais para empresas que investirem em energia renovável.", dataApresentacao: "2023-08-12", autor_principal: "Senador Jaques Wagner" },
-        { id: 1011, siglaTipo: "MPV", numero: 1185, ano: 2023, ementa: "Institui o Programa de Aceleração da Transição Energética e estabelece o marco regulatório do hidrogênio verde.", dataApresentacao: "2023-07-15", autor_principal: "Poder Executivo" },
-        { id: 1012, siglaTipo: "PEC", numero: 8, ano: 2023, ementa: "Altera o art. 5º da Constituição Federal para incluir a proteção de dados pessoais como direito fundamental.", dataApresentacao: "2023-04-10", autor_principal: "Senador Alessandro Vieira" },
-        { id: 1013, siglaTipo: "PLS", numero: 742, ano: 2024, ementa: "Cria o Fundo Nacional de Segurança Cibernética para proteção de infraestruturas críticas.", dataApresentacao: "2024-06-05", autor_principal: "Senador Marcos Rogério" },
-        { id: 1014, siglaTipo: "REQ", numero: 102, ano: 2023, ementa: "Requer a convocação do Ministro da Fazenda para prestar esclarecimentos sobre a política fiscal.", dataApresentacao: "2023-10-20", autor_principal: "Senador Rogério Marinho" },
-        { id: 1015, siglaTipo: "PLC", numero: 55, ano: 2024, ementa: "Regulamenta o mercado de créditos de carbono no Brasil.", dataApresentacao: "2024-07-01", autor_principal: "Senadora Leila Barros" },
-    ]
-
-    const loadMockProjetosLegislativos = () => {
+    const fetchProjetosLegislativos = async () => {
         loadingProjetosLegislativos.value = true
-        // Simulate async loading
-        setTimeout(() => {
-            projetosLegislativosList.value = mockProjetosLegislativosSenado
+        try {
+            const response = await fetch(`${apiUrl}/api/senado/materia/listar`)
+            if (!response.ok) throw new Error("Falha ao buscar projetos legislativos")
+            const data = await response.json()
+            projetosLegislativosList.value = data.materia.map((m: any) => ({
+                id: m.id,
+                siglaTipo: m.siglaTipo,
+                numero: m.numero,
+                ano: m.ano,
+                ementa: m.ementa,
+                dataApresentacao: m.dataApresentacao,
+                autor_principal: m.autor_principal,
+            }))
+        } catch (e: any) {
+            console.error("Erro ao buscar projetos legislativos:", e)
+        } finally {
             loadingProjetosLegislativos.value = false
-        }, 300)
+        }
+    }
+
+    const fetchVotacaoMateria = async (codigoMateria: number) => {
+        loadingVotos.value = true
+        currentVotos.value = null
+        try {
+            const response = await fetch(`${apiUrl}/api/senado/materia/votacao?codigo_materia=${codigoMateria}`)
+            if (!response.ok) throw new Error("Falha ao buscar votação")
+            const data = await response.json()
+            currentVotos.value = { votacao: data.votacao }
+        } catch (e: any) {
+            console.error("Erro ao buscar votação:", e)
+        } finally {
+            loadingVotos.value = false
+        }
+    }
+
+    const toggleProjetoLegislativoVotos = async (id: number) => {
+        if (selectedProjetoLegislativoId.value === id) {
+            selectedProjetoLegislativoId.value = null
+            currentVotos.value = null
+            return
+        }
+        selectedProjetoLegislativoId.value = id
+        await fetchVotacaoMateria(id)
     }
 
     const filteredProjetosLegislativos = computed(() => {
@@ -344,7 +380,12 @@ export const useSenadoresStore = defineStore("senadores", () => {
         tiposUnicosProjetosLegislativos,
         anosUnicosProjetosLegislativos,
         projetosLegislativosPorTipo,
-        loadMockProjetosLegislativos,
+        fetchProjetosLegislativos,
+        fetchVotacaoMateria,
+        toggleProjetoLegislativoVotos,
+        selectedProjetoLegislativoId,
+        currentVotos,
+        loadingVotos,
         setProjetosLegislativosFilter,
         resetProjetosLegislativosFilters,
     }

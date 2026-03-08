@@ -97,18 +97,17 @@ WHERE data_despesa >= CURRENT_DATE - INTERVAL '12 months';
 
 @router.get("/comparar")
 def get_comparativo_senadores(id1: int, id2: int, ano: int = None):
-  
+    try:
         conn = db.get_connect_senado()
         if not conn:
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
         if id1 == id2:
             raise HTTPException(status_code=400, detail="Os senadores devem ser diferentes")
-        
-        try:
-            with conn.cursor() as cursor:
-                query_perfil = """
-   SELECT 
+
+        with conn.cursor() as cursor:
+            query_perfil = """
+SELECT 
     codigo, 
     nome_parlamentar, 
     nome_completo, 
@@ -121,14 +120,14 @@ def get_comparativo_senadores(id1: int, id2: int, ano: int = None):
 FROM public.parlamentar
 WHERE codigo IN (%s, %s);
 """             
-                cursor.execute(query_perfil, (id1, id2))
-                resultado = cursor.fetchall()
+            cursor.execute(query_perfil, (id1, id2))
+            resultado = cursor.fetchall()
 
-                if not resultado:
-                    raise HTTPException(status_code=404, detail="Senador não encontrado")
-                
-                query_despesas = """
-                SELECT 
+            if not resultado:
+                raise HTTPException(status_code=404, detail="Senador não encontrado")
+            
+            query_despesas = """
+SELECT 
     cod_senador, 
     tipo_despesa, 
     SUM(valor_reembolsado) as total,
@@ -137,10 +136,10 @@ FROM public.despesa_ceaps
 WHERE cod_senador IN (%s, %s)
 GROUP BY cod_senador, tipo_despesa;
 """
-                cursor.execute(query_despesas, (id1, id2))
-                reultados_despesas = cursor.fetchall()
+            cursor.execute(query_despesas, (id1, id2))
+            resultados_despesas = cursor.fetchall()
 
-                query_despesas_recentes = """SELECT 
+            query_despesas_recentes = """SELECT 
     ano, 
     mes, 
     tipo_despesa, 
@@ -151,78 +150,78 @@ WHERE cod_senador = %s
   AND data_despesa >= CURRENT_DATE - INTERVAL '12 months'
 ORDER BY data_despesa DESC;
 """
-                cursor.execute(query_despesas_recentes, (id1,))
-                despesas_recentes_1 = cursor.fetchall()
-                cursor.execute(query_despesas_recentes, (id2,))
-                despesas_recentes_2 = cursor.fetchall()
+            cursor.execute(query_despesas_recentes, (id1,))
+            despesas_recentes_1 = cursor.fetchall()
+            cursor.execute(query_despesas_recentes, (id2,))
+            despesas_recentes_2 = cursor.fetchall()
 
+            # Fix mapping to ensure correct IDs map to correct keys regardless of SQL return order
+            senador_1_data = next((r for r in resultado if r[0] == id1), None)
+            senador_2_data = next((r for r in resultado if r[0] == id2), None)
+            
+            if not senador_1_data or not senador_2_data:
+                raise HTTPException(status_code=404, detail="Um ou ambos os senadores não foram encontrados")
 
-                # Fix mapping to ensure correct IDs map to correct keys regardless of SQL return order
-                senador_1_data = next((r for r in resultado if r[0] == id1), None)
-                senador_2_data = next((r for r in resultado if r[0] == id2), None)
+            return{ 
+                "senador1": {
+                    "codigo": senador_1_data[0],
+                    "nomeParlamentar": senador_1_data[1],
+                    "nomeCompleto": senador_1_data[2],
+                    "sexo": senador_1_data[3],
+                    "siglaPartido": senador_1_data[4],
+                    "uf": senador_1_data[5],
+                    "email": senador_1_data[6],
+                    "urlFoto": senador_1_data[7],
+                    "dataNascimento": senador_1_data[8]
+                },
+                "senador2": {
+                    "codigo": senador_2_data[0],
+                    "nomeParlamentar": senador_2_data[1],
+                    "nomeCompleto": senador_2_data[2],
+                    "sexo": senador_2_data[3],
+                    "siglaPartido": senador_2_data[4],
+                    "uf": senador_2_data[5],
+                    "email": senador_2_data[6],
+                    "urlFoto": senador_2_data[7],
+                    "dataNascimento": senador_2_data[8]
+                },
+                "despesas": [           
+                    {
+                        "senador": r[0],
+                        "tipoDespesa": r[1],
+                        "total": float(r[2]),
+                        "qtd": r[3]
+                    }
+                    for r in resultados_despesas
+                ],
+                "despesas_recentes_1": [
+                    {
+                        "ano": r[0],
+                        "mes": r[1],
+                        "tipoDespesa": r[2],
+                        "valor": float(r[3]),
+                        "data_despesa": r[4].isoformat() if hasattr(r[4], 'isoformat') else str(r[4])
+                    }
+                    for r in despesas_recentes_1
+                ],
+                "despesas_recentes_2": [
+                    {
+                        "ano": r[0],
+                        "mes": r[1],
+                        "tipoDespesa": r[2],
+                        "valor": float(r[3]),
+                        "data_despesa": r[4].isoformat() if hasattr(r[4], 'isoformat') else str(r[4])
+                    }
+                    for r in despesas_recentes_2
+                ]       
+            }
+    except Exception as e:
+        logging.error(f"Erro ao buscar senador: {e}")
+        raise HTTPException(status_code=500, detail="Erro ao processar senador")
+    finally:
+        if 'conn' in locals() and conn:
+            conn.close()
                 
-                if not senador_1_data or not senador_2_data:
-                    raise HTTPException(status_code=404, detail="Um ou ambos os senadores não foram encontrados")
-
-                return{ 
-                    "senador1": {
-                        "codigo": senador_1_data[0],
-                        "nomeParlamentar": senador_1_data[1],
-                        "nomeCompleto": senador_1_data[2],
-                        "sexo": senador_1_data[3],
-                        "siglaPartido": senador_1_data[4],
-                        "uf": senador_1_data[5],
-                        "email": senador_1_data[6],
-                        "urlFoto": senador_1_data[7],
-                        "dataNascimento": senador_1_data[8]
-                    },
-                    "senador2": {
-                        "codigo": senador_2_data[0],
-                        "nomeParlamentar": senador_2_data[1],
-                        "nomeCompleto": senador_2_data[2],
-                        "sexo": senador_2_data[3],
-                        "siglaPartido": senador_2_data[4],
-                        "uf": senador_2_data[5],
-                        "email": senador_2_data[6],
-                        "urlFoto": senador_2_data[7],
-                        "dataNascimento": senador_2_data[8]
-                    },
-                    "despesas": [           
-                        {
-                            "senador": r[0],
-                            "tipoDespesa": r[1],
-                            "total": float(r[2]),
-                            "qtd": r[3]
-                        }
-                        for r in reultados_despesas
-                    ],
-                    "despesas_recentes_1": [
-                        {
-                            "ano": r[0],
-                            "mes": r[1],
-                            "tipoDespesa": r[2],
-                            "valor": float(r[3]),
-                            "data_despesa": r[4].isoformat() if hasattr(r[4], 'isoformat') else str(r[4])
-                        }
-                        for r in despesas_recentes_1
-                    ],
-                    "despesas_recentes_2": [
-                        {
-                            "ano": r[0],
-                            "mes": r[1],
-                            "tipoDespesa": r[2],
-                            "valor": float(r[3]),
-                            "data_despesa": r[4].isoformat() if hasattr(r[4], 'isoformat') else str(r[4])
-                        }
-                        for r in despesas_recentes_2
-                    ]       
-                }
-        except Exception as e:
-            logging.error(f"Erro ao buscar senador: {e}")
-            raise HTTPException(status_code=500, detail="Erro ao processar senador")
-        finally:
-            if 'conn' in locals() and conn:
-                conn.close()
 
 @router.get("/{senador_codigo}", summary="Obtém o perfil detalhado de um senador")
 def get_perfil_senador(senador_codigo: int):
@@ -459,8 +458,55 @@ WHERE data_despesa >= CURRENT_DATE - INTERVAL '12 months';
     finally:
         if 'conn' in locals() and conn:
             conn.close()
-            
-            
+
+
+@router.get("/materia/listar")
+def get_materia_listar():
+    try:
+        conn = db.get_connect_senado()
+        if not conn:
+            raise HTTPException(status_code=503, detail="Banco de dados indisponível")
+        
+        with conn.cursor() as cursor:
+            query = """
+                SELECT
+                    m.codigo AS id,
+                    m.sigla,
+                    m.numero,
+                    m.ano,
+                    m.ementa,
+                    m.data,
+                    p.nome_parlamentar AS autor_principal
+                FROM materia m
+                LEFT JOIN autoria a ON a.codigo_materia = m.codigo AND a.autor_principal = true
+                LEFT JOIN parlamentar p ON a.codigo_parlamentar = p.codigo
+                ORDER BY m.ano DESC, m.sigla, m.numero
+                LIMIT 15 OFFSET 0
+            """
+            cursor.execute(query)
+            resultados = cursor.fetchall()
+            return {
+                "materia": [
+                    {
+                        "id": r[0],
+                        "siglaTipo": r[1],
+                        "numero": r[2],
+                        "ano": r[3],
+                        "ementa": r[4],
+                        "dataApresentacao": r[5].isoformat() if hasattr(r[5], 'isoformat') else str(r[5]) if r[5] else None,
+                        "autor_principal": r[6]
+                    }
+                    for r in resultados
+                ]
+            }
+    except Exception as e:
+        logging.error(f"Erro ao buscar matéria: {e}")
+        raise HTTPException(status_code=500, detail="Erro ao processar matéria")
+    finally:
+        if 'conn' in locals() and conn:
+            conn.close()
+
+
 @router.get("/materia/votacao", summary="Obtém o histórico de votações de um projeto legislativo")
 def get_votacao_materia(codigo_materia: int):
     try:
@@ -470,42 +516,41 @@ def get_votacao_materia(codigo_materia: int):
         
         with conn.cursor() as cursor:
             query = """
-            SELECT 
-    m.sigla || ' ' || m.numero || '/' || m.ano AS materia,
-    m.ementa,
-    p.nome_parlamentar,
-    p.sigla_partido,
-    p.uf,
-    vp.sigla_descricao_voto AS voto,
-    vp.descricao_resultado AS resultado
-FROM votacao_parlamentar vp
-JOIN materia m ON vp.codigo_materia = m.codigo
-JOIN parlamentar p ON vp.codigo_parlamentar = p.codigo
-ORDER BY m.ano DESC, m.sigla, m.numero, p.nome_parlamentar;
-        """
-        cursor.execute(query, (codigo_materia,))
-        resultados = cursor.fetchall()
-        return {
-            "votacao": [
-                {
-                    "materia": r[0],
-                    "ementa": r[1],
-                    "nomeParlamentar": r[2],
-                    "siglaPartido": r[3],
-                    "uf": r[4],
-                    "voto": r[5],
-                    "resultado": r[6]
-                }
-                for r in resultados
-            ]
-        }
+                SELECT 
+                    m.sigla || ' ' || m.numero || '/' || m.ano AS materia,
+                    m.ementa,
+                    p.nome_parlamentar,
+                    p.sigla_partido,
+                    p.uf,
+                    vp.sigla_descricao_voto AS voto,
+                    vp.descricao_resultado AS resultado
+                FROM votacao_parlamentar vp
+                JOIN materia m ON vp.codigo_materia = m.codigo
+                JOIN parlamentar p ON vp.codigo_parlamentar = p.codigo
+                WHERE vp.codigo_materia = %s
+                ORDER BY m.ano DESC, m.sigla, m.numero, p.nome_parlamentar
+            """
+            cursor.execute(query, (codigo_materia,))
+            resultados = cursor.fetchall()
+            return {
+                "votacao": [
+                    {
+                        "materia": r[0],
+                        "ementa": r[1],
+                        "nomeParlamentar": r[2],
+                        "siglaPartido": r[3],
+                        "uf": r[4],
+                        "voto": r[5],
+                        "resultado": r[6]
+                    }
+                    for r in resultados
+                ]
+            }
     
     except Exception as e:
         logging.error(f"Erro ao buscar histórico de votação: {e}")
         raise HTTPException(status_code=500, detail="Erro ao processar histórico de votação")
     finally:
         if 'conn' in locals() and conn:
-            conn.close()    
-    
-            
- 
+            conn.close()
+

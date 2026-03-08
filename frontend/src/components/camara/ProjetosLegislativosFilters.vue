@@ -100,4 +100,3 @@ const hasActiveFilters = computed(() => {
   return store.projetosLegislativosFilters.search || store.projetosLegislativosFilters.siglaTipo || store.projetosLegislativosFilters.ano || store.projetosLegislativosFilters.deputado
 })
 </script>
-
