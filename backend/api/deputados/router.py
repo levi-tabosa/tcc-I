@@ -222,7 +222,7 @@ def get_votos_proposicao(proposicao_id: int):
         INNER JOIN votacoes v ON vp.votacao_id = v.id
         INNER JOIN votacoes_votos vv ON v.id = vv.votacao_id
         INNER JOIN deputados d ON vv.deputado_id = d.id
-        WHERE vp.proposicao_id = %s
+        WHERE vp.proposicao_id = %s AND vv.tipo_voto != 'Artigo 17'
         ORDER BY v.data DESC, d.nome_civil ASC
     """
     resultados = _execute_query(query, (proposicao_id,))

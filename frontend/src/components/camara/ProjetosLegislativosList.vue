@@ -41,9 +41,9 @@
           :class="{ 'ring-2 ring-primary/50': store.selectedProjetoLegislativoId === projeto.id }"
           @click="store.toggleProjetoLegislativoVotos(projeto.id)"
         >
-          <div class="flex items-start gap-4">
-            <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-lg bg-primary/10">
-              <FileText class="h-6 w-6 text-primary" />
+          <div class="flex items-start gap-3 sm:gap-4">
+            <div class="flex-shrink-0 flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 rounded-lg bg-primary/10">
+              <FileText class="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
             </div>
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 mb-1 flex-wrap">
@@ -58,7 +58,7 @@
                 <span class="text-xs text-muted-foreground">{{ projeto.autor_principal }}</span>
               </div>
             </div>
-            <div class="flex items-center gap-3 flex-shrink-0">
+            <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
               <a
                 :href="`https://www.camara.leg.br/proposicoesWeb/fichadetramitacao?idProposicao=${projeto.id}`"
                 target="_blank"
@@ -66,8 +66,8 @@
                 class="inline-flex items-center gap-1 text-sm text-primary hover:underline group"
                 @click.stop
               >
-                Ver na Câmara
-                <ExternalLink class="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
+                <span class="hidden sm:inline">Ver na Câmara</span>
+                <ExternalLink class="h-4 w-4 sm:h-3 sm:w-3 transition-transform group-hover:translate-x-0.5" />
               </a>
               <ChevronDown
                 class="h-4 w-4 text-muted-foreground transition-transform duration-200"
@@ -80,7 +80,7 @@
         <!-- Painel de Votos Expansível -->
         <div
           v-if="store.selectedProjetoLegislativoId === projeto.id"
-          class="mt-1 rounded-lg border border-border bg-muted/30 overflow-hidden animate-slideDown"
+          class="mt-1 rounded-lg border border-border bg-muted overflow-hidden animate-slideDown"
         >
           <!-- Loading votos -->
           <div v-if="store.loadingVotos" class="py-8 text-center">
@@ -148,12 +148,12 @@
                 v-if="expandedVotacaoIds.has(votacao.id_votacao)"
                 class="px-4 pb-4 pl-12 animate-slideDown"
               >
-                <div class="max-h-60 overflow-y-auto rounded-lg border border-border/60">
-                  <table class="table-professional">
+                <div class="max-h-60 overflow-y-auto overflow-x-auto rounded-lg border border-border">
+                  <table class="table-professional w-full">
                     <thead>
                       <tr>
-                        <th>Deputado(a)</th>
-                        <th class="text-center w-32">Voto</th>
+                        <th class="whitespace-nowrap">Deputado(a)</th>
+                        <th class="text-center w-24 sm:w-32 whitespace-nowrap">Voto</th>
                       </tr>
                     </thead>
                     <tbody>

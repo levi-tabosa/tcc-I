@@ -18,7 +18,7 @@
         <select
           :value="store.filters.partido"
           @change="store.setFilter('partido', ($event.target as HTMLSelectElement).value)"
-          class="input-base px-4 py-2.5 pr-10 rounded-full appearance-none cursor-pointer min-w-[180px]"
+          class="input-base px-4 py-2.5 pr-10 rounded-full appearance-none cursor-pointer w-full sm:w-auto sm:min-w-[180px]"
         >
           <option value="">Todos os partidos</option>
           <option v-for="partido in store.partidosUnicos" :key="partido" :value="partido">
@@ -33,7 +33,7 @@
         <select
           :value="store.filters.estado"
           @change="store.setFilter('estado', ($event.target as HTMLSelectElement).value)"
-          class="input-base px-4 py-2.5 pr-10 rounded-full appearance-none cursor-pointer min-w-[180px]"
+          class="input-base px-4 py-2.5 pr-10 rounded-full appearance-none cursor-pointer w-full sm:w-auto sm:min-w-[180px]"
         >
           <option value="">Todos os estados</option>
           <option v-for="estado in store.estadosUnicos" :key="estado" :value="estado">

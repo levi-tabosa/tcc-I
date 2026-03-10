@@ -12,6 +12,9 @@
         </div>
       </section>
 
+      <!-- Stats -->
+      <SenadoresStats />
+
       <!-- Main content -->
       <section class="py-8">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -29,4 +32,5 @@ import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import SenadoresFilters from '@/components/senado/SenadoresFilters.vue'
 import SenadoresList from '@/components/senado/SenadoresList.vue'
+import SenadoresStats from '@/components/senado/SenadoresStats.vue'
 </script>

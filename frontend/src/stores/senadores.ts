@@ -28,11 +28,14 @@ export interface SenadorDetail {
 export interface EstatisticasSenadoGerais {
     total_senadores: number
     total_gastos: number
+    senadores_por_regiao: { name: string; value: number }[]
 }
 
 export interface EstatisticasSenado {
     total_gastos: number
     media_por_senador: number
+    total_12_meses: number
+    gastos_por_mes: { ano: number; mes: number; valor: number }[]
     partidos: { partido: string; total: number; percentual: number }[]
     categorias: { categoria: string; total: number }[]
     top_10: { codigo: number; nome: string; partido: string; uf: string; foto: string; total: number }[]
@@ -66,6 +69,7 @@ export interface ProjetosLegislativosSenadoFilters {
     search: string
     siglaTipo: string
     ano: string
+    senador: string
 }
 
 export interface SenadoresFilters {
@@ -106,9 +110,12 @@ export const useSenadoresStore = defineStore("senadores", () => {
         search: "",
         siglaTipo: "",
         ano: "",
+        senador: "",
     })
     const projetosLegislativosList = ref<ProjetoLegislativoSenado[]>([])
     const loadingProjetosLegislativos = ref(false)
+    const projetosLegislativosPage = ref(1)
+    const hasMoreProjetosLegislativos = ref(true)
     const selectedProjetoLegislativoId = ref<number | null>(null)
     const currentVotos = ref<VotacaoMateriaSenado | null>(null)
     const loadingVotos = ref(false)
@@ -256,13 +263,30 @@ export const useSenadoresStore = defineStore("senadores", () => {
         currentPage.value = 1
     }
 
-    const fetchProjetosLegislativos = async () => {
+    const fetchProjetosLegislativos = async (pagina = 1) => {
         loadingProjetosLegislativos.value = true
         try {
-            const response = await fetch(`${apiUrl}/api/senado/materia/listar`)
+            const params = new URLSearchParams()
+            params.append("pagina", String(pagina))
+
+            if (projetosLegislativosFilters.value.siglaTipo) {
+                params.append("siglaTipo", projetosLegislativosFilters.value.siglaTipo)
+            }
+            if (projetosLegislativosFilters.value.ano) {
+                params.append("ano", projetosLegislativosFilters.value.ano)
+            }
+            if (projetosLegislativosFilters.value.search) {
+                params.append("ementa", projetosLegislativosFilters.value.search)
+            }
+            if (projetosLegislativosFilters.value.senador) {
+                params.append("senador", projetosLegislativosFilters.value.senador)
+            }
+
+            const response = await fetch(`${apiUrl}/api/senado/materia/listar?${params.toString()}`)
             if (!response.ok) throw new Error("Falha ao buscar projetos legislativos")
             const data = await response.json()
-            projetosLegislativosList.value = data.materia.map((m: any) => ({
+
+            const mapped = data.materia.map((m: any) => ({
                 id: m.id,
                 siglaTipo: m.siglaTipo,
                 numero: m.numero,
@@ -271,10 +295,25 @@ export const useSenadoresStore = defineStore("senadores", () => {
                 dataApresentacao: m.dataApresentacao,
                 autor_principal: m.autor_principal,
             }))
+
+            if (pagina === 1) {
+                projetosLegislativosList.value = mapped
+            } else {
+                projetosLegislativosList.value = [...projetosLegislativosList.value, ...mapped]
+            }
+
+            projetosLegislativosPage.value = pagina
+            hasMoreProjetosLegislativos.value = mapped.length === 15
         } catch (e: any) {
             console.error("Erro ao buscar projetos legislativos:", e)
         } finally {
             loadingProjetosLegislativos.value = false
+        }
+    }
+
+    const loadMoreProjetosLegislativos = async () => {
+        if (!loadingProjetosLegislativos.value && hasMoreProjetosLegislativos.value) {
+            await fetchProjetosLegislativos(projetosLegislativosPage.value + 1)
         }
     }
 
@@ -340,10 +379,12 @@ export const useSenadoresStore = defineStore("senadores", () => {
 
     const setProjetosLegislativosFilter = (key: keyof ProjetosLegislativosSenadoFilters, value: string) => {
         projetosLegislativosFilters.value[key] = value
+        fetchProjetosLegislativos(1)
     }
 
     const resetProjetosLegislativosFilters = () => {
-        projetosLegislativosFilters.value = { search: "", siglaTipo: "", ano: "" }
+        projetosLegislativosFilters.value = { search: "", siglaTipo: "", ano: "", senador: "" }
+        fetchProjetosLegislativos(1)
     }
 
     return {
@@ -381,6 +422,8 @@ export const useSenadoresStore = defineStore("senadores", () => {
         anosUnicosProjetosLegislativos,
         projetosLegislativosPorTipo,
         fetchProjetosLegislativos,
+        loadMoreProjetosLegislativos,
+        hasMoreProjetosLegislativos,
         fetchVotacaoMateria,
         toggleProjetoLegislativoVotos,
         selectedProjetoLegislativoId,

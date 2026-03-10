@@ -149,7 +149,7 @@
   }
 
   .table-professional thead {
-    @apply bg-muted/50 sticky top-0 z-10;
+    @apply bg-muted sticky top-0 z-10;
   }
 
   .table-professional th {
@@ -157,7 +157,7 @@
   }
 
   .table-professional tbody tr {
-    @apply border-b border-muted/60 transition-colors duration-150 hover:bg-muted/30;
+    @apply border-b border-muted transition-colors duration-150 hover:bg-muted;
   }
 
   .table-professional td {

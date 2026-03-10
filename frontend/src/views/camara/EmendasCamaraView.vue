@@ -91,10 +91,10 @@
               <div
                 v-for="(deputado, index) in estatisticas.ranking"
                 :key="deputado.id"
-                class="flex items-center gap-6 p-4 sm:p-6 hover:bg-muted/50 transition-all duration-300 group"
+                class="flex items-center gap-3 sm:gap-6 p-3 sm:p-6 hover:bg-muted/50 transition-all duration-300 group"
               >
-                <span class="text-xl font-black text-muted-foreground/30 w-8 group-hover:text-primary/50 transition-colors">{{ index + 1 }}º</span>
-                <div class="h-14 w-14 rounded-2xl bg-muted overflow-hidden border-2 border-primary/20 group-hover:border-primary/50 group-hover:scale-110 transition-all duration-300 shadow-sm flex-shrink-0">
+                <span class="text-lg sm:text-xl font-black text-muted-foreground/30 w-6 sm:w-8 group-hover:text-primary/50 transition-colors">{{ index + 1 }}º</span>
+                <div class="h-10 w-10 sm:h-14 sm:w-14 rounded-xl sm:rounded-2xl bg-muted overflow-hidden border-2 border-primary/20 group-hover:border-primary/50 group-hover:scale-110 transition-all duration-300 shadow-sm flex-shrink-0">
                   <img 
                     :src="deputado.foto" 
                     :alt="deputado.nome"
@@ -103,11 +103,11 @@
                   />
                 </div>
                 <div class="flex-1 min-w-0">
-                  <p class="font-bold text-foreground truncate text-lg uppercase">{{ deputado.nome }}</p>
-                  <p class="text-sm font-medium text-muted-foreground uppercase tracking-tight">{{ deputado.partido }} • {{ deputado.estado }}</p>
+                  <p class="font-bold text-foreground truncate text-sm sm:text-lg uppercase">{{ deputado.nome }}</p>
+                  <p class="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-tight">{{ deputado.partido }} • {{ deputado.estado }}</p>
                 </div>
-                <div class="text-right">
-                  <p class="text-xl font-extrabold text-accent">R$ {{ (deputado.emendasTotal / 1000000).toFixed(1) }}M</p>
+                <div class="text-right flex-shrink-0">
+                  <p class="text-base sm:text-xl font-extrabold text-accent">R$ {{ (deputado.emendasTotal / 1000000).toFixed(1) }}M</p>
                 </div>
               </div>
             </div>

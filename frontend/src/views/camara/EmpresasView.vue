@@ -69,7 +69,7 @@
           <BaseCard v-if="!loading">
             <div class="space-y-4">
               <div v-for="empresa in topEmpresas.slice(0, 10)" :key="empresa.cnpj" class="flex items-center gap-4">
-                <div class="w-32 text-sm font-medium text-foreground truncate" :title="empresa.nome">{{ empresa.nome }}</div>
+                <div class="w-20 sm:w-32 text-xs sm:text-sm font-medium text-foreground truncate" :title="empresa.nome">{{ empresa.nome }}</div>
                 <div class="flex-1 h-8 bg-muted rounded-lg overflow-hidden">
                   <div
                     class="h-full bg-primary rounded-lg flex items-center justify-end px-2 transition-all duration-1000"
@@ -98,10 +98,10 @@
                   <tr class="border-b border-border">
                     <th class="text-left py-3 px-4 text-sm font-medium text-muted-foreground">#</th>
                     <th class="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Empresa</th>
-                    <th class="text-left py-3 px-4 text-sm font-medium text-muted-foreground">CNPJ</th>
+                    <th class="text-left py-3 px-4 text-sm font-medium text-muted-foreground hidden md:table-cell">CNPJ</th>
                     <th class="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Valor Total</th>
-                    <th class="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Contratos</th>
-                    <th class="text-right py-3 px-4 text-sm font-medium text-muted-foreground">% do Total</th>
+                    <th class="text-right py-3 px-4 text-sm font-medium text-muted-foreground hidden sm:table-cell">Contratos</th>
+                    <th class="text-right py-3 px-4 text-sm font-medium text-muted-foreground hidden sm:table-cell">% do Total</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -115,10 +115,10 @@
                       <p class="text-sm font-medium text-foreground">{{ empresa.nome }}</p>
                       <p class="text-xs text-muted-foreground">{{ empresa.principais_partidos }}</p>
                     </td>
-                    <td class="py-3 px-4 text-sm text-muted-foreground font-mono">{{ empresa.cnpj }}</td>
+                    <td class="py-3 px-4 text-sm text-muted-foreground font-mono hidden md:table-cell">{{ empresa.cnpj }}</td>
                     <td class="py-3 px-4 text-sm font-medium text-foreground text-right">{{ formatCurrency(empresa.valor_total) }}</td>
-                    <td class="py-3 px-4 text-sm text-muted-foreground text-right">{{ formatNumber(empresa.contratos) }}</td>
-                    <td class="py-3 px-4 text-sm text-muted-foreground text-right">{{ empresa.percentual.toFixed(2) }}%</td>
+                    <td class="py-3 px-4 text-sm text-muted-foreground text-right hidden sm:table-cell">{{ formatNumber(empresa.contratos) }}</td>
+                    <td class="py-3 px-4 text-sm text-muted-foreground text-right hidden sm:table-cell">{{ empresa.percentual.toFixed(2) }}%</td>
                   </tr>
                 </tbody>
               </table>

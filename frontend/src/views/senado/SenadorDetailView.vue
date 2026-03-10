@@ -150,7 +150,7 @@
                                 <tr>
                                     <th class="bg-card py-4 px-4 text-left font-bold text-xs uppercase tracking-wider text-muted-foreground border-b">Data</th>
                                     <th class="bg-card py-4 px-4 text-left font-bold text-xs uppercase tracking-wider text-muted-foreground border-b">Descrição / Categoria</th>
-                                    <th class="bg-card py-4 px-4 text-left font-bold text-xs uppercase tracking-wider text-muted-foreground border-b">Fornecedor</th>
+                                    <th class="bg-card py-4 px-4 text-left font-bold text-xs uppercase tracking-wider text-muted-foreground border-b hidden sm:table-cell">Fornecedor</th>
                                     <th class="bg-card py-4 px-4 text-right font-bold text-xs uppercase tracking-wider text-muted-foreground border-b">Valor</th>
                                 </tr>
                             </thead>
@@ -158,7 +158,7 @@
                                 <tr v-for="(despesa, index) in store.currentDespesas" :key="index" class="hover:bg-muted/50 transition-colors">
                                     <td class="whitespace-nowrap">{{ despesa.mes }}/{{ despesa.ano }}</td>
                                     <td class="truncate max-w-xs">{{ despesa.tipoDespesa || despesa.tipo_despesa }}</td>
-                                    <td class="truncate max-w-xs">{{ despesa.fornecedor || '--' }}</td>
+                                    <td class="truncate max-w-xs hidden sm:table-cell">{{ despesa.fornecedor || '--' }}</td>
                                     <td class="text-right whitespace-nowrap font-medium">R$ {{ (despesa.valorReembolsado || despesa.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</td>
                                 </tr>
                                 <tr v-if="store.currentDespesas.length === 0">

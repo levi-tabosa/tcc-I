@@ -152,7 +152,7 @@
                                     <th class="bg-card py-4 px-4 text-left font-bold text-xs uppercase tracking-wider text-muted-foreground border-b">Data</th>
                                     <th class="bg-card py-4 px-4 text-left font-bold text-xs uppercase tracking-wider text-muted-foreground border-b">Descrição</th>
                                     <th class="bg-card py-4 px-4 text-right font-bold text-xs uppercase tracking-wider text-muted-foreground border-b">Valor</th>
-                                    <th class="bg-card py-4 px-4 text-center font-bold text-xs uppercase tracking-wider text-muted-foreground border-b">Doc</th>
+                                    <th class="bg-card py-4 px-4 text-center font-bold text-xs uppercase tracking-wider text-muted-foreground border-b hidden sm:table-cell">Doc</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-border bg-card">
@@ -160,7 +160,7 @@
                                     <td class="whitespace-nowrap">{{ despesa.mes }}/{{ despesa.ano }}</td>
                                     <td class="truncate max-w-xs">{{ despesa.tipo_despesa }}</td>
                                     <td class="text-right whitespace-nowrap font-medium">R$ {{ despesa.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</td>
-                                    <td class="text-center">
+                                    <td class="text-center hidden sm:table-cell">
                                         <a v-if="despesa.url_documento" :href="despesa.url_documento" target="_blank" class="text-primary hover:text-primary-700 transition-colors" title="Ver documento">
                                             <FileText class="h-4 w-4 mx-auto" />
                                         </a>

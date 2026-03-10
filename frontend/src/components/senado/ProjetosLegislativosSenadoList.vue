@@ -48,9 +48,9 @@
           :class="{ 'ring-2 ring-primary/50': store.selectedProjetoLegislativoId === projeto.id }"
           @click="handleProjetoClick(projeto.id)"
         >
-          <div class="flex items-start gap-4">
-            <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-lg bg-primary/10">
-              <FileText class="h-6 w-6 text-primary" />
+          <div class="flex items-start gap-3 sm:gap-4">
+            <div class="flex-shrink-0 flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 rounded-lg bg-primary/10">
+              <FileText class="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
             </div>
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 mb-1 flex-wrap">
@@ -65,7 +65,7 @@
                 <span class="text-xs text-muted-foreground">{{ projeto.autor_principal }}</span>
               </div>
             </div>
-            <div class="flex items-center gap-3 flex-shrink-0">
+            <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
               <a
                 :href="`https://www25.senado.leg.br/web/atividade/materias/-/materia/${projeto.id}`"
                 target="_blank"
@@ -73,8 +73,8 @@
                 class="inline-flex items-center gap-1 text-sm text-primary hover:underline group"
                 @click.stop
               >
-                Ver no Senado
-                <ExternalLink class="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
+                <span class="hidden sm:inline">Ver no Senado</span>
+                <ExternalLink class="h-4 w-4 sm:h-3 sm:w-3 transition-transform group-hover:translate-x-0.5" />
               </a>
               <ChevronDown
                 class="h-4 w-4 text-muted-foreground transition-transform duration-200"
@@ -87,7 +87,7 @@
         <!-- Painel de Votos Expansível -->
         <div
           v-if="store.selectedProjetoLegislativoId === projeto.id"
-          class="mt-1 rounded-lg border border-border bg-muted/30 overflow-hidden animate-slideDown"
+          class="mt-1 rounded-lg border border-border bg-muted overflow-hidden animate-slideDown"
         >
           <!-- Loading votos -->
           <div v-if="store.loadingVotos" class="py-8 text-center">
@@ -133,11 +133,11 @@
                 {{ tipo }}: {{ count }}
               </span>
               <span class="text-xs text-muted-foreground self-center">
-                {{ filteredVotos.length }} de {{ store.currentVotos.votacao.length }} senadores
+                {{ filteredVotos.length }} de {{ totalVotos }} senadores
               </span>
             </div>
 
-            <div class="max-h-60 overflow-y-auto rounded-lg border border-border/60">
+            <div class="max-h-60 overflow-y-auto rounded-lg border border-border">
               <table class="table-professional">
                 <thead>
                   <tr>
@@ -187,6 +187,13 @@ import type { VotoSenador } from '@/stores/senadores'
 const store = useSenadoresStore()
 const votosSearch = ref('')
 
+const hiddenVotoTypes = ['P-NRV', 'AP', 'Presidente (art. 51 RISF)', 'LS', 'NCom']
+
+const totalVotos = computed(() => {
+  if (!store.currentVotos) return 0
+  return store.currentVotos.votacao.filter(v => !hiddenVotoTypes.includes(v.voto)).length
+})
+
 const handleProjetoClick = (id: number) => {
   votosSearch.value = ''
   store.toggleProjetoLegislativoVotos(id)
@@ -194,10 +201,11 @@ const handleProjetoClick = (id: number) => {
 
 const filteredVotos = computed(() => {
   if (!store.currentVotos) return []
-  if (!votosSearch.value.trim()) return store.currentVotos.votacao
+  const base = store.currentVotos.votacao.filter(v => !hiddenVotoTypes.includes(v.voto))
+  if (!votosSearch.value.trim()) return base
 
   const search = votosSearch.value.toLowerCase().trim()
-  return store.currentVotos.votacao.filter(v =>
+  return base.filter(v =>
     v.nomeParlamentar.toLowerCase().includes(search) ||
     v.siglaPartido.toLowerCase().includes(search) ||
     v.uf.toLowerCase().includes(search)

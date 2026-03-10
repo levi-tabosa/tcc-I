@@ -135,9 +135,9 @@
         <!-- Ranking de Senadores -->
         <section class="py-8 bg-muted/30">
           <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between mb-6">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
               <h2 class="text-2xl font-bold text-foreground">Ranking de Senadores</h2>
-              <div class="flex items-center gap-2">
+              <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
                 <input
                   v-model="searchQuery"
                   type="text"
@@ -188,6 +188,7 @@
                       </span>
                       <span class="text-xs text-muted-foreground">{{ senador.estado }}</span>
                     </div>
+                    <p class="sm:hidden text-sm font-bold text-foreground mt-1">{{ senador.valorFormatado }}</p>
                   </div>
 
                   <!-- Barra de progresso + valor -->

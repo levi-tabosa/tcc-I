@@ -27,7 +27,7 @@
       <select
         :value="store.projetosLegislativosFilters.siglaTipo"
         @change="store.setProjetosLegislativosFilter('siglaTipo', ($event.target as HTMLSelectElement).value)"
-        class="px-4 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+        class="w-full sm:w-auto px-4 py-3 sm:py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
       >
         <option value="">Todos os tipos</option>
         <option v-for="tipo in tiposProjetoLegislativo" :key="tipo" :value="tipo">
@@ -39,7 +39,7 @@
       <select
         :value="store.projetosLegislativosFilters.ano"
         @change="store.setProjetosLegislativosFilter('ano', ($event.target as HTMLSelectElement).value)"
-        class="px-4 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+        class="w-full sm:w-auto px-4 py-3 sm:py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
       >
         <option value="">Todos os anos</option>
         <option v-for="ano in anosDisponiveis" :key="ano" :value="ano">

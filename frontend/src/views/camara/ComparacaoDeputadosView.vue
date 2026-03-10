@@ -311,7 +311,7 @@
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                     <!-- Bar A -->
                     <div class="flex items-center gap-3">
-                      <span class="text-xs text-muted-foreground w-20 text-right shrink-0">{{ selectedA?.nome?.split(' ')[0] }}</span>
+                      <span class="text-xs text-muted-foreground w-14 sm:w-20 text-right shrink-0">{{ selectedA?.nome?.split(' ')[0] }}</span>
                       <div class="flex-1 h-6 bg-muted rounded-full overflow-hidden">
                         <div
                           class="h-full bg-primary rounded-full transition-all duration-500 flex items-center justify-end pr-2"
@@ -328,7 +328,7 @@
                     </div>
                     <!-- Bar B -->
                     <div class="flex items-center gap-3">
-                      <span class="text-xs text-muted-foreground w-20 text-right shrink-0">{{ selectedB?.nome?.split(' ')[0] }}</span>
+                      <span class="text-xs text-muted-foreground w-14 sm:w-20 text-right shrink-0">{{ selectedB?.nome?.split(' ')[0] }}</span>
                       <div class="flex-1 h-6 bg-muted rounded-full overflow-hidden">
                         <div
                           class="h-full bg-accent rounded-full transition-all duration-500 flex items-center justify-end pr-2"
