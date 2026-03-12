@@ -20,11 +20,12 @@ for f in "$PORTAL_DIR"/*.sql; do
     echo "Processando arquivo de portal: $f"
     
     for DB_NAME in "${DATABASES[@]}"; do
-        echo "Configurando schema 'portal' no banco: $DB_NAME"
+        echo "Limpando e configurando schema 'portal' no banco: $DB_NAME"
         
-        # Cria o schema portal se não existir
+        # Remove o schema se já existir e recria (Garante que os dados sejam novos)
         psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$DB_NAME" <<-EOSQL
-            CREATE SCHEMA IF NOT EXISTS portal;
+            DROP SCHEMA IF EXISTS portal CASCADE;
+            CREATE SCHEMA portal;
 EOSQL
 
         echo "Importando dados do portal ($f) para $DB_NAME..."

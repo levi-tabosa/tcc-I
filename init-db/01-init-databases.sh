@@ -18,10 +18,10 @@ if [ -d "$SQL_DIR" ]; then
         echo "Processando arquivo: $f"
         echo "Criando banco de dados: $DB_NAME"
         
-        # Cria o banco de dados se ele não existir
+        # Recria o banco de dados do zero (Garante que os dados sejam novos)
         psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
-            SELECT 'CREATE DATABASE $DB_NAME'
-            WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '$DB_NAME')\gexec
+            DROP DATABASE IF EXISTS $DB_NAME;
+            CREATE DATABASE $DB_NAME;
 EOSQL
 
         echo "Importando dados para $DB_NAME..."
