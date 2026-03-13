@@ -628,7 +628,7 @@ def get_votacao_materia(codigo_materia: int):
         if 'conn' in locals() and conn:
             conn.close()
 
-@router.get("/estatisticas")
+@router.get("/estatisticas", summary="Obtém estatísticas gerais dos senadores")
 def get_estatisticas_gerais():
     try:
         conn = db.get_connect_senado()
@@ -732,6 +732,106 @@ ORDER BY quantidade DESC;"""
             
             }
             
+    except Exception as e:
+        logging.error(f"Erro ao buscar estatísticas gerais: {e}")
+        raise HTTPException(status_code=500, detail="Erro ao processar estatísticas gerais")
+
+
+@router.get("/empresas/estatisticas", summary="Obtém estatísticas gerais das empresas")
+def get_estatisticas_empresas():
+    try:
+        conn = db.get_connect_senado()
+        if not conn:
+            raise HTTPException(status_code=503, detail="Banco de dados indisponível")
+        
+        with conn.cursor() as cursor:
+            query = """
+               SELECT
+                    COUNT(DISTINCT cpf_cnpj) as total_empresas,
+                    SUM(valor_reembolsado) as total_pago,
+                    COUNT(*) as total_contratos
+                FROM senado.despesa_ceaps;
+            """
+            cursor.execute(query)
+            resultados_gerais = cursor.fetchall()
+
+            query = """
+                SELECT
+                    fornecedor as empresa,
+                    SUM(valor_reembolsado) as valor_total
+                FROM senado.despesa_ceaps
+                GROUP BY fornecedor
+                ORDER BY valor_total DESC
+                LIMIT 10;
+            """
+            cursor.execute(query)
+            resultados_top_10 = cursor.fetchall()
+            
+            query = """WITH EmpresaStats AS (
+    -- Agrupa os gastos por fornecedor e CNPJ
+    SELECT
+        fornecedor,
+        cpf_cnpj,
+        SUM(valor_reembolsado) as valor_total,
+        COUNT(*) as contratos
+    FROM senado.despesa_ceaps
+    GROUP BY fornecedor, cpf_cnpj
+),
+TotalGeral AS (
+    -- Calcula o total de tudo para fazer a porcentagem
+    SELECT SUM(valor_reembolsado) as soma_total FROM senado.despesa_ceaps
+),
+EmpresaPartidos AS (
+    -- Identifica quais partidos de senadores pagaram para cada empresa
+    SELECT
+        d.fornecedor,
+        d.cpf_cnpj,
+        STRING_AGG(DISTINCT p.sigla_partido, ', ') as partidos
+    FROM senado.despesa_ceaps d
+    LEFT JOIN senado.parlamentar p ON d.cod_senador = p.codigo
+    GROUP BY d.fornecedor, d.cpf_cnpj
+)
+SELECT
+    ROW_NUMBER() OVER (ORDER BY es.valor_total DESC) as rank,
+    es.fornecedor as empresa,
+    COALESCE(ep.partidos, 'N/A') as partidos,
+    es.cpf_cnpj as cnpj,
+    es.valor_total,
+    es.contratos,
+    ROUND((es.valor_total / tg.soma_total) * 100, 2) as percentual
+FROM EmpresaStats es
+JOIN EmpresaPartidos ep ON es.fornecedor = ep.fornecedor AND es.cpf_cnpj = ep.cpf_cnpj
+CROSS JOIN TotalGeral tg
+ORDER BY es.valor_total DESC
+LIMIT 20;
+            """
+            cursor.execute(query)
+            resultados_top_20 = cursor.fetchall()
+            
+            return {
+                "total_empresas": resultados_gerais[0][0],
+                "total_pago": resultados_gerais[0][1],
+                "total_contratos": resultados_gerais[0][2],
+                "top_10_empresas": [
+                    {
+                        "empresa": r[0],
+                        "valor_total": r[1]
+                    }
+                    for r in resultados_top_10
+                ],
+                "top_20_empresas": [
+                    {
+                        "rank": r[0],
+                        "empresa": r[1],
+                        "partidos": r[2],
+                        "cnpj": r[3],
+                        "valor_total": r[4],
+                        "contratos": r[5],
+                        "percentual": r[6]
+                    }
+                    for r in resultados_top_20
+                ]
+            }
     except Exception as e:
         logging.error(f"Erro ao buscar estatísticas gerais: {e}")
         raise HTTPException(status_code=500, detail="Erro ao processar estatísticas gerais")

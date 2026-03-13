@@ -2,7 +2,7 @@ from fastapi import APIRouter, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.deputados.router import router as deputados_router
-from api.senado.router import router as senado_router
+from api.senadores.router import router as senado_router
 import uvicorn
 
 

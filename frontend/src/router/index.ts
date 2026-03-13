@@ -87,6 +87,12 @@ const router = createRouter({
       meta: { title: "Projetos do Senado" },
     },
     {
+      path: "/senado/empresas",
+      name: "empresas-senado",
+      component: () => import("@/views/senado/EmpresasView.vue"),
+      meta: { title: "Empresas e Fornecedores" },
+    },
+    {
       path: "/senado/comparar",
       name: "comparar-senadores",
       component: () => import("@/views/senado/ComparacaoSenadoresView.vue"),

@@ -193,6 +193,7 @@ const senadoItems = [
   { name: 'Projetos Legislativos', href: '/senado/projetos-legislativos' },
   { name: 'Despesas', href: '/senado/despesas' },
   { name: 'Emendas', href: '/senado/emendas' },
+  { name: 'Empresas', href: '/senado/empresas' },
 ]
 
 const mobileMenuOpen = ref(false)
