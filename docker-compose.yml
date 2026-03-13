@@ -5,8 +5,8 @@ services:
       dockerfile: backend/Dockerfile
     container_name: camara_backend
     environment:
-      - DATABASE_URL_CAMARA=postgresql://postgres:postgres@postgres:5432/camara_db
-      - DATABASE_URL_SENADO=postgresql://postgres:postgres@postgres:5432/senado_db
+      - DATABASE_URL_CAMARA=postgresql://postgres:postgres@postgres:5432/fiscaliza_db?options=-csearch_path%3Dcamara
+      - DATABASE_URL_SENADO=postgresql://postgres:postgres@postgres:5432/fiscaliza_db?options=-csearch_path%3Dsenado
       - API_KEY=${API_KEY} # obtido  .env na pasta raiz do projeto
     ports:
       - "8000:8000"
@@ -35,19 +35,18 @@ services:
       - VITE_API_URL=http://localhost:8000
 
   postgres:
-    image: postgres:15
+    image: postgres:18
     container_name: postgres
     environment:
-      POSTGRES_DB: camara_db
+      POSTGRES_DB: fiscaliza_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+      PGDATA: /var/lib/postgresql/data/pgdata
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./init-db:/docker-entrypoint-initdb.d
-      - ./portal-auto:/docker-entrypoint-initdb.d/portal-auto/
-      - ./sql-auto:/docker-entrypoint-initdb.d/sql-auto/
     networks:
       - camara-network
     healthcheck:

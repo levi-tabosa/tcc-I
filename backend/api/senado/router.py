@@ -30,7 +30,7 @@ def get_lista_senadores():
     url_foto,
     url_pagina,
     data_nascimento
-FROM public.parlamentar
+FROM senado.parlamentar
 ORDER BY nome_parlamentar ASC;""")
             
             resultados = cursor.fetchall()
@@ -70,14 +70,14 @@ def get_estatisticas_senado():
         with conn.cursor() as cursor:
             query = """SELECT 
     COUNT(DISTINCT codigo) as total_senadores
-FROM public.parlamentar;
+FROM senado.parlamentar;
 """
             cursor.execute(query)
             total_senadores = cursor.fetchone()[0]
 
             query = """SELECT 
     COALESCE(SUM(valor_reembolsado), 0) as total_gastos 
-FROM public.despesa_ceaps;
+FROM senado.despesa_ceaps;
 """
             cursor.execute(query)
             total_gastos = cursor.fetchone()[0] or 0
@@ -93,7 +93,7 @@ FROM public.despesa_ceaps;
         ELSE 'Outros'
     END AS regiao,
     COUNT(DISTINCT codigo) AS quantidade
-FROM public.parlamentar
+FROM senado.parlamentar
 WHERE uf IS NOT NULL
 GROUP BY regiao
 ORDER BY quantidade DESC;
@@ -139,7 +139,7 @@ SELECT
     email,
     url_foto,
     data_nascimento
-FROM public.parlamentar
+FROM senado.parlamentar
 WHERE codigo IN (%s, %s);
 """             
             cursor.execute(query_perfil, (id1, id2))
@@ -154,7 +154,7 @@ SELECT
     tipo_despesa, 
     SUM(valor_reembolsado) as total,
     COUNT(*) as qtd
-FROM public.despesa_ceaps
+FROM senado.despesa_ceaps
 WHERE cod_senador IN (%s, %s)
 GROUP BY cod_senador, tipo_despesa;
 """
@@ -167,7 +167,7 @@ GROUP BY cod_senador, tipo_despesa;
     tipo_despesa, 
     valor_reembolsado, 
     data_despesa
-FROM public.despesa_ceaps
+FROM senado.despesa_ceaps
 WHERE cod_senador = %s
   AND data_despesa >= CURRENT_DATE - INTERVAL '12 months'
 ORDER BY data_despesa DESC;
@@ -264,7 +264,7 @@ def get_perfil_senador(senador_codigo: int):
     url_foto,
     url_pagina,
     data_nascimento
-FROM public.parlamentar
+FROM senado.parlamentar
 WHERE codigo = %s;"""
             cursor.execute(query, (senador_codigo,))
             resultado = cursor.fetchone()
@@ -310,7 +310,7 @@ def get_despesas_senador(senador_codigo: int):
     fornecedor, 
     valor_reembolsado, 
     data_despesa
-FROM public.despesa_ceaps
+FROM senado.despesa_ceaps
 WHERE cod_senador = %s  
   AND data_despesa >= CURRENT_DATE - INTERVAL '12 months'
 ORDER BY data_despesa DESC; """
@@ -322,7 +322,7 @@ ORDER BY data_despesa DESC; """
                 SELECT 
                     tipo_despesa, 
                     SUM(valor_reembolsado) as total
-                FROM public.despesa_ceaps
+                FROM senado.despesa_ceaps
                 WHERE cod_senador = %s
                 GROUP BY tipo_despesa
                 ORDER BY total DESC;
@@ -367,7 +367,7 @@ def get_despesas_estatisticas():
         with conn.cursor() as cursor:
             query = """
            SELECT COALESCE(SUM(valor_reembolsado), 0) AS total_gastos
-           FROM public.despesa_ceaps;
+           FROM senado.despesa_ceaps;
 """
             cursor.execute(query)
             res_total = cursor.fetchone()
@@ -375,7 +375,7 @@ def get_despesas_estatisticas():
 
             query = """SELECT 
     COALESCE(SUM(valor_reembolsado) / NULLIF(COUNT(DISTINCT cod_senador), 0), 0) AS media_por_senador
-FROM public.despesa_ceaps;
+FROM senado.despesa_ceaps;
 """
             cursor.execute(query)
             res_media = cursor.fetchone()
@@ -383,7 +383,7 @@ FROM public.despesa_ceaps;
             
             query = """WITH total_geral AS (
     SELECT COALESCE(SUM(valor_reembolsado), 1) as soma_total 
-    FROM public.despesa_ceaps 
+    FROM senado.despesa_ceaps 
 )
 SELECT 
     p.sigla_partido,
@@ -392,8 +392,8 @@ SELECT
         (SUM(d.valor_reembolsado) / (SELECT soma_total FROM total_geral)) * 100, 
         2
     ) AS percentual
-FROM public.despesa_ceaps d
-JOIN public.parlamentar p ON d.cod_senador = p.codigo
+FROM senado.despesa_ceaps d
+JOIN senado.parlamentar p ON d.cod_senador = p.codigo
 GROUP BY p.sigla_partido
 ORDER BY total_valor DESC;
 """
@@ -405,7 +405,7 @@ ORDER BY total_valor DESC;
         tipo_despesa, 
         SUM(valor_reembolsado) AS valor,
         ROW_NUMBER() OVER (ORDER BY SUM(valor_reembolsado) DESC) as rank
-    FROM public.despesa_ceaps
+    FROM senado.despesa_ceaps
     GROUP BY tipo_despesa
 )
 SELECT 
@@ -426,8 +426,8 @@ ORDER BY (CASE WHEN rank <= 9 THEN tipo_despesa ELSE 'Outros' END = 'Outros'), t
     p.uf, 
     p.url_foto,
     SUM(d.valor_reembolsado) AS total_valor
-FROM public.despesa_ceaps d
-JOIN public.parlamentar p ON d.cod_senador = p.codigo
+FROM senado.despesa_ceaps d
+JOIN senado.parlamentar p ON d.cod_senador = p.codigo
 GROUP BY p.codigo, p.nome_parlamentar, p.sigla_partido, p.uf, p.url_foto
 ORDER BY total_valor DESC
 LIMIT 10;
@@ -440,7 +440,7 @@ LIMIT 10;
     EXTRACT(YEAR FROM data_despesa)::int AS ano,
     EXTRACT(MONTH FROM data_despesa)::int AS mes,
     SUM(valor_reembolsado) AS valor
-FROM public.despesa_ceaps
+FROM senado.despesa_ceaps
 WHERE data_despesa IS NOT NULL
   AND EXTRACT(YEAR FROM data_despesa) BETWEEN 2000 AND EXTRACT(YEAR FROM CURRENT_DATE)
 GROUP BY 1, 2
@@ -452,7 +452,7 @@ LIMIT 12;
 
             query = """SELECT 
     COALESCE(SUM(valor_reembolsado), 0) AS total_geral
-FROM public.despesa_ceaps;
+FROM senado.despesa_ceaps;
 """
             cursor.execute(query)
             total_12_meses = cursor.fetchone()[0] or 0
@@ -637,7 +637,7 @@ def get_estatisticas_gerais():
         
         with conn.cursor() as cursor:
             query = """SELECT COUNT(DISTINCT codigo) AS total_senadores
-FROM public.parlamentar;"""
+FROM senado.parlamentar;"""
             cursor.execute(query)
             total_senadores = cursor.fetchone()[0]
 
@@ -650,25 +650,25 @@ FROM public.parlamentar;"""
         WHEN uf IN ('PR','RS','SC') THEN 'Sul'
     END
 ) AS total_regioes
-FROM public.parlamentar
+FROM senado.parlamentar
 WHERE uf IS NOT NULL; """
             cursor.execute(query)
             total_regioes = cursor.fetchone()[0]
 
             query = """SELECT COUNT(DISTINCT sigla_partido) AS total_partidos
-FROM public.parlamentar
+FROM senado.parlamentar
 WHERE sigla_partido IS NOT NULL;"""
             cursor.execute(query)
             total_partidos = cursor.fetchone()[0]
             
             query = """SELECT COUNT(DISTINCT uf) AS total_estados
-FROM public.parlamentar
+FROM senado.parlamentar
 WHERE uf IS NOT NULL;"""
             cursor.execute(query)
             total_estados = cursor.fetchone()[0]
 
             query = """SELECT ano, mes, SUM(valor_reembolsado) AS valor
-FROM public.despesa_ceaps
+FROM senado.despesa_ceaps
 WHERE data_despesa >= CURRENT_DATE - INTERVAL '12 months'
 GROUP BY ano, mes
 ORDER BY ano DESC, mes DESC;"""
@@ -676,7 +676,7 @@ ORDER BY ano DESC, mes DESC;"""
             despesas = cursor.fetchall()
 
             query = """SELECT sigla_partido, COUNT(DISTINCT codigo) AS total_senadores
-FROM public.parlamentar
+FROM senado.parlamentar
 WHERE sigla_partido IS NOT NULL
 GROUP BY sigla_partido
 ORDER BY total_senadores DESC
@@ -694,7 +694,7 @@ LIMIT 6;"""
         ELSE 'Outros'
     END AS regiao,
     COUNT(DISTINCT codigo) AS quantidade
-FROM public.parlamentar
+FROM senado.parlamentar
 WHERE uf IS NOT NULL
 GROUP BY regiao
 ORDER BY quantidade DESC;"""

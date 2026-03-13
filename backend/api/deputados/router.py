@@ -59,7 +59,7 @@ def get_lista_emendas(
             e.funcao,
             e.localidade_gasto as localidade
         FROM portal.emendas e
-        JOIN public.deputados d ON lower(e.nome_autor) = lower(d.nome_civil)
+        JOIN camara.deputados d ON lower(e.nome_autor) = lower(d.nome_civil)
         WHERE 1=1
     """
     params = []
@@ -118,10 +118,10 @@ def get_resumo_emendas():
             d.id, d.nome_civil, m.sigla_partido, m.sigla_uf,
             SUM(e.valor_pago) as total_valor
         FROM portal.emendas e
-        JOIN public.deputados d ON lower(e.nome_autor) = lower(d.nome_civil)
+        JOIN camara.deputados d ON lower(e.nome_autor) = lower(d.nome_civil)
         LEFT JOIN (
             SELECT DISTINCT ON (deputado_id) deputado_id, sigla_partido, sigla_uf
-            FROM public.deputados_mandatos
+            FROM camara.deputados_mandatos
             ORDER BY deputado_id, id DESC
         ) m ON d.id = m.deputado_id
         GROUP BY d.id, d.nome_civil, m.sigla_partido, m.sigla_uf
@@ -550,9 +550,9 @@ def get_estatisticas_despesas():
         m.sigla_partido,
         m.sigla_uf AS estado,
         SUM(desp.valor_documento) AS total_gasto
-    FROM public.deputados_despesas desp
-    JOIN public.deputados_mandatos m ON desp.mandato_id = m.id
-    JOIN public.deputados d ON m.deputado_id = d.id
+    FROM camara.deputados_despesas desp
+    JOIN camara.deputados_mandatos m ON desp.mandato_id = m.id
+    JOIN camara.deputados d ON m.deputado_id = d.id
     GROUP BY d.id, d.nome_civil, m.sigla_partido, m.sigla_uf
     ORDER BY total_gasto DESC
     LIMIT 10;
