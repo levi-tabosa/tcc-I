@@ -22,7 +22,7 @@ def get_lista_emendas(
     offset = (pagina - 1) * itens_por_pagina
 
     try:
-        conn = db.get_connect_camara()
+        conn = db.get_db_connection()
         if not conn:
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
@@ -74,7 +74,7 @@ def get_lista_emendas(
 @router.get("/emendas/resumo", summary="Obtém resumo das emendas")
 def get_resumo_emendas():
     try:
-        conn = db.get_connect_camara()
+        conn = db.get_db_connection()
         if not conn:
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
@@ -172,7 +172,7 @@ def get_lista_proposicoes(
     offset = (pagina - 1) * itens_por_pagina
     
     try:
-        conn = db.get_connect_camara()
+        conn = db.get_db_connection()
         if not conn:
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
@@ -185,15 +185,15 @@ def get_lista_proposicoes(
                     p.ano, 
                     p.ementa, 
                     p.data_apresentacao as "dataApresentacao"
-                FROM proposicoes p
+                FROM camara.proposicoes p
             """
             params = []
             
             if deputado:
                 query += """
-                    INNER JOIN votacoes_proposicoes vp ON p.id = vp.proposicao_id
-                    INNER JOIN votacoes_votos vv ON vp.votacao_id = vv.votacao_id
-                    INNER JOIN deputados d ON vv.deputado_id = d.id
+                    INNER JOIN camara.votacoes_proposicoes vp ON p.id = vp.proposicao_id
+                    INNER JOIN camara.votacoes_votos vv ON vp.votacao_id = vv.votacao_id
+                    INNER JOIN camara.deputados d ON vv.deputado_id = d.id
                 """
             
             query += " WHERE 1=1"
@@ -234,7 +234,7 @@ def get_lista_proposicoes(
 @router.get("/proposicoes/{proposicao_id}/votos", summary="Obtém o histórico de votos de um projeto legislativo")
 def get_votos_proposicao(proposicao_id: int):
     try:
-        conn = db.get_connect_camara()
+        conn = db.get_db_connection()
         if not conn:
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
@@ -247,10 +247,10 @@ def get_votos_proposicao(proposicao_id: int):
                     d.id AS deputado_id,
                     d.nome_civil,
                     vv.tipo_voto AS voto
-                FROM votacoes_proposicoes vp
-                INNER JOIN votacoes v ON vp.votacao_id = v.id
-                INNER JOIN votacoes_votos vv ON v.id = vv.votacao_id
-                INNER JOIN deputados d ON vv.deputado_id = d.id
+                FROM camara.votacoes_proposicoes vp
+                INNER JOIN camara.votacoes v ON vp.votacao_id = v.id
+                INNER JOIN camara.votacoes_votos vv ON v.id = vv.votacao_id
+                INNER JOIN camara.deputados d ON vv.deputado_id = d.id
                 WHERE vp.proposicao_id = %s AND vv.tipo_voto != 'Artigo 17'
                 ORDER BY v.data DESC, d.nome_civil ASC
             """
@@ -291,7 +291,7 @@ def get_votos_proposicao(proposicao_id: int):
 @router.get("/lista", summary="Lista todos os deputados ativos")
 def get_todos_deputados():
     try:
-        conn = db.get_connect_camara()
+        conn = db.get_db_connection()
         if not conn:
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
@@ -302,8 +302,8 @@ def get_todos_deputados():
                     d.nome_civil,
                     m.sigla_partido,
                     m.sigla_uf as uf
-                FROM deputados d
-                INNER JOIN deputados_mandatos m ON d.id = m.deputado_id
+                FROM camara.deputados d
+                INNER JOIN camara.deputados_mandatos m ON d.id = m.deputado_id
                 WHERE m.sigla_uf IS NOT NULL
                 ORDER BY d.id, m.id DESC
             """
@@ -324,13 +324,13 @@ def get_todos_deputados():
 @router.get("/estatisticas", summary="Obtém estatísticas gerais dos deputados")
 def get_estatisticas_gerais():
     try:
-        conn = db.get_connect_camara()
+        conn = db.get_db_connection()
         if not conn:
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
         with conn.cursor() as cursor:
             # 1. Total de Deputados
-            cursor.execute("SELECT COUNT(DISTINCT deputado_id) as total from deputados_mandatos")
+            cursor.execute("SELECT COUNT(DISTINCT deputado_id) as total from camara.deputados_mandatos")
             total_deputados = cursor.fetchone()[0] or 0
 
             # 2. Distribuição por Região
@@ -345,7 +345,7 @@ def get_estatisticas_gerais():
                         ELSE 'Outros'
                     END AS regiao,
                     COUNT(DISTINCT m.deputado_id) as quantidade
-                FROM deputados_mandatos m
+                FROM camara.deputados_mandatos m
                 WHERE m.sigla_uf IS NOT NULL
                 GROUP BY regiao
                 ORDER BY quantidade DESC
@@ -371,7 +371,7 @@ def get_comparativo_deputados(id1: int, id2: int, ano: int = None):
         raise HTTPException(status_code=400, detail="Escolha dois deputados diferentes para comparar.")
 
     try:
-        conn = db.get_connect_camara()
+        conn = db.get_db_connection()
         if not conn:
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
@@ -381,8 +381,8 @@ def get_comparativo_deputados(id1: int, id2: int, ano: int = None):
                 SELECT DISTINCT ON (d.id)
                     d.id, d.nome_civil, m.sigla_partido, m.sigla_uf, 
                     d.email, d.data_nascimento, d.escolaridade, d.uf_nascimento
-                FROM deputados d
-                LEFT JOIN deputados_mandatos m ON d.id = m.deputado_id
+                FROM camara.deputados d
+                LEFT JOIN camara.deputados_mandatos m ON d.id = m.deputado_id
                 WHERE d.id IN (%s, %s)
                 ORDER BY d.id, m.id DESC
             """
@@ -412,8 +412,8 @@ def get_comparativo_deputados(id1: int, id2: int, ano: int = None):
                 SELECT 
                     m.deputado_id, d.tipo_despesa, 
                     SUM(d.valor_documento) as total, COUNT(d.id) as qtd
-                FROM deputados_despesas d
-                JOIN deputados_mandatos m ON d.mandato_id = m.id
+                FROM camara.deputados_despesas d
+                JOIN camara.deputados_mandatos m ON d.mandato_id = m.id
                 WHERE m.deputado_id IN (%s, %s)
             """
             params = [id1, id2]
@@ -443,8 +443,8 @@ def get_comparativo_deputados(id1: int, id2: int, ano: int = None):
             for dep_id in [id1, id2]:
                 cursor.execute("""
                     SELECT d.ano, d.mes, d.tipo_despesa, d.valor_documento as valor, d.url_documento
-                    FROM deputados_despesas d
-                    JOIN deputados_mandatos m ON d.mandato_id = m.id
+                    FROM camara.deputados_despesas d
+                    JOIN camara.deputados_mandatos m ON d.mandato_id = m.id
                     WHERE m.deputado_id = %s
                     ORDER BY d.ano DESC, d.mes DESC
                     LIMIT 10
@@ -468,7 +468,7 @@ def get_comparativo_deputados(id1: int, id2: int, ano: int = None):
 @router.get("/{deputado_id}", summary="Obtém os detalhes do perfil e despesas do deputado pelo ID")
 def get_perfil_deputado(deputado_id: int):
     try:
-        conn = db.get_connect_camara()
+        conn = db.get_db_connection()
         if not conn:
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
@@ -478,8 +478,8 @@ def get_perfil_deputado(deputado_id: int):
                 SELECT d.id, d.nome_civil, d.cpf, d.sexo, d.email, d.data_nascimento, 
                        d.escolaridade, d.uf_nascimento, d.municipio_nascimento, 
                        m.sigla_partido
-                FROM deputados d
-                LEFT JOIN deputados_mandatos m ON d.id = m.deputado_id
+                FROM camara.deputados d
+                LEFT JOIN camara.deputados_mandatos m ON d.id = m.deputado_id
                 WHERE d.id = %s
                 ORDER BY m.id DESC
                 LIMIT 1
@@ -502,8 +502,8 @@ def get_perfil_deputado(deputado_id: int):
                 SELECT 
                     desp.ano, desp.mes, desp.tipo_despesa, 
                     desp.valor_documento as valor, desp.url_documento
-                FROM deputados_despesas AS desp
-                JOIN deputados_mandatos AS mand ON desp.mandato_id = mand.id
+                FROM camara.deputados_despesas AS desp
+                JOIN camara.deputados_mandatos AS mand ON desp.mandato_id = mand.id
                 WHERE mand.deputado_id = %s
                 ORDER BY desp.ano DESC, desp.mes DESC
                 LIMIT 50
@@ -558,7 +558,7 @@ def get_perfil_deputado(deputado_id: int):
 @router.get("/{deputado_id}/despesas", summary="Obtém a lista de despesas de um deputado")
 def get_despesas_deputado(deputado_id: int):
     try:
-        conn = db.get_connect_camara()
+        conn = db.get_db_connection()
         if not conn:
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
@@ -568,8 +568,8 @@ def get_despesas_deputado(deputado_id: int):
                 SELECT 
                     desp.ano, desp.mes, desp.tipo_despesa, 
                     desp.valor_documento as valor, desp.url_documento
-                FROM deputados_despesas AS desp
-                JOIN deputados_mandatos AS mand ON desp.mandato_id = mand.id
+                FROM camara.deputados_despesas AS desp
+                JOIN camara.deputados_mandatos AS mand ON desp.mandato_id = mand.id
                 WHERE mand.deputado_id = %s
                 ORDER BY desp.ano DESC, desp.mes DESC
                 LIMIT 50
@@ -582,8 +582,8 @@ def get_despesas_deputado(deputado_id: int):
             # 2. Resumo por categoria
             query_categorias = """
                 SELECT desp.tipo_despesa as categoria, SUM(desp.valor_documento) as valor
-                FROM deputados_despesas AS desp
-                JOIN deputados_mandatos AS mand ON desp.mandato_id = mand.id
+                FROM camara.deputados_despesas AS desp
+                JOIN camara.deputados_mandatos AS mand ON desp.mandato_id = mand.id
                 WHERE mand.deputado_id = %s
                 GROUP BY desp.tipo_despesa
                 ORDER BY valor DESC
@@ -609,7 +609,7 @@ def get_despesas_deputado(deputado_id: int):
 @router.get("/{deputado_id}/emendas", summary="Obtém a lista de emendas parlamentares de um deputado")
 def get_emendas_deputado(deputado_id: int):
     try:
-        conn = db.get_connect_camara()
+        conn = db.get_db_connection()
         if not conn:
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
@@ -649,7 +649,7 @@ def get_emendas_deputado(deputado_id: int):
 @router.get("/despesas/estatisticas", summary="Obtém o panorama geral de gastos da Câmara")
 def get_estatisticas_despesas():    
     try:
-        conn = db.get_connect_camara()
+        conn = db.get_db_connection()
         if not conn:
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
@@ -657,7 +657,7 @@ def get_estatisticas_despesas():
             # 1. Gastos por Categoria (com formatação Top 9 + Outros)
             cursor.execute("""
                 SELECT tipo_despesa as categoria, SUM(valor_documento) as valor
-                FROM deputados_despesas
+                FROM camara.deputados_despesas
                 GROUP BY tipo_despesa
                 ORDER BY valor DESC
             """)
@@ -682,7 +682,7 @@ def get_estatisticas_despesas():
             # 2. Evolução Mensal
             cursor.execute("""
                 SELECT ano, mes, SUM(valor_documento) as valor
-                FROM deputados_despesas
+                FROM camara.deputados_despesas
                 GROUP BY ano, mes
                 ORDER BY ano DESC, mes DESC
                 LIMIT 12
@@ -692,8 +692,8 @@ def get_estatisticas_despesas():
             # 3. Gastos por Estado
             cursor.execute("""
                 SELECT m.sigla_uf as estado, SUM(desp.valor_documento) as valor
-                FROM deputados_mandatos m
-                JOIN deputados_despesas desp ON m.id = desp.mandato_id
+                FROM camara.deputados_mandatos m
+                JOIN camara.deputados_despesas desp ON m.id = desp.mandato_id
                 WHERE m.sigla_uf IS NOT NULL
                 GROUP BY m.sigla_uf
                 ORDER BY valor DESC
@@ -703,8 +703,8 @@ def get_estatisticas_despesas():
             # 4. Gastos por Partido
             cursor.execute("""
                 SELECT m.sigla_partido as partido, SUM(desp.valor_documento) as valor
-                FROM deputados_mandatos m
-                JOIN deputados_despesas desp ON m.id = desp.mandato_id
+                FROM camara.deputados_mandatos m
+                JOIN camara.deputados_despesas desp ON m.id = desp.mandato_id
                 WHERE m.sigla_partido IS NOT NULL
                 GROUP BY m.sigla_partido
                 ORDER BY valor DESC
@@ -714,15 +714,15 @@ def get_estatisticas_despesas():
             # 5. Totais
             cursor.execute("""
                 SELECT SUM(valor_documento) as total
-                FROM deputados_despesas
+                FROM camara.deputados_despesas
                 WHERE TO_DATE(CAST(ano AS TEXT) || '-' || CAST(mes AS TEXT), 'YYYY-MM') >= (CURRENT_DATE - INTERVAL '1 year')
             """)
             total_12_meses = cursor.fetchone()[0] or 0
 
-            cursor.execute("SELECT SUM(valor_documento) as total from deputados_despesas")
+            cursor.execute("SELECT SUM(valor_documento) as total from camara.deputados_despesas")
             total_geral = cursor.fetchone()[0] or 0
             
-            cursor.execute("SELECT COUNT(DISTINCT cnpj_cpf_fornecedor) as total FROM deputados_despesas")
+            cursor.execute("SELECT COUNT(DISTINCT cnpj_cpf_fornecedor) as total FROM camara.deputados_despesas")
             total_empresas = cursor.fetchone()[0] or 0
 
             cursor.execute("""
@@ -767,7 +767,7 @@ def get_estatisticas_despesas():
 @router.get("/empresas/estatisticas", summary="Obtém as estatísticas e ranking das empresas contratadas")
 def get_estatisticas_empresas(limit: int = 20):
     try:
-        conn = db.get_connect_camara()
+        conn = db.get_db_connection()
         if not conn:
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
@@ -778,7 +778,7 @@ def get_estatisticas_empresas(limit: int = 20):
                     COUNT(DISTINCT cnpj_cpf_fornecedor) as total_empresas,
                     COALESCE(SUM(valor_documento), 0) as total_pago,
                     COUNT(*) as total_contratos
-                FROM deputados_despesas
+                FROM camara.deputados_despesas
                 WHERE LENGTH(cnpj_cpf_fornecedor) > 11
             """)
             res_stats = cursor.fetchone()

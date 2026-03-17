@@ -42,7 +42,7 @@ def load_deputados_map(conn):
     ids_set = set()
     try:
         with conn.cursor() as cursor:
-            cursor.execute("SELECT id, nome_civil FROM deputados;")
+            cursor.execute("SELECT id, nome_civil FROM camara.deputados;")
             for row in cursor.fetchall():
                 db_id, name = row
                 ids_set.add(db_id)
@@ -93,7 +93,7 @@ def process_votacao(conn, vot_res, dep_map, ids_set):
                 det = data['dados']
                 # Insere/atualiza votacao
                 cursor.execute("""
-                    INSERT INTO votacoes (id, uri, data, data_hora_registro, sigla_orgao, uri_orgao, descricao)
+                    INSERT INTO camara.votacoes (id, uri, data, data_hora_registro, sigla_orgao, uri_orgao, descricao)
                     VALUES (%s, %s, %s, %s, %s, %s, %s)
                     ON CONFLICT (id) DO UPDATE SET descricao = EXCLUDED.descricao;
                 """, (
@@ -110,16 +110,16 @@ def process_votacao(conn, vot_res, dep_map, ids_set):
                 for p in det.get('proposicoesAfetadas', []):
                     pid = p.get('id')
                     if pid:
-                        cursor.execute("SELECT 1 FROM proposicoes WHERE id = %s", (pid,))
+                        cursor.execute("SELECT 1 FROM camara.proposicoes WHERE id = %s", (pid,))
                         if cursor.fetchone():
                             cursor.execute(
-                                "INSERT INTO votacoes_proposicoes (votacao_id, proposicao_id) VALUES (%s, %s) ON CONFLICT DO NOTHING;",
+                                "INSERT INTO camara.votacoes_proposicoes (votacao_id, proposicao_id) VALUES (%s, %s) ON CONFLICT DO NOTHING;",
                                 (original_id, pid)
                             )
             else:
                 # Sem detalhes, mas garante que a votacao exista no banco para o FK
                 cursor.execute("""
-                    INSERT INTO votacoes (id, data, descricao)
+                    INSERT INTO camara.votacoes (id, data, descricao)
                     VALUES (%s, %s, %s)
                     ON CONFLICT (id) DO NOTHING;
                 """, (
@@ -163,7 +163,7 @@ def process_votacao(conn, vot_res, dep_map, ids_set):
                     if target_id:
                         try:
                             cursor.execute("""
-                                INSERT INTO votacoes_votos (votacao_id, deputado_id, tipo_voto, data_registro_voto)
+                                INSERT INTO camara.votacoes_votos (votacao_id, deputado_id, tipo_voto, data_registro_voto)
                                 VALUES (%s, %s, %s, %s) ON CONFLICT DO NOTHING;
                             """, (original_id, target_id, tipo_voto, data_hora_voto))
                             votos_vinc_count += 1
@@ -221,7 +221,7 @@ def main():
     logging.info("Iniciando ingestao de votacoes e votos (2007-2025)")
     logging.info("=" * 60)
 
-    conn = db.get_connect()
+    conn = db.get_db_connection()
     if not conn:
         logging.error("Nao foi possivel conectar ao banco!")
         return
@@ -235,14 +235,14 @@ def main():
 
         # Verifica progresso existente
         with conn.cursor() as cur:
-            cur.execute("SELECT COUNT(*) FROM votacoes_votos;")
+            cur.execute("SELECT COUNT(*) FROM camara.votacoes_votos;")
             existing = cur.fetchone()[0]
             logging.info(f"Votos ja existentes no banco: {existing}")
 
             # Descobre a data mais recente para continuar de onde parou
             cur.execute("""
-                SELECT MAX(v.data) FROM votacoes v
-                INNER JOIN votacoes_votos vv ON vv.votacao_id = v.id;
+                SELECT MAX(v.data) FROM camara.votacoes v
+                INNER JOIN camara.votacoes_votos vv ON vv.votacao_id = v.id;
             """)
             last_date_row = cur.fetchone()
             last_date = last_date_row[0] if last_date_row and last_date_row[0] else None
@@ -310,7 +310,7 @@ def main():
 
                     # Pula votacoes que ja tem votos no banco
                     with conn.cursor() as cur:
-                        cur.execute("SELECT 1 FROM votacoes_votos WHERE votacao_id = %s LIMIT 1", (v_id,))
+                        cur.execute("SELECT 1 FROM camara.votacoes_votos WHERE votacao_id = %s LIMIT 1", (v_id,))
                         if cur.fetchone():
                             puladas += 1
                             continue
@@ -327,14 +327,14 @@ def main():
 
             # Log de progresso por ano
             with conn.cursor() as cur:
-                cur.execute("SELECT COUNT(*) FROM votacoes_votos;")
+                cur.execute("SELECT COUNT(*) FROM camara.votacoes_votos;")
                 total_agora = cur.fetchone()[0]
             logging.info(f"  Total acumulado apos {ano}: {total_agora} votos no banco")
 
         logging.info("=" * 60)
         logging.info(f"CONCLUIDO! Total de votos inseridos nesta execucao: {total_votos_inseridos}")
         with conn.cursor() as cur:
-            cur.execute("SELECT COUNT(*) FROM votacoes_votos;")
+            cur.execute("SELECT COUNT(*) FROM camara.votacoes_votos;")
             logging.info(f"Total de votos no banco: {cur.fetchone()[0]}")
         logging.info("=" * 60)
 

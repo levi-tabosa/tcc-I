@@ -153,7 +153,7 @@ def insert_emenda_documentos(conn, docs, emenda_id):
     conn.commit()
 
 def ingest():
-    conn = db.get_connect()
+    conn = db.get_db_connection()
     
     # Intervalo definido para teste com inicio baseado na grande quantidade de emendas sem informação (S/I) de 2014 
     for ano in range(2020, 2027):

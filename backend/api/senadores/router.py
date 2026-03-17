@@ -14,7 +14,7 @@ router = APIRouter(
 @router.get("/lista", summary="Lista todos os senadores ativos")
 def get_lista_senadores():
     try:
-        conn = db.get_connect_senado()
+        conn = db.get_db_connection()
         if not conn:
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
@@ -63,7 +63,7 @@ ORDER BY nome_parlamentar ASC;""")
 @router.get("/estatisticas")
 def get_estatisticas_senado():
     try:
-        conn = db.get_connect_senado()
+        conn = db.get_db_connection()
         if not conn:
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
@@ -120,7 +120,7 @@ ORDER BY quantidade DESC;
 @router.get("/comparar")
 def get_comparativo_senadores(id1: int, id2: int, ano: int = None):
     try:
-        conn = db.get_connect_senado()
+        conn = db.get_db_connection()
         if not conn:
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
@@ -248,7 +248,7 @@ ORDER BY data_despesa DESC;
 @router.get("/{senador_codigo}", summary="Obtém o perfil detalhado de um senador")
 def get_perfil_senador(senador_codigo: int):
     try:
-        conn = db.get_connect_senado()
+        conn = db.get_db_connection()
         if not conn:
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
@@ -311,7 +311,7 @@ WHERE codigo = %s;"""
 @router.get("/{senador_codigo}/despesas", summary="Obtém o extrato de despesas de um senador")
 def get_despesas_senador(senador_codigo: int):
     try:
-        conn = db.get_connect_senado()
+        conn = db.get_db_connection()
         if not conn:
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
@@ -374,7 +374,7 @@ ORDER BY data_despesa DESC; """
 @router.get("/despesas/estatisticas")
 def get_despesas_estatisticas():
     try:
-        conn = db.get_connect_senado()
+        conn = db.get_db_connection()
         if not conn:
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
@@ -526,7 +526,7 @@ def get_materia_listar(
     offset = (pagina - 1) * itens_por_pagina
 
     try:
-        conn = db.get_connect_senado()
+        conn = db.get_db_connection()
         if not conn:
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
@@ -540,16 +540,16 @@ def get_materia_listar(
                     m.ementa,
                     m.data,
                     autor.nome_parlamentar AS autor_principal
-                FROM materia m
-                LEFT JOIN autoria a ON a.codigo_materia = m.codigo AND a.autor_principal = true
-                LEFT JOIN parlamentar autor ON a.codigo_parlamentar = autor.codigo
+                FROM senado.materia m
+                LEFT JOIN senado.autoria a ON a.codigo_materia = m.codigo AND a.autor_principal = true
+                LEFT JOIN senado.parlamentar autor ON a.codigo_parlamentar = autor.codigo
             """
             params = []
 
             if senador:
                 query += """
-                    INNER JOIN votacao_parlamentar vp ON m.codigo = vp.codigo_materia
-                    INNER JOIN parlamentar p ON vp.codigo_parlamentar = p.codigo
+                    INNER JOIN senado.votacao_parlamentar vp ON m.codigo = vp.codigo_materia
+                    INNER JOIN senado.parlamentar p ON vp.codigo_parlamentar = p.codigo
                 """
 
             query += " WHERE 1=1"
@@ -604,7 +604,7 @@ def get_lista_emendas(
     offset = (pagina - 1) * itens_por_pagina
 
     try:
-        conn = db.get_connect_senado()
+        conn = db.get_db_connection()
         if not conn:
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
@@ -661,7 +661,7 @@ def get_lista_emendas(
 @router.get("/emendas/resumo", summary="Obtém resumo das emendas do Senado")
 def get_resumo_emendas():
     try:
-        conn = db.get_connect_senado()
+        conn = db.get_db_connection()
         if not conn:
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
@@ -747,7 +747,7 @@ def get_resumo_emendas():
 @router.get("/materia/votacao", summary="Obtém o histórico de votações de um projeto legislativo")
 def get_votacao_materia(codigo_materia: int):
     try:
-        conn = db.get_connect_senado()
+        conn = db.get_db_connection()
         if not conn:
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
@@ -761,9 +761,9 @@ def get_votacao_materia(codigo_materia: int):
                     p.uf,
                     vp.sigla_descricao_voto AS voto,
                     vp.descricao_resultado AS resultado
-                FROM votacao_parlamentar vp
-                JOIN materia m ON vp.codigo_materia = m.codigo
-                JOIN parlamentar p ON vp.codigo_parlamentar = p.codigo
+                FROM senado.votacao_parlamentar vp
+                JOIN senado.materia m ON vp.codigo_materia = m.codigo
+                JOIN senado.parlamentar p ON vp.codigo_parlamentar = p.codigo
                 WHERE vp.codigo_materia = %s
                   AND vp.sigla_descricao_voto NOT IN ('P-NRV', 'AP', 'Presidente (art. 51 RISF)', 'LS', 'NCom')
                 ORDER BY m.ano DESC, m.sigla, m.numero, p.nome_parlamentar
@@ -795,7 +795,7 @@ def get_votacao_materia(codigo_materia: int):
 @router.get("/materia/votacao", summary="Obtém o histórico de votações de um projeto legislativo")
 def get_votacao_materia(codigo_materia: int):
     try:
-        conn = db.get_connect_senado()
+        conn = db.get_db_connection()
         if not conn:
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
@@ -843,7 +843,7 @@ def get_votacao_materia(codigo_materia: int):
 @router.get("/estatisticas", summary="Obtém estatísticas gerais dos senadores")
 def get_estatisticas_gerais():
     try:
-        conn = db.get_connect_senado()
+        conn = db.get_db_connection()
         if not conn:
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
@@ -951,7 +951,7 @@ ORDER BY quantidade DESC;"""
 @router.get("/{senador_codigo}/emendas/lista", summary="Obtém a lista de emendas parlamentares de um senador")
 def get_emendas_lista_senador(senador_codigo: int):
     try:
-        conn = db.get_connect_senado()
+        conn = db.get_db_connection()
         if not conn:
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
@@ -997,7 +997,7 @@ def get_emendas_lista_senador(senador_codigo: int):
 @router.get("/empresas/estatisticas", summary="Obtém estatísticas gerais das empresas")
 def get_estatisticas_empresas():
     try:
-        conn = db.get_connect_senado()
+        conn = db.get_db_connection()
         if not conn:
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
