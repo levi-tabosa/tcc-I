@@ -5,9 +5,9 @@
       <!-- Hero -->
       <section class="bg-gradient-to-br from-accent/10 via-background to-primary/10 py-12">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h1 class="text-3xl font-bold text-foreground sm:text-4xl">Emendas Parlamentares</h1>
+          <h1 class="text-3xl font-bold text-foreground sm:text-4xl">Emendas Parlamentares — Câmara</h1>
           <p class="mt-2 text-muted-foreground max-w-2xl">
-            Acompanhe a distribuição de emendas parlamentares. Veja rankings por deputado, área e município.
+            Acompanhe a distribuição de emendas parlamentares dos deputados. Rankings por deputado, área e município.
           </p>
         </div>
       </section>
@@ -84,16 +84,17 @@
       <!-- Ranking -->
       <section class="py-12 bg-muted/30">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 class="text-2xl font-bold text-foreground mb-8">Top 10 Deputados em Emendas</h2>
+          <h2 class="text-2xl font-bold text-foreground mb-8">Top 10 — Deputados em Emendas</h2>
           <BaseCard class="overflow-hidden border-none shadow-xl">
             <div v-if="carregando" class="p-12 text-center text-muted-foreground">Carregando ranking...</div>
             <div v-else class="divide-y divide-border">
-              <div
-                v-for="(deputado, index) in estatisticas.ranking"
-                :key="deputado.id"
-                class="flex items-center gap-3 sm:gap-6 p-3 sm:p-6 hover:bg-muted/50 transition-all duration-300 group"
-              >
-                <span class="text-lg sm:text-xl font-black text-muted-foreground/30 w-6 sm:w-8 group-hover:text-primary/50 transition-colors">{{ index + 1 }}º</span>
+                <div
+                  v-for="(deputado, index) in estatisticas.ranking"
+                  :key="deputado.id"
+                  class="flex items-center gap-3 sm:gap-6 p-3 sm:p-6 hover:bg-muted/50 transition-all duration-300 group cursor-pointer"
+                  @click="goToDeputado(deputado.id)"
+                >
+                  <span class="text-lg sm:text-xl font-black text-muted-foreground/30 w-6 sm:w-8 group-hover:text-primary/50 transition-colors">{{ index + 1 }}º</span>
                 <div class="h-10 w-10 sm:h-14 sm:w-14 rounded-xl sm:rounded-2xl bg-muted overflow-hidden border-2 border-primary/20 group-hover:border-primary/50 group-hover:scale-110 transition-all duration-300 shadow-sm flex-shrink-0">
                   <img 
                     :src="deputado.foto" 
@@ -121,6 +122,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { Landmark, Users, TrendingUp } from 'lucide-vue-next'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
@@ -132,6 +134,7 @@ const estatisticas = ref({
   ranking: [] as any[]
 })
 
+const router = useRouter()
 const carregando = ref(true)
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -145,6 +148,10 @@ async function carregarEstatisticas() {
   } finally {
     carregando.value = false
   }
+}
+
+function goToDeputado(id: number) {
+  router.push(`/camara/deputados/${id}`)
 }
 
 onMounted(() => {

@@ -23,6 +23,18 @@ export interface SenadorDetail {
     sigla_partido: string
     uf: string
     foto: string
+    total_emendas?: number
+}
+
+export interface EmendaSenado {
+    codigo: string
+    ano: number
+    tipo: string
+    valorEmpenhado: number
+    valorLiquidado: number
+    valorPago: number
+    funcao: string
+    localidade: string
 }
 
 export interface EstatisticasSenadoGerais {
@@ -99,6 +111,8 @@ export const useSenadoresStore = defineStore("senadores", () => {
     const currentDespesas = ref<any[]>([])
     const currentCategorias = ref<any[]>([])
     const totalDespesas = ref(0)
+    const currentEmendas = ref<EmendaSenado[]>([])
+    const totalEmendas = ref(0)
     const loadingDetail = ref(false)
 
     // General Stats state
@@ -168,11 +182,15 @@ export const useSenadoresStore = defineStore("senadores", () => {
                 municipio_nascimento: "N/A",
                 sigla_partido: s.siglaPartido,
                 uf: s.uf,
-                foto: s.urlFoto
+                foto: s.urlFoto,
+                total_emendas: s.total_emendas || 0
             }
+            totalEmendas.value = s.total_emendas || 0
 
             // Buscar despesas logo após
             await fetchDespesasSenador(id)
+            // Buscar emendas logo após
+            await fetchEmendasSenador(id)
         } catch (e: any) {
             console.error("Erro ao buscar detalhes do senador:", e)
             error.value = "Erro ao carregar perfil do senador."
@@ -190,10 +208,18 @@ export const useSenadoresStore = defineStore("senadores", () => {
             currentDespesas.value = data.despesas
             currentCategorias.value = data.categorias || []
             totalDespesas.value = data.total_despesas
-        } catch (e: any) {
-            console.error("Erro ao buscar despesas:", e)
         } finally {
             loadingDetail.value = false
+        }
+    }
+
+    const fetchEmendasSenador = async (id: number) => {
+        try {
+            const response = await fetch(`${apiUrl}/api/senado/${id}/emendas/lista`)
+            if (!response.ok) throw new Error("Falha ao buscar emendas")
+            currentEmendas.value = await response.json()
+        } catch (e: any) {
+            console.error("Erro ao buscar emendas do senador:", e)
         }
     }
 
@@ -402,6 +428,8 @@ export const useSenadoresStore = defineStore("senadores", () => {
         currentDespesas,
         currentCategorias,
         totalDespesas,
+        currentEmendas,
+        totalEmendas,
         loadingDetail,
         generalStats,
         senadorStats,

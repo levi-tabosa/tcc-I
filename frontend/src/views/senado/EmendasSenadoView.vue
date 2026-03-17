@@ -5,35 +5,112 @@
       <!-- Hero -->
       <section class="bg-gradient-to-br from-purple-500/10 via-background to-accent/10 py-12">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h1 class="text-3xl font-bold text-foreground sm:text-4xl">Emendas do Senado</h1>
+          <h1 class="text-3xl font-bold text-foreground sm:text-4xl">Emendas Parlamentares — Senado</h1>
           <p class="mt-2 text-muted-foreground max-w-2xl">
-            Acompanhe as emendas parlamentares dos senadores.
+            Acompanhe a distribuição de emendas parlamentares dos senadores. Rankings por senador, área e município.
           </p>
         </div>
       </section>
 
-      <!-- Em breve -->
-      <section class="section-content">
-        <div class="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
-          <BaseCard class="text-center py-16">
-            <div class="relative inline-flex p-5 rounded-full bg-purple-500/10 mb-6">
-              <Landmark class="h-14 w-14 text-purple-500" />
-              <span class="absolute top-1 right-1 flex h-4 w-4">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-4 w-4 bg-purple-500"></span>
-              </span>
-            </div>
-            <h2 class="text-2xl font-bold text-foreground mb-3">Em Desenvolvimento</h2>
-            <p class="text-muted-foreground max-w-md mx-auto mb-6">
-              Os dados de emendas do Senado Federal estarão disponíveis em breve.
-            </p>
-            <div class="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-              <div class="flex gap-1">
-                <div class="h-2 w-2 rounded-full bg-purple-500 animate-pulse"></div>
-                <div class="h-2 w-2 rounded-full bg-purple-400 animate-pulse animate-delay-100"></div>
-                <div class="h-2 w-2 rounded-full bg-purple-300 animate-pulse animate-delay-200"></div>
+      <!-- Overview -->
+      <section class="py-12 bg-muted/30">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div v-if="carregando" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <BaseCard v-for="i in 3" :key="i" class="animate-pulse h-32" />
+          </div>
+          <div v-else class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <BaseCard hover class="border-l-4 border-purple-500">
+              <div class="flex items-center gap-4">
+                <div class="p-3 rounded-xl bg-purple-500/10">
+                  <Users class="h-6 w-6 text-purple-500" />
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-muted-foreground uppercase tracking-wider">Senadores com Emendas</p>
+                  <p class="text-3xl font-bold text-foreground">{{ estatisticas.totais.senadores }}</p>
+                </div>
               </div>
-              <span>Integração em andamento</span>
+            </BaseCard>
+            <BaseCard hover class="border-l-4 border-accent">
+              <div class="flex items-center gap-4">
+                <div class="p-3 rounded-xl bg-accent/10">
+                  <Landmark class="h-6 w-6 text-accent" />
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-muted-foreground uppercase tracking-wider">Municípios Beneficiados</p>
+                  <p class="text-3xl font-bold text-foreground">{{ estatisticas.totais.municipios }}</p>
+                </div>
+              </div>
+            </BaseCard>
+            <BaseCard hover class="border-l-4 border-chart-2 sm:col-span-2 lg:col-span-1">
+              <div class="flex items-center gap-4">
+                <div class="p-3 rounded-xl bg-chart-2/10">
+                  <TrendingUp class="h-6 w-6 text-chart-2" />
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-muted-foreground uppercase tracking-wider">Áreas Contempladas</p>
+                  <p class="text-3xl font-bold text-foreground">{{ estatisticas.totais.areas }}</p>
+                </div>
+              </div>
+            </BaseCard>
+          </div>
+        </div>
+      </section>
+
+      <!-- Áreas -->
+      <section class="py-12">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div class="flex items-center justify-between mb-8">
+            <h2 class="text-2xl font-bold text-foreground">Distribuição por Área</h2>
+            <span class="text-sm text-muted-foreground">Total: R$ {{ (estatisticas.totais.valor_total / 1000000000).toFixed(1) }} Bi</span>
+          </div>
+          <div v-if="carregando" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <BaseCard v-for="i in 6" :key="i" class="animate-pulse h-24" />
+          </div>
+          <div v-else class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <BaseCard v-for="area in estatisticas.areas" :key="area.nome" hover class="group bg-card/50 backdrop-blur-sm">
+              <div class="flex items-center justify-between mb-3">
+                <span class="font-semibold text-foreground group-hover:text-purple-500 transition-colors">{{ area.nome }}</span>
+                <span class="text-lg font-bold text-accent">{{ area.percentual }}%</span>
+              </div>
+              <div class="h-2 bg-muted rounded-full overflow-hidden mb-3">
+                <div class="h-full bg-purple-500 rounded-full transition-all duration-1000" :style="{ width: `${area.percentual}%` }" />
+              </div>
+              <p class="text-sm font-medium text-muted-foreground">R$ {{ (area.valor / 1000000).toFixed(1) }}M</p>
+            </BaseCard>
+          </div>
+        </div>
+      </section>
+
+      <!-- Ranking -->
+      <section class="py-12 bg-muted/30">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <h2 class="text-2xl font-bold text-foreground mb-8">Top 10 — Senadores em Emendas</h2>
+          <BaseCard class="overflow-hidden border-none shadow-xl">
+            <div v-if="carregando" class="p-12 text-center text-muted-foreground">Carregando ranking...</div>
+            <div v-else class="divide-y divide-border">
+                <div
+                  v-for="(senador, index) in estatisticas.ranking"
+                  :key="senador.id"
+                  class="flex items-center gap-3 sm:gap-6 p-3 sm:p-6 hover:bg-muted/50 transition-all duration-300 group cursor-pointer"
+                  @click="goToSenador(senador.id)"
+                >
+                  <span class="text-lg sm:text-xl font-black text-muted-foreground/30 w-6 sm:w-8 group-hover:text-purple-500/50 transition-colors">{{ index + 1 }}º</span>
+                <div class="h-10 w-10 sm:h-14 sm:w-14 rounded-xl sm:rounded-2xl bg-muted overflow-hidden border-2 border-purple-500/20 group-hover:border-purple-500/50 group-hover:scale-110 transition-all duration-300 shadow-sm flex-shrink-0">
+                  <img 
+                    :src="senador.foto" 
+                    :alt="senador.nome"
+                    class="h-full w-full object-cover object-top"
+                    @error="(e: any) => e.target.src = `https://ui-avatars.com/api/?name=${senador.nome}&background=random`"
+                  />
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="font-bold text-foreground truncate text-sm sm:text-lg uppercase">{{ senador.nome }}</p>
+                  <p class="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-tight">{{ senador.partido }} • {{ senador.estado }}</p>
+                </div>
+                <div class="text-right flex-shrink-0">
+                  <p class="text-base sm:text-xl font-extrabold text-accent">R$ {{ (senador.emendasTotal / 1000000).toFixed(1) }}M</p>
+                </div>
+              </div>
             </div>
           </BaseCard>
         </div>
@@ -44,8 +121,40 @@
 </template>
 
 <script setup lang="ts">
-import { Landmark } from 'lucide-vue-next'
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { Landmark, Users, TrendingUp } from 'lucide-vue-next'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
+
+const estatisticas = ref({
+  totais: { senadores: 0, municipios: 0, areas: 0, valor_total: 0 },
+  areas: [] as any[],
+  ranking: [] as any[]
+})
+
+const router = useRouter()
+const carregando = ref(true)
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
+async function carregarEstatisticas() {
+  try {
+    const resposta = await fetch(`${API_URL}/api/senado/emendas/resumo`)
+    if (!resposta.ok) throw new Error('Erro ao buscar estatísticas')
+    estatisticas.value = await resposta.json()
+  } catch (erro) {
+    console.error('Falha ao carregar estatísticas:', erro)
+  } finally {
+    carregando.value = false
+  }
+}
+
+function goToSenador(id: number) {
+  router.push(`/senado/senadores/${id}`)
+}
+
+onMounted(() => {
+  carregarEstatisticas()
+})
 </script>

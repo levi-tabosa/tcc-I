@@ -104,14 +104,14 @@
                   <p class="mt-1 text-xs text-muted-foreground">Soma de todas despesas registradas</p>
                 </BaseCard>
 
-                <!-- Placeholder for stats not currently in API -->
-                <BaseCard class="opacity-70 border-purple-100/50">
+                <BaseCard class="border-purple-100">
                   <div class="flex items-center justify-between">
                     <p class="text-sm text-muted-foreground">Emendas</p>
-                    <BaseBadge variant="outline" class="border-purple-200 text-purple-700 bg-purple-50">Breve</BaseBadge>
+                    <BaseBadge variant="secondary" class="bg-purple-100 text-purple-800">Mandato</BaseBadge>
                   </div>
-                  <p class="mt-2 text-xl font-bold text-muted-foreground">Dados Indisponíveis</p>
-                  <p class="mt-1 text-xs text-muted-foreground italic">Informação não integrada ao portal</p>
+                  <p v-if="store.totalEmendas > 0" class="mt-2 text-3xl font-bold text-foreground">R$ {{ (store.totalEmendas / 1000000).toFixed(1) }}M</p>
+                  <p v-else class="mt-2 text-xl font-bold text-muted-foreground">Dados Indisponíveis</p>
+                  <p class="mt-1 text-xs text-muted-foreground text-purple-600/70">Soma das emendas pagas ao senador</p>
                 </BaseCard>
 
                 <BaseCard class="sm:col-span-2 lg:col-span-3 border-purple-100">
@@ -139,6 +139,43 @@
           </div>
         </section>
         
+        <!-- Emendas Table Section -->
+        <section class="py-8 bg-purple-50/30">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <h3 class="text-xl font-bold text-foreground mb-4">Emendas Parlamentares</h3>
+                <BaseCard variant="elevated" class="p-0 overflow-hidden border-purple-100 shadow-purple-900/5">
+                    <div class="overflow-x-auto max-h-[600px] relative">
+                        <table class="table-professional w-full border-collapse">
+                            <thead class="sticky top-0 z-10 bg-card border-b border-purple-100 shadow-sm">
+                                <tr>
+                                    <th class="bg-card py-4 px-4 text-left font-bold text-xs uppercase tracking-wider text-muted-foreground border-b border-purple-100">Ano/Tipo</th>
+                                    <th class="bg-card py-4 px-4 text-left font-bold text-xs uppercase tracking-wider text-muted-foreground border-b border-purple-100">Função</th>
+                                    <th class="bg-card py-4 px-4 text-left font-bold text-xs uppercase tracking-wider text-muted-foreground border-b border-purple-100">Localidade</th>
+                                    <th class="bg-card py-4 px-4 text-right font-bold text-xs uppercase tracking-wider text-muted-foreground border-b border-purple-100">Valor Pago</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-purple-50 bg-card">
+                                <tr v-for="(emenda, index) in store.currentEmendas" :key="index" class="hover:bg-purple-50/50 transition-colors">
+                                    <td class="whitespace-nowrap">
+                                        <div class="flex flex-col">
+                                            <span class="font-medium text-purple-900">{{ emenda.ano }}</span>
+                                            <span class="text-xs text-muted-foreground">{{ emenda.tipo }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="text-muted-foreground">{{ emenda.funcao }}</td>
+                                    <td class="text-muted-foreground">{{ emenda.localidade }}</td>
+                                    <td class="text-right whitespace-nowrap font-medium text-purple-600">R$ {{ emenda.valorPago.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</td>
+                                </tr>
+                                <tr v-if="store.currentEmendas.length === 0">
+                                    <td colspan="4" class="py-12 text-center text-muted-foreground italic">Dados Indisponíveis</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </BaseCard>
+            </div>
+        </section>
+
         <!-- Expenses Table Section -->
         <section class="py-8">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

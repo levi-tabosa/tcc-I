@@ -7,7 +7,7 @@
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h1 class="text-3xl font-bold text-foreground sm:text-4xl">Projetos Legislativos do Senado</h1>
           <p class="mt-2 text-muted-foreground max-w-2xl">
-            Acompanhe os projetos de lei, PECs, medidas provisórias e outros projetos legislativos tramitando no Senado Federal.
+            Acompanhe os projetos de lei, PECs, medidas provisórias e outros projetos legislativos apresentados no Senado Federal.
           </p>
         </div>
       </section>

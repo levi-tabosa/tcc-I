@@ -272,6 +272,19 @@ WHERE codigo = %s;"""
             if not resultado:
                 raise HTTPException(status_code=404, detail="Senador não encontrado")
             
+            # 2. Buscar Resumo de Emendas
+            query_emendas = """
+                SELECT SUM(e.valor_pago) as total_emendas
+                FROM portal.emendas e
+                JOIN senado.parlamentar s 
+                  ON (lower(e.nome_autor) = lower(s.nome_completo) 
+                      OR lower(e.nome_autor) = lower(s.nome_parlamentar))
+                WHERE s.codigo = %s
+            """
+            cursor.execute(query_emendas, (senador_codigo,))
+            emendas_res_row = cursor.fetchone()
+            total_emendas = float(emendas_res_row[0]) if emendas_res_row and emendas_res_row[0] else 0.0
+
             return {
                 "senador": {
                     "codigo": resultado[0],
@@ -283,7 +296,8 @@ WHERE codigo = %s;"""
                     "email": resultado[6],
                     "urlFoto": resultado[7],
                     "urlPagina": resultado[8],
-                    "dataNascimento": resultado[9]
+                    "dataNascimento": resultado[9],
+                    "total_emendas": total_emendas
                 }
             }
     except Exception as e:
@@ -580,6 +594,204 @@ def get_materia_listar(
             conn.close()
 
 
+@router.get("/emendas", summary="Busca uma lista de emendas parlamentares do Senado")
+def get_lista_emendas(
+    nome_senador: str = Query(None),
+    ano: int = Query(None),
+    pagina: int = 1
+):
+    itens_por_pagina = 15
+    offset = (pagina - 1) * itens_por_pagina
+
+    try:
+        conn = db.get_connect_senado()
+        if not conn:
+            raise HTTPException(status_code=503, detail="Banco de dados indisponível")
+        
+        with conn.cursor() as cursor:
+            query = """
+                SELECT 
+                    s.nome_parlamentar as senador,
+                    e.codigo_emenda as codigo,
+                    e.ano,
+                    e.tipo_emenda as tipo,
+                    e.valor_empenhado,
+                    e.valor_liquidado,
+                    e.valor_pago,
+                    e.funcao,
+                    e.localidade_gasto as localidade
+                FROM portal.emendas e
+                JOIN senado.parlamentar s 
+                  ON (lower(e.nome_autor) = lower(s.nome_completo) 
+                      OR lower(e.nome_autor) = lower(s.nome_parlamentar))
+                WHERE 1=1
+            """
+            params = []
+            if nome_senador:
+                query += " AND s.nome_parlamentar ILIKE %s"
+                params.append(f"%{nome_senador}%")
+            if ano:
+                query += " AND e.ano = %s"
+                params.append(ano)
+                
+            query += " ORDER BY e.ano DESC, e.valor_pago DESC LIMIT %s OFFSET %s"
+            params.extend([itens_por_pagina, offset])
+
+            cursor.execute(query, tuple(params))
+            columns = [desc[0] for desc in cursor.description]
+            resultados = [dict(zip(columns, row)) for row in cursor.fetchall()]
+            
+            for r in resultados:
+                r["valorEmpenhado"] = float(r["valor_empenhado"]) if r["valor_empenhado"] else 0.0
+                r["valorLiquidado"] = float(r["valor_liquidado"]) if r["valor_liquidado"] else 0.0
+                r["valorPago"] = float(r["valor_pago"]) if r["valor_pago"] else 0.0
+                del r["valor_empenhado"]
+                del r["valor_liquidado"]
+                del r["valor_pago"]
+                
+            return resultados
+    except Exception as e:
+        logging.error(f"Erro ao buscar emendas do senado: {e}")
+        raise HTTPException(status_code=500, detail="Erro ao processar emendas")
+    finally:
+        if 'conn' in locals() and conn:
+            conn.close()
+
+
+@router.get("/emendas/resumo", summary="Obtém resumo das emendas do Senado")
+def get_resumo_emendas():
+    try:
+        conn = db.get_connect_senado()
+        if not conn:
+            raise HTTPException(status_code=503, detail="Banco de dados indisponível")
+        
+        with conn.cursor() as cursor:
+            # 1. Totais Gerais
+            cursor.execute("""
+                SELECT 
+                    COUNT(DISTINCT e.nome_autor) as total_senadores,
+                    COUNT(DISTINCT e.localidade_gasto) as total_municipios,
+                    COUNT(DISTINCT e.funcao) as total_areas
+                FROM portal.emendas e
+                JOIN senado.parlamentar s 
+                  ON (lower(e.nome_autor) = lower(s.nome_completo) 
+                      OR lower(e.nome_autor) = lower(s.nome_parlamentar))
+            """)
+            totais = cursor.fetchone()
+            
+            # 2. Distribuição por Área
+            cursor.execute("""
+                SELECT e.funcao, SUM(e.valor_pago) as valor_total
+                FROM portal.emendas e
+                JOIN senado.parlamentar s 
+                  ON (lower(e.nome_autor) = lower(s.nome_completo) 
+                      OR lower(e.nome_autor) = lower(s.nome_parlamentar))
+                GROUP BY e.funcao
+                ORDER BY valor_total DESC
+            """)
+            areas_raw = cursor.fetchall()
+            valor_total_global = sum(float(r[1]) for r in areas_raw) if areas_raw else 1
+
+            areas_formatadas = [
+                {
+                    "nome": r[0] if r[0] else "Outros",
+                    "valor": float(r[1]),
+                    "percentual": round((float(r[1]) / valor_total_global) * 100, 1)
+                }
+                for r in areas_raw
+            ]
+
+            # 3. Top 10 Senadores
+            cursor.execute("""
+                SELECT 
+                    s.codigo, s.nome_parlamentar, s.sigla_partido, s.uf, s.url_foto,
+                    SUM(e.valor_pago) as total_valor
+                FROM portal.emendas e
+                JOIN senado.parlamentar s 
+                  ON (lower(e.nome_autor) = lower(s.nome_completo) 
+                      OR lower(e.nome_autor) = lower(s.nome_parlamentar))
+                GROUP BY s.codigo, s.nome_parlamentar, s.sigla_partido, s.uf, s.url_foto
+                ORDER BY total_valor DESC
+                LIMIT 10
+            """)
+            top_senadores = cursor.fetchall()
+
+            return {
+                "totais": {
+                    "senadores": totais[0],
+                    "municipios": totais[1],
+                    "areas": totais[2],
+                    "valor_total": valor_total_global
+                },
+                "areas": areas_formatadas,
+                "ranking": [
+                    {
+                        "id": r[0],
+                        "nome": r[1],
+                        "partido": r[2] if r[2] else "S/P",
+                        "estado": r[3] if r[3] else "BR",
+                        "emendasTotal": float(r[5]),
+                        "foto": r[4] if r[4] else f"https://ui-avatars.com/api/?name={r[1]}&background=random"
+                    }
+                    for r in top_senadores
+                ]
+            }
+    except Exception as e:
+        logging.error(f"Erro ao buscar resumo emendas: {e}")
+        raise HTTPException(status_code=500, detail="Erro ao processar emendas")
+    finally:
+        if 'conn' in locals() and conn:
+            conn.close()
+
+
+@router.get("/materia/votacao", summary="Obtém o histórico de votações de um projeto legislativo")
+def get_votacao_materia(codigo_materia: int):
+    try:
+        conn = db.get_connect_senado()
+        if not conn:
+            raise HTTPException(status_code=503, detail="Banco de dados indisponível")
+        
+        with conn.cursor() as cursor:
+            query = """
+                SELECT 
+                    m.sigla || ' ' || m.numero || '/' || m.ano AS materia,
+                    m.ementa,
+                    p.nome_parlamentar,
+                    p.sigla_partido,
+                    p.uf,
+                    vp.sigla_descricao_voto AS voto,
+                    vp.descricao_resultado AS resultado
+                FROM votacao_parlamentar vp
+                JOIN materia m ON vp.codigo_materia = m.codigo
+                JOIN parlamentar p ON vp.codigo_parlamentar = p.codigo
+                WHERE vp.codigo_materia = %s
+                  AND vp.sigla_descricao_voto NOT IN ('P-NRV', 'AP', 'Presidente (art. 51 RISF)', 'LS', 'NCom')
+                ORDER BY m.ano DESC, m.sigla, m.numero, p.nome_parlamentar
+            """
+            cursor.execute(query, (codigo_materia,))
+            resultados = cursor.fetchall()
+            return {
+                "votacao": [
+                    {
+                        "materia": r[0],
+                        "ementa": r[1],
+                        "nomeParlamentar": r[2],
+                        "siglaPartido": r[3],
+                        "uf": r[4],
+                        "voto": r[5],
+                        "resultado": r[6]
+                    }
+                    for r in resultados
+                ]
+            }
+    except Exception as e:
+        logging.error(f"Erro ao buscar votação: {e}")
+        raise HTTPException(status_code=500, detail="Erro ao processar votação")
+    finally:
+        if 'conn' in locals() and conn:
+            conn.close()
+
+
 @router.get("/materia/votacao", summary="Obtém o histórico de votações de um projeto legislativo")
 def get_votacao_materia(codigo_materia: int):
     try:
@@ -735,6 +947,51 @@ ORDER BY quantidade DESC;"""
     except Exception as e:
         logging.error(f"Erro ao buscar estatísticas gerais: {e}")
         raise HTTPException(status_code=500, detail="Erro ao processar estatísticas gerais")
+
+@router.get("/{senador_codigo}/emendas/lista", summary="Obtém a lista de emendas parlamentares de um senador")
+def get_emendas_lista_senador(senador_codigo: int):
+    try:
+        conn = db.get_connect_senado()
+        if not conn:
+            raise HTTPException(status_code=503, detail="Banco de dados indisponível")
+        
+        with conn.cursor() as cursor:
+            query = """
+                SELECT 
+                    e.codigo_emenda as codigo,
+                    e.ano,
+                    e.tipo_emenda as tipo,
+                    e.valor_empenhado,
+                    e.valor_liquidado,
+                    e.valor_pago,
+                    e.funcao,
+                    e.localidade_gasto as localidade
+                FROM portal.emendas e
+                JOIN senado.parlamentar s 
+                  ON (lower(e.nome_autor) = lower(s.nome_completo) 
+                      OR lower(e.nome_autor) = lower(s.nome_parlamentar))
+                WHERE s.codigo = %s
+                ORDER BY e.ano DESC, e.valor_pago DESC
+            """
+            cursor.execute(query, (senador_codigo,))
+            columns = [desc[0] for desc in cursor.description]
+            resultados = [dict(zip(columns, row)) for row in cursor.fetchall()]
+            
+            for r in resultados:
+                r["valorEmpenhado"] = float(r["valor_empenhado"]) if r["valor_empenhado"] else 0.0
+                r["valorLiquidado"] = float(r["valor_liquidado"]) if r["valor_liquidado"] else 0.0
+                r["valorPago"] = float(r["valor_pago"]) if r["valor_pago"] else 0.0
+                del r["valor_empenhado"]
+                del r["valor_liquidado"]
+                del r["valor_pago"]
+                
+            return resultados
+    except Exception as e:
+        logging.error(f"Erro ao buscar emendas do senador: {e}")
+        raise HTTPException(status_code=500, detail="Erro ao processar emendas")
+    finally:
+        if 'conn' in locals() and conn:
+            conn.close()
 
 
 @router.get("/empresas/estatisticas", summary="Obtém estatísticas gerais das empresas")

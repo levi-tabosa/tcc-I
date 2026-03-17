@@ -5,8 +5,7 @@ services:
       dockerfile: backend/Dockerfile
     container_name: camara_backend
     environment:
-      - DATABASE_URL_CAMARA=postgresql://postgres:postgres@postgres:5432/fiscaliza_db?options=-csearch_path%3Dcamara
-      - DATABASE_URL_SENADO=postgresql://postgres:postgres@postgres:5432/fiscaliza_db?options=-csearch_path%3Dsenado
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/fiscaliza_db
       - API_KEY=${API_KEY} # obtido  .env na pasta raiz do projeto
     ports:
       - "8000:8000"

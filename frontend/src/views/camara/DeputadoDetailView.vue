@@ -106,13 +106,14 @@
                 </BaseCard>
 
                  <!-- Placeholder for stats not currently in API -->
-                <BaseCard class="opacity-70">
+                <BaseCard>
                   <div class="flex items-center justify-between">
                     <p class="text-sm text-muted-foreground">Emendas</p>
-                    <BaseBadge variant="outline">Breve</BaseBadge>
+                    <BaseBadge variant="secondary">Mandato</BaseBadge>
                   </div>
-                  <p class="mt-2 text-xl font-bold text-muted-foreground">Dados Indisponíveis</p>
-                  <p class="mt-1 text-xs text-muted-foreground italic">Informação não integrada ao portal</p>
+                  <p v-if="store.totalEmendas > 0" class="mt-2 text-3xl font-bold text-foreground">R$ {{ (store.totalEmendas / 1000000).toFixed(1) }}M</p>
+                  <p v-else class="mt-2 text-xl font-bold text-muted-foreground">Dados Indisponíveis</p>
+                  <p class="mt-1 text-xs text-muted-foreground">Soma das emendas pagas ao deputado</p>
                 </BaseCard>
 
                 <BaseCard class="sm:col-span-2 lg:col-span-3">
@@ -140,6 +141,43 @@
           </div>
         </section>
         
+        <!-- Emendas Table Section -->
+        <section class="py-8 bg-muted/20">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <h3 class="text-xl font-bold text-foreground mb-4">Emendas Parlamentares</h3>
+                <BaseCard variant="elevated" class="p-0 overflow-hidden">
+                    <div class="overflow-x-auto max-h-[600px] relative">
+                        <table class="table-professional w-full border-collapse">
+                            <thead class="sticky top-0 z-10 bg-card border-b shadow-sm">
+                                <tr>
+                                    <th class="bg-card py-4 px-4 text-left font-bold text-xs uppercase tracking-wider text-muted-foreground border-b">Ano/Tipo</th>
+                                    <th class="bg-card py-4 px-4 text-left font-bold text-xs uppercase tracking-wider text-muted-foreground border-b">Função</th>
+                                    <th class="bg-card py-4 px-4 text-left font-bold text-xs uppercase tracking-wider text-muted-foreground border-b">Localidade</th>
+                                    <th class="bg-card py-4 px-4 text-right font-bold text-xs uppercase tracking-wider text-muted-foreground border-b">Valor Pago</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-border bg-card">
+                                <tr v-for="(emenda, index) in store.currentEmendas" :key="index" class="hover:bg-muted/50 transition-colors">
+                                    <td class="whitespace-nowrap">
+                                        <div class="flex flex-col">
+                                            <span class="font-medium">{{ emenda.ano }}</span>
+                                            <span class="text-xs text-muted-foreground">{{ emenda.tipo }}</span>
+                                        </div>
+                                    </td>
+                                    <td>{{ emenda.funcao }}</td>
+                                    <td>{{ emenda.localidade }}</td>
+                                    <td class="text-right whitespace-nowrap font-medium text-primary">R$ {{ emenda.valorPago.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</td>
+                                </tr>
+                                <tr v-if="store.currentEmendas.length === 0">
+                                    <td colspan="4" class="py-12 text-center text-muted-foreground italic">Dados Indisponíveis</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </BaseCard>
+            </div>
+        </section>
+
         <!-- Expenses Table Section -->
         <section class="py-8">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

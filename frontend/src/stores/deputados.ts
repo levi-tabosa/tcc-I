@@ -34,6 +34,18 @@ export interface DeputadoDetail {
   categorias?: { categoria: string; valor: number }[]
   despesas?: Despesa[]
   total_gasto?: number
+  total_emendas?: number
+}
+
+export interface Emenda {
+  codigo: string
+  ano: number
+  tipo: string
+  valorEmpenhado: number
+  valorLiquidado: number
+  valorPago: number
+  funcao: string
+  localidade: string
 }
 
 export interface Despesa {
@@ -131,6 +143,8 @@ export const useDeputadosStore = defineStore("deputados", () => {
   const currentDespesas = ref<Despesa[]>([])
   const currentCategorias = ref<Categoria[]>([])
   const totalDespesas = ref(0)
+  const currentEmendas = ref<Emenda[]>([])
+  const totalEmendas = ref(0)
   const loadingDetail = ref(false)
 
   // General Stats state
@@ -191,6 +205,10 @@ export const useDeputadosStore = defineStore("deputados", () => {
       currentDespesas.value = data.despesas || []
       currentCategorias.value = data.categorias || []
       totalDespesas.value = data.total_despesas || 0
+      totalEmendas.value = data.total_emendas || 0
+      
+      // Also fetch the full list of emendas
+      await fetchEmendasDeputado(id)
     } catch (e: any) {
       console.error("Erro ao buscar detalhes:", e)
       error.value = "Erro ao carregar detalhes do deputado."
@@ -303,6 +321,16 @@ export const useDeputadosStore = defineStore("deputados", () => {
     }
   }
 
+  const fetchEmendasDeputado = async (id: number) => {
+    try {
+      const response = await fetch(`${apiUrl}/api/deputados/${id}/emendas`)
+      if (!response.ok) throw new Error("Falha ao buscar emendas")
+      currentEmendas.value = await response.json()
+    } catch (e: any) {
+      console.error("Erro ao buscar emendas do deputado:", e)
+    }
+  }
+
   const toggleProjetoLegislativoVotos = async (id: number) => {
     if (selectedProjetoLegislativoId.value === id) {
       selectedProjetoLegislativoId.value = null
@@ -384,6 +412,8 @@ export const useDeputadosStore = defineStore("deputados", () => {
     currentDespesas,
     currentCategorias,
     totalDespesas,
+    currentEmendas,
+    totalEmendas,
     loadingDetail,
     generalStats,
     deputadoStats,

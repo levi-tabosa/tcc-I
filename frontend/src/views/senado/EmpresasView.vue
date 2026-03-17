@@ -5,9 +5,9 @@
       <!-- Hero -->
       <section class="bg-gradient-to-br from-chart-2/10 via-background to-primary/10 py-12">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h1 class="text-3xl font-bold text-foreground sm:text-4xl">Rankings de Empresas</h1>
+          <h1 class="text-3xl font-bold text-foreground sm:text-4xl">Ranking de Fornecedores do Senado</h1>
           <p class="mt-2 text-muted-foreground max-w-2xl">
-            Conheça as empresas que mais recebem recursos da cota parlamentar (CEAPS). Transparência nos contratos e pagamentos.
+            Conheça as empresas que mais recebem recursos da Cota para o Exercício da Atividade Parlamentar dos Senadores (CEAPS). Transparência detalhada em gastos e contratos.
           </p>
         </div>
       </section>
