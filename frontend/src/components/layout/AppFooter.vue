@@ -57,6 +57,7 @@ import { Github, Twitter } from 'lucide-vue-next'
 
 const dataSources = [
   { name: 'Dados Abertos da Câmara', url: 'https://dadosabertos.camara.leg.br' },
+  { name: 'Dados Abertos do Senado', url: 'https://www12.senado.leg.br/dados-abertos' },
   { name: 'Portal da Transparência', url: 'https://portaldatransparencia.gov.br' },
 ]
 </script>

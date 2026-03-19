@@ -53,11 +53,11 @@
             <p class="mt-2 text-muted-foreground">Informações sobre as fontes e tipos de dados exibidos</p>
           </div>
 
-          <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div class="flex flex-wrap justify-center gap-6">
             <div
               v-for="source in dataSources"
               :key="source.title"
-              class="bg-card rounded-xl border border-border p-6 hover:shadow-lg transition-shadow"
+              class="bg-card rounded-xl border border-border p-6 hover:shadow-lg transition-shadow w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)]"
             >
               <div class="flex items-center gap-3 mb-4">
                 <div class="p-2.5 rounded-lg bg-primary/10">
@@ -178,22 +178,6 @@
         </div>
       </section>
 
-      <!-- CTA -->
-      <section class="py-20">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
-          <h2 class="text-3xl font-bold text-foreground">Pronto para fiscalizar?</h2>
-          <p class="mt-3 text-muted-foreground max-w-lg mx-auto">
-            Escolha por onde começar e acompanhe o que fazem com o dinheiro público.
-          </p>
-          <div class="mt-8 flex flex-wrap justify-center gap-3">
-            <BaseButton to="/camara/deputados">Deputados</BaseButton>
-            <BaseButton to="/camara/despesas" variant="outline">Despesas</BaseButton>
-            <BaseButton to="/camara/emendas" variant="outline">Emendas</BaseButton>
-            <BaseButton to="/camara/projetos-legislativos" variant="outline">Projetos Legislativos</BaseButton>
-            <BaseButton to="/camara/comparar" variant="outline">Comparar</BaseButton>
-          </div>
-        </div>
-      </section>
     </main>
     <AppFooter />
   </div>
@@ -224,10 +208,9 @@ const dataSources = [
     icon: Receipt,
     items: [
       'Sistema de reembolso de despesas dos parlamentares',
-      'Dados com defasagem de até 90 dias para comprovação',
       'Categorias: passagens, alimentação, combustíveis, etc.',
     ],
-    fonte: 'API da Câmara dos Deputados',
+    fonte: 'API da Câmara e do Senado',
   },
   {
     title: 'Emendas Parlamentares',
@@ -243,11 +226,11 @@ const dataSources = [
     title: 'Votações',
     icon: Vote,
     items: [
-      'Registro nominal de votos dos deputados',
+      'Registro nominal de votos dos parlamentares',
       'Dados desde 2007 até a legislatura atual',
       'Resultado completo de cada votação',
     ],
-    fonte: 'API da Câmara dos Deputados',
+    fonte: 'API da Câmara e do Senado',
   },
   {
     title: 'Projetos Legislativos',
@@ -257,7 +240,7 @@ const dataSources = [
       'Autoria, tramitação e situação atual',
       'Filtros por tipo, ano e autor',
     ],
-    fonte: 'API da Câmara dos Deputados',
+    fonte: 'API da Câmara e do Senado',
   },
   {
     title: 'Perfis Parlamentares',
@@ -269,40 +252,30 @@ const dataSources = [
     ],
     fonte: 'API da Câmara e do Senado',
   },
-  {
-    title: 'Atualização',
-    icon: RefreshCw,
-    items: [
-      'Dados atualizados automaticamente a cada 24h',
-      'Maior frequência em períodos de votação',
-      'Histórico desde 2007 disponível',
-    ],
-    fonte: 'Processamento automático',
-  },
 ]
 
 // Features
 const features = [
   {
     title: 'Veja quem mais gasta',
-    description: 'O painel de despesas mostra os deputados e partidos que mais utilizam a cota parlamentar, com rankings, totais e análises por categoria.',
-    tips: ['Filtre por partido ou estado', 'Veja gastos por categoria', 'Compare períodos diferentes'],
+    description: 'O painel de despesas mostra os parlamentares e partidos que mais utilizam a cota parlamentar, com rankings, totais e análises por categoria.',
+    tips: ['Filtre por partido ou estado', 'Veja gastos por categoria', 'Câmara e Senado disponíveis'],
     href: '/camara/despesas',
     cta: 'Ver despesas',
     icon: Receipt,
   },
   {
-    title: 'Compare deputados lado a lado',
-    description: 'Escolha dois deputados e compare perfis, gastos totais, categorias de despesas e últimas notas fiscais em uma única tela.',
-    tips: ['Compare deputados do mesmo estado', 'Veja diferença percentual de gastos', 'Analise categorias individualmente'],
+    title: 'Compare parlamentares lado a lado',
+    description: 'Escolha dois parlamentares e compare perfis, gastos totais, categorias de despesas e últimas notas fiscais em uma única tela.',
+    tips: ['Compare parlamentares do mesmo estado', 'Veja diferença percentual de gastos', 'Disponível para Câmara e Senado'],
     href: '/camara/comparar',
     cta: 'Iniciar comparação',
     icon: Scale,
   },
   {
     title: 'Acompanhe as votações',
-    description: 'Veja como cada deputado votou nos projetos legislativos. Descubra padrões de votação e alinhamento partidário.',
-    tips: ['Veja o placar completo de cada votação', 'Filtre por projeto legislativo ou deputado', 'Dados desde 2007'],
+    description: 'Veja como cada parlamentar votou nos projetos legislativos. Descubra padrões de votação e alinhamento partidário.',
+    tips: ['Veja o placar completo de cada votação', 'Filtre por projeto legislativo ou parlamentar', 'Dados desde 2007'],
     href: '/camara/projetos-legislativos',
     cta: 'Ver projetos legislativos',
     icon: Vote,
@@ -316,19 +289,19 @@ const features = [
     icon: FileText,
   },
   {
-    title: 'Conheça cada deputado a fundo',
-    description: 'Clique em qualquer deputado para ver o perfil completo: histórico de gastos, despesas detalhadas, partido e informações pessoais.',
+    title: 'Conheça cada parlamentar a fundo',
+    description: 'Clique em qualquer parlamentar para ver o perfil completo: histórico de gastos, despesas detalhadas, partido e informações pessoais.',
     tips: ['Veja a evolução dos gastos', 'Confira as últimas despesas', 'Acesse informações de contato'],
     href: '/camara/deputados',
-    cta: 'Buscar deputado',
+    cta: 'Buscar parlamentar',
     icon: Users,
   },
 ]
 
 // Tips
 const tips = [
-  'Meses recentes podem ter dados incompletos — deputados têm prazo de 90 dias para enviar comprovantes.',
-  'Use filtros por estado para comparar deputados da mesma região.',
+  'Acompanhe dados atualizados diariamente para uma fiscalização efetiva.',
+  'Use filtros por estado para comparar parlamentares da mesma região.',
   'Na comparação, preste atenção nas categorias — dois deputados podem gastar o mesmo total, mas em áreas muito diferentes.',
   'Compartilhe os dados nas redes sociais — quanto mais gente fiscalizando, melhor para a democracia.',
 ]
@@ -338,10 +311,6 @@ const faqs = [
   {
     question: 'De onde vêm os dados?',
     answer: 'Todos os dados são obtidos através das APIs oficiais da Câmara dos Deputados (dadosabertos.camara.leg.br) e do Portal da Transparência do Governo Federal. São dados públicos, disponíveis para qualquer cidadão.',
-  },
-  {
-    question: 'Com que frequência os dados são atualizados?',
-    answer: 'Os dados são atualizados automaticamente a cada 24 horas. Porém, a Câmara dos Deputados dá aos parlamentares um prazo de até 90 dias para enviar comprovantes de despesas, então meses recentes podem ter informações incompletas.',
   },
   {
     question: 'O que é a Cota Parlamentar (CEAP)?',

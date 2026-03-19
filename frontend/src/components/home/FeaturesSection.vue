@@ -165,5 +165,11 @@ const senadoItems = [
     icon: GitCompare,
     href: "/senado/comparar",
   },
+  {
+    title: "Empresas",
+    description: "Fornecedores e gastos do Senado",
+    icon: Store,
+    href: "/senado/empresas",
+  },
 ]
 </script>

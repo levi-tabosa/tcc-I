@@ -809,9 +809,9 @@ def get_votacao_materia(codigo_materia: int):
                     p.uf,
                     vp.sigla_descricao_voto AS voto,
                     vp.descricao_resultado AS resultado
-                FROM votacao_parlamentar vp
-                JOIN materia m ON vp.codigo_materia = m.codigo
-                JOIN parlamentar p ON vp.codigo_parlamentar = p.codigo
+                FROM senado.votacao_parlamentar vp
+                JOIN senado.materia m ON vp.codigo_materia = m.codigo
+                JOIN senado.parlamentar p ON vp.codigo_parlamentar = p.codigo
                 WHERE vp.codigo_materia = %s
                   AND vp.sigla_descricao_voto NOT IN ('P-NRV', 'AP', 'Presidente (art. 51 RISF)', 'LS', 'NCom')
                 ORDER BY m.ano DESC, m.sigla, m.numero, p.nome_parlamentar
@@ -853,7 +853,7 @@ FROM senado.parlamentar;"""
             cursor.execute(query)
             total_senadores = cursor.fetchone()[0]
 
-            query = """"SELECT COUNT(DISTINCT
+            query = """SELECT COUNT(DISTINCT
     CASE
         WHEN uf IN ('AC','AP','AM','PA','RO','RR','TO') THEN 'Norte'
         WHEN uf IN ('AL','BA','CE','MA','PB','PE','PI','RN','SE') THEN 'Nordeste'

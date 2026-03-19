@@ -516,8 +516,8 @@ def get_perfil_deputado(deputado_id: int):
             # 3. Resumo por categoria
             query_categorias = """
                 SELECT desp.tipo_despesa as categoria, SUM(desp.valor_documento) as valor
-                FROM deputados_despesas AS desp
-                JOIN deputados_mandatos AS mand ON desp.mandato_id = mand.id
+                FROM camara.deputados_despesas AS desp
+                JOIN camara.deputados_mandatos AS mand ON desp.mandato_id = mand.id
                 WHERE mand.deputado_id = %s
                 GROUP BY desp.tipo_despesa
                 ORDER BY valor DESC
@@ -798,7 +798,7 @@ def get_estatisticas_empresas(limit: int = 20):
                     MAX(nome_fornecedor) as nome,
                     SUM(valor_documento) as total_valor,
                     COUNT(*) as qtd_contratos
-                FROM deputados_despesas
+                FROM camara.deputados_despesas
                 WHERE LENGTH(cnpj_cpf_fornecedor) > 11
                 GROUP BY cnpj_cpf_fornecedor
                 ORDER BY total_valor DESC
@@ -809,8 +809,8 @@ def get_estatisticas_empresas(limit: int = 20):
                     d.cnpj_cpf_fornecedor,
                     m.sigla_partido,
                     SUM(d.valor_documento) as valor
-                FROM deputados_despesas d
-                JOIN deputados_mandatos m ON d.mandato_id = m.id
+                FROM camara.deputados_despesas d
+                JOIN camara.deputados_mandatos m ON d.mandato_id = m.id
                 JOIN top_fornecedores tf ON d.cnpj_cpf_fornecedor = tf.cnpj_cpf_fornecedor
                 GROUP BY d.cnpj_cpf_fornecedor, m.sigla_partido
             )
