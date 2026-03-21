@@ -1,9 +1,10 @@
 services:
   backend:
+    image: tcc-backend
     build:
       context: .
       dockerfile: backend/Dockerfile
-    container_name: camara_backend
+    container_name: backend
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/fiscaliza_db
       - API_KEY=${API_KEY} # obtido  .env na pasta raiz do projeto
@@ -12,30 +13,31 @@ services:
     volumes:
       - ./backend:/app
     networks:
-      - camara-network
+      - tcc-network
     depends_on:
       postgres:
         condition: service_healthy
     command: sh -c "python main.py"
 
   frontend:
+    image: tcc-frontend
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: camara_frontend
+    container_name: frontend
     ports:
       - "5173:5173"
     volumes:
       - ./frontend:/app
       - /app/node_modules
     networks:
-      - camara-network
+      - tcc-network
     environment:
       - VITE_API_URL=http://localhost:8000
 
   postgres:
     image: postgres:18
-    container_name: postgres
+    container_name: database
     environment:
       POSTGRES_DB: fiscaliza_db
       POSTGRES_USER: postgres
@@ -44,10 +46,10 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - tcc-pgdata:/var/lib/postgresql/data
       - ./init-db:/docker-entrypoint-initdb.d
     networks:
-      - camara-network
+      - tcc-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -55,8 +57,10 @@ services:
       retries: 15
 
 networks:
-  camara-network:
+  tcc-network:
+    name: tcc-network
     driver: bridge
 
 volumes:
-  pgdata: {}
+  tcc-pgdata:
+    name: tcc-pgdata
