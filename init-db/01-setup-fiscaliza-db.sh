@@ -2,45 +2,48 @@
 set -e
 
 # Script para configurar o banco fiscaliza_db com os schemas camara, senado e portal
-# e importar os respectivos arquivos SQL.
+# e importar os respectivos arquivos SQL ou DUMP (binário).
 
-SQL_DIR="/docker-entrypoint-initdb.d/sql-auto"
 DB_NAME="$POSTGRES_DB"
+USER_NAME="$POSTGRES_USER"
+SQL_DIR="/docker-entrypoint-initdb.d/sql-auto"
 
-echo "Iniciando a configuração do banco: $DB_NAME"
+echo ">>> Iniciando a configuração do banco: $DB_NAME"
 
-# 1. Cria os schemas
-psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$DB_NAME" <<-EOSQL
+# 1. Criação dos Schemas básicos
+echo ">>> Criando schemas de trabalho (camara, senado, portal)..."
+psql -v ON_ERROR_STOP=1 --username "$USER_NAME" --dbname "$DB_NAME" <<-EOSQL
     CREATE SCHEMA IF NOT EXISTS camara;
     CREATE SCHEMA IF NOT EXISTS senado;
     CREATE SCHEMA IF NOT EXISTS portal;
 EOSQL
 
-# 2. Importa os arquivos SQL para os respectivos schemas
-# Nota: Assumimos que os nomes dos arquivos na pasta sql-auto são camara.sql, senado.sql e portal_data.sql
+# 2. Executa schema.sql se existir (para definições adicionais - COMENTADO)
+# if [ -f "/docker-entrypoint-initdb.d/schema.sql" ]; then
+#     echo ">>> Executando schema.sql encontrado..."
+#     psql -v ON_ERROR_STOP=1 --username "$USER_NAME" --dbname "$DB_NAME" -f "/docker-entrypoint-initdb.d/schema.sql"
+# fi
 
-# Importando CAMARA
-if [ -f "$SQL_DIR/camara.sql" ]; then
-    echo "Importando CAMARA para o schema 'camara' (ajustando public -> camara)..."
-    sed 's/public\./camara./g' "$SQL_DIR/camara.sql" | psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$DB_NAME" --set search_path=camara
-else
-    echo "Aviso: camara.sql não encontrado."
-fi
+# 3. Função de Importação
+import_schema() {
+    local schema=$1
+    local file_base=$2
 
-# Importando SENADO
-if [ -f "$SQL_DIR/senado.sql" ]; then
-    echo "Importando SENADO para o schema 'senado' (ajustando public -> senado)..."
-    sed 's/public\./senado./g' "$SQL_DIR/senado.sql" | psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$DB_NAME" --set search_path=senado
-else
-    echo "Aviso: senado.sql não encontrado."
-fi
+    if [ -f "$SQL_DIR/$file_base.dump" ]; then
+        echo ">>> Importando schema '$schema' via pg_restore (arquivo binário)..."
+        pg_restore -v --clean --if-exists --no-owner --no-privileges --username "$USER_NAME" --dbname "$DB_NAME" "$SQL_DIR/$file_base.dump"
+    elif [ -f "$SQL_DIR/$file_base.sql" ]; then
+        echo ">>> Importando schema '$schema' via psql (arquivo SQL)..."
+        # Transforma public. em schema. para garantir que os dados caiam no schema correto
+        sed "s/public\./$schema./g" "$SQL_DIR/$file_base.sql" | psql -v ON_ERROR_STOP=1 --username "$USER_NAME" --dbname "$DB_NAME" --set search_path="$schema"
+    else
+        echo ">>> Aviso: Nenhum arquivo ($file_base.dump ou $file_base.sql) encontrado para o schema '$schema'."
+    fi
+}
 
-# Importando PORTAL
-if [ -f "$SQL_DIR/portal_data.sql" ]; then
-    echo "Importando PORTAL para o schema 'portal'..."
-    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$DB_NAME" --set search_path=portal < "$SQL_DIR/portal_data.sql"
-else
-    echo "Aviso: portal_data.sql não encontrado."
-fi
+# 4. Execução das importações
+import_schema "camara" "camara"
+import_schema "senado" "senado"
+import_schema "portal" "portal_data"
 
-echo "Configuração do fiscaliza_db concluída com sucesso."
+echo ">>> Configuração do fiscaliza_db concluída com sucesso."
