@@ -1,14 +1,20 @@
 #!/bin/bash
 
+
 # Script para exportar os schemas do PostgreSQL via Docker (Versão Binária - Custom Format)
 # Este script evita erros de versão do pg_dump instalada no Windows
+
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# bash backend/scripts/export_schemas.sh
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 
 CONTAINER_NAME="database"
 DATABASE_NAME="fiscaliza_db"
 USER_NAME="postgres"
 OUTPUT_DIR="./init-db/sql-auto"
 
-# Garante que a pasta de saída existe
+# Garante que a pasta de saída
 mkdir -p "$OUTPUT_DIR"
 
 declare -A SCHEMAS
