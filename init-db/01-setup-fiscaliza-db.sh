@@ -18,11 +18,6 @@ psql -v ON_ERROR_STOP=1 --username "$USER_NAME" --dbname "$DB_NAME" <<-EOSQL
     CREATE SCHEMA IF NOT EXISTS portal;
 EOSQL
 
-# 2. Executa schema.sql se existir (para definições adicionais - COMENTADO)
-# if [ -f "/docker-entrypoint-initdb.d/schema.sql" ]; then
-#     echo ">>> Executando schema.sql encontrado..."
-#     psql -v ON_ERROR_STOP=1 --username "$USER_NAME" --dbname "$DB_NAME" -f "/docker-entrypoint-initdb.d/schema.sql"
-# fi
 
 # 3. Função de Importação
 import_schema() {
@@ -44,6 +39,6 @@ import_schema() {
 # 4. Execução das importações
 import_schema "camara" "camara"
 import_schema "senado" "senado"
-import_schema "portal" "portal_data"
+import_schema "portal" "portal" "portal_data"
 
 echo ">>> Configuração do fiscaliza_db concluída com sucesso."
