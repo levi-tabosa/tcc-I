@@ -39,6 +39,6 @@ import_schema() {
 # 4. Execução das importações
 import_schema "camara" "camara"
 import_schema "senado" "senado"
-import_schema "portal" "portal" "portal_data"
+import_schema "portal" "portal_data"
 
 echo ">>> Configuração do fiscaliza_db concluída com sucesso."
