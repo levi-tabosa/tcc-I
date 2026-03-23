@@ -59,7 +59,7 @@
                       :src="sen.foto"
                       :alt="sen.nome"
                       class="h-8 w-8 rounded-full object-cover border border-border"
-                      @error="($event.target as HTMLImageElement).src = '/placeholder-user.jpg'"
+                      @error="($event.target as HTMLImageElement).src = '/placeholder-user.svg'"
                     />
                     <div>
                       <p class="text-sm font-medium text-foreground">{{ sen.nome }}</p>
@@ -74,7 +74,7 @@
                   :src="selectedA.foto"
                   :alt="selectedA.nome"
                   class="h-10 w-10 rounded-full object-cover border-2 border-primary/30"
-                  @error="($event.target as HTMLImageElement).src = '/placeholder-user.jpg'"
+                  @error="($event.target as HTMLImageElement).src = '/placeholder-user.svg'"
                 />
                 <div>
                   <p class="text-sm font-semibold text-foreground">{{ selectedA.nome }}</p>
@@ -138,7 +138,7 @@
                   :src="selectedB.foto"
                   :alt="selectedB.nome"
                   class="h-10 w-10 rounded-full object-cover border-2 border-accent/30"
-                  @error="($event.target as HTMLImageElement).src = '/placeholder-user.jpg'"
+                  @error="($event.target as HTMLImageElement).src = '/placeholder-user.svg'"
                 />
                 <div>
                   <p class="text-sm font-semibold text-foreground">{{ selectedB.nome }}</p>
@@ -155,18 +155,13 @@
               @click="compareSenadores"
             >
               <Scale class="h-4 w-4 mr-2" />
-              {{ loadingComparison ? 'Carregando...' : 'Comparar Senadores' }}
+              {{ loadingComparison ? '...' : 'Comparar Senadores' }}
             </BaseButton>
           </div>
         </div>
       </section>
 
-      <div v-if="loadingComparison" class="flex items-center justify-center py-20">
-        <div class="flex flex-col items-center gap-3">
-          <div class="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-          <p class="text-muted-foreground">Carregando dados para comparação...</p>
-        </div>
-      </div>
+      <BaseLoading v-if="loadingComparison" message="Carregando dados para comparação..." />
 
       <!-- Comparison Results -->
       <template v-if="comparisonReady && senadorA && senadorB">
@@ -186,7 +181,7 @@
                       :src="senadorA.foto"
                       :alt="senadorA.nome_civil"
                       class="w-full h-full object-cover"
-                      @error="($event.target as HTMLImageElement).src = '/placeholder-user.jpg'"
+                      @error="($event.target as HTMLImageElement).src = '/placeholder-user.svg'"
                     />
                   </div>
                   <h3 class="mt-3 text-lg font-bold text-foreground">{{ senadorA.nome_civil }}</h3>
@@ -215,7 +210,7 @@
                       :src="senadorB.foto"
                       :alt="senadorB.nome_civil"
                       class="w-full h-full object-cover"
-                      @error="($event.target as HTMLImageElement).src = '/placeholder-user.jpg'"
+                      @error="($event.target as HTMLImageElement).src = '/placeholder-user.svg'"
                     />
                   </div>
                   <h3 class="mt-3 text-lg font-bold text-foreground">{{ senadorB.nome_civil }}</h3>
@@ -431,6 +426,7 @@ import AppFooter from '@/components/layout/AppFooter.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
+import BaseLoading from '@/components/ui/BaseLoading.vue'
 import { useSenadoresStore, type Senador, type SenadorDetail } from '@/stores/senadores'
 
 const store = useSenadoresStore()

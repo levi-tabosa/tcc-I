@@ -6,9 +6,7 @@
     </p>
 
     <!-- Loading State -->
-    <div v-if="store.loading" class="text-center py-12">
-      <p class="text-muted-foreground">Carregando deputados...</p>
-    </div>
+    <BaseLoading v-if="store.loading" message="Carregando deputados..." />
 
     <!-- Error State -->
     <div v-else-if="store.error" class="text-center py-12">
@@ -29,7 +27,7 @@
               :src="deputado.foto"
               :alt="deputado.nome"
               class="w-full h-full object-cover"
-              @error="($event.target as HTMLImageElement).src = '/placeholder-user.jpg'"
+              @error="($event.target as HTMLImageElement).src = '/placeholder-user.svg'"
             />
           </div>
           <div class="flex-1 min-w-0">
@@ -94,6 +92,7 @@ import { computed, onMounted } from 'vue'
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
+import BaseLoading from '@/components/ui/BaseLoading.vue'
 import { useDeputadosStore } from '@/stores/deputados'
 
 const store = useDeputadosStore()

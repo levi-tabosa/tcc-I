@@ -4,9 +4,7 @@
       <h3 class="text-lg font-semibold mb-4">Emendas Recentes</h3>
       
       <!-- Loading State -->
-      <div v-if="carregando" class="text-center py-4 text-muted-foreground">
-        Carregando emendas...
-      </div>
+      <BaseLoading v-if="carregando" message="Carregando emendas..." />
 
       <!-- Empty State -->
       <div v-else-if="emendas.length === 0" class="text-center py-4 text-muted-foreground">
@@ -47,7 +45,7 @@
           :disabled="carregandoMais"
           class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background border border-input hover:bg-accent hover:text-accent-foreground h-10 py-2 px-4"
         >
-          <span v-if="carregandoMais">Carregando...</span>
+          <span v-if="carregandoMais">...</span>
           <span v-else>Carregar Mais</span>
         </button>
       </div>
@@ -60,6 +58,7 @@
 import { ref, onMounted } from 'vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
+import BaseLoading from '@/components/ui/BaseLoading.vue'
 
 // Teria que ser tipado com uma interface correta, mas any resolve por hora
 const emendas = ref<any[]>([])

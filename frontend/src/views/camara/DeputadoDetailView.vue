@@ -12,36 +12,7 @@
         </div>
       </div>
 
-      <div v-if="store.loadingDetail" class="flex-1 min-h-[400px]">
-        <section class="py-8">
-          <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div class="flex flex-col lg:flex-row gap-8">
-              <div class="lg:w-80 flex-shrink-0">
-                <div class="card-default p-6 text-center">
-                  <div class="skeleton-circle h-32 w-32 mx-auto"></div>
-                  <div class="skeleton-text w-48 mx-auto mt-4"></div>
-                  <div class="flex justify-center gap-2 mt-3">
-                    <div class="skeleton-text w-16"></div>
-                    <div class="skeleton-text w-12"></div>
-                  </div>
-                  <div class="space-y-3 mt-6">
-                    <div class="skeleton-text w-full"></div>
-                    <div class="skeleton-text w-3/4"></div>
-                    <div class="skeleton-text w-2/3"></div>
-                  </div>
-                </div>
-              </div>
-              <div class="flex-1 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <div v-for="i in 3" :key="i" class="card-default p-6">
-                  <div class="skeleton-text-sm w-24 mb-2"></div>
-                  <div class="skeleton-text w-32 h-8"></div>
-                  <div class="skeleton-text-sm w-40 mt-2"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      </div>
+      <BaseLoading v-if="store.loadingDetail" message="Carregando detalhes do deputado..." full-page />
 
       <div v-else-if="store.error" class="flex-1 flex items-center justify-center min-h-[400px]">
         <p class="text-destructive">{{ store.error }}</p>
@@ -60,7 +31,7 @@
                       :src="store.currentDeputado.foto"
                       :alt="store.currentDeputado.nome_civil"
                       class="w-full h-full object-cover"
-                      @error="($event.target as HTMLImageElement).src = '/placeholder-user.jpg'"
+                      @error="($event.target as HTMLImageElement).src = '/placeholder-user.svg'"
                     />
                   </div>
 
@@ -233,6 +204,7 @@ import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
+import BaseLoading from '@/components/ui/BaseLoading.vue'
 import { useDeputadosStore } from '@/stores/deputados'
 
 const route = useRoute()

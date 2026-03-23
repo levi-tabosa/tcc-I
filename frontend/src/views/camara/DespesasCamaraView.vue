@@ -346,7 +346,7 @@ const goToDeputado = (id: number) => {
 
 const onImgError = (e: Event) => {
   const img = e.target as HTMLImageElement
-  img.src = 'https://placehold.co/40x40/e2e8f0/64748b?text=D'
+  img.src = '/placeholder-user.svg'
 }
 
 const overviewStats = computed(() => [
@@ -354,7 +354,7 @@ const overviewStats = computed(() => [
     label: "Total de Gastos", 
     value: store.generalStats 
       ? `R$ ${(store.generalStats.total_gastos / 1000000).toFixed(0)}M` 
-      : "Carregando...", 
+      : "...", 
     subvalue: "Acumulado Total",
     icon: Banknote, 
     color: "text-primary", 
@@ -364,7 +364,7 @@ const overviewStats = computed(() => [
     label: "Média por Deputado", 
     value: store.generalStats && store.deputadoStats && store.deputadoStats.total_deputados > 0
       ? `R$ ${(store.generalStats.total_gastos / store.deputadoStats.total_deputados / 1000).toFixed(0)}K`
-      : "Carregando...", 
+      : "...", 
     icon: Users, 
     color: "text-accent", 
     bgColor: "bg-accent/10" 
@@ -373,7 +373,7 @@ const overviewStats = computed(() => [
     label: "Empresas Contratadas", 
     value: store.generalStats 
       ? store.generalStats.total_empresas_contratadas.toLocaleString()
-      : "Carregando...", 
+      : "...", 
     icon: Building2, 
     color: "text-chart-2", 
     bgColor: "bg-chart-2/10" 

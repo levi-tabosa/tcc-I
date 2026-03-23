@@ -86,7 +86,7 @@
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 class="text-2xl font-bold text-foreground mb-8">Top 10 — Deputados em Emendas</h2>
           <BaseCard class="overflow-hidden border-none shadow-xl">
-            <div v-if="carregando" class="p-12 text-center text-muted-foreground">Carregando ranking...</div>
+          <BaseLoading v-if="carregando" message="Carregando ranking..." />
             <div v-else class="divide-y divide-border">
                 <div
                   v-for="(deputado, index) in estatisticas.ranking"
@@ -100,7 +100,7 @@
                     :src="deputado.foto" 
                     :alt="deputado.nome"
                     class="h-full w-full object-cover object-top"
-                    @error="(e: any) => e.target.src = `https://ui-avatars.com/api/?name=${deputado.nome}&background=random`"
+                    @error="($event.target as HTMLImageElement).src = '/placeholder-user.svg'"
                   />
                 </div>
                 <div class="flex-1 min-w-0">
@@ -127,6 +127,7 @@ import { Landmark, Users, TrendingUp } from 'lucide-vue-next'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
+import BaseLoading from '@/components/ui/BaseLoading.vue'
 
 const estatisticas = ref({
   totais: { deputados: 0, municipios: 0, areas: 0, valor_total: 0 },

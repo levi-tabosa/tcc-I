@@ -78,9 +78,7 @@
               </div>
             </div>
           </div>
-          <div v-else class="py-12 text-center text-muted-foreground text-sm">
-            Carregando dados...
-          </div>
+          <BaseLoading v-else message="Carregando gastos..." />
         </BaseCard>
 
         <!-- Maiores Bancadas -->
@@ -105,9 +103,7 @@
               <p class="text-xs text-muted-foreground">Top 6 partidos com mais senadores</p>
             </div>
           </div>
-          <div v-else class="py-12 text-center text-muted-foreground text-sm">
-            Carregando dados...
-          </div>
+          <BaseLoading v-else message="Buscando bancadas..." />
         </BaseCard>
 
         <!-- Distribuição por Região -->
@@ -131,9 +127,7 @@
               </div>
             </div>
           </div>
-          <div v-else class="py-12 text-center text-muted-foreground text-sm">
-            Carregando dados...
-          </div>
+          <BaseLoading v-else message="Processando regiões..." />
         </BaseCard>
       </div>
     </div>
@@ -144,6 +138,7 @@
 import { computed, onMounted } from 'vue'
 import { Users, MapPin, Briefcase, Globe } from 'lucide-vue-next'
 import BaseCard from '@/components/ui/BaseCard.vue'
+import BaseLoading from '@/components/ui/BaseLoading.vue'
 import { useSenadoresStore } from '@/stores/senadores'
 
 const store = useSenadoresStore()

@@ -5,24 +5,7 @@
       {{ store.projetosLegislativosList.length }} projetos legislativos encontrados
     </p>
 
-    <div v-if="store.loadingProjetosLegislativos && store.projetosLegislativosList.length === 0" class="py-12">
-      <div class="space-y-4">
-        <div v-for="i in 3" :key="i" class="card-default p-6">
-          <div class="flex items-start gap-4">
-            <div class="skeleton-rect h-12 w-12 flex-shrink-0"></div>
-            <div class="flex-1 space-y-2">
-              <div class="flex gap-2">
-                <div class="skeleton-text w-24"></div>
-                <div class="skeleton-text-sm w-16"></div>
-              </div>
-              <div class="skeleton-text w-full"></div>
-              <div class="skeleton-text w-3/4"></div>
-              <div class="skeleton-text-sm w-32 mt-2"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <BaseLoading v-if="store.loadingProjetosLegislativos && store.projetosLegislativosList.length === 0" message="Carregando projetos legislativos..." />
 
     <!-- Error State -->
     <div v-else-if="store.error" class="text-center py-12">
@@ -83,15 +66,7 @@
           class="mt-1 rounded-lg border border-border bg-muted overflow-hidden animate-slideDown"
         >
           <!-- Loading votos -->
-          <div v-if="store.loadingVotos" class="py-8 text-center">
-            <div class="inline-flex items-center gap-2 text-muted-foreground">
-              <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Buscando votos...
-            </div>
-          </div>
+          <BaseLoading v-if="store.loadingVotos" message="Buscando votos..." />
 
           <!-- Sem votos -->
           <div
@@ -191,7 +166,7 @@
         :disabled="store.loadingProjetosLegislativos"
         class="px-6 py-3 rounded-lg border border-border bg-background text-foreground font-medium hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
       >
-        <span v-if="store.loadingProjetosLegislativos">Carregando...</span>
+        <span v-if="store.loadingProjetosLegislativos">...</span>
         <span v-else>Carregar mais</span>
         <ChevronDown v-if="!store.loadingProjetosLegislativos" class="h-4 w-4" />
       </button>
@@ -204,6 +179,7 @@ import { onMounted, ref, watch } from 'vue'
 import { FileText, User, ExternalLink, ChevronDown, Vote, ChevronRight } from 'lucide-vue-next'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
+import BaseLoading from '@/components/ui/BaseLoading.vue'
 import { useDeputadosStore } from '@/stores/deputados'
 import type { VotoDeputado } from '@/stores/deputados'
 

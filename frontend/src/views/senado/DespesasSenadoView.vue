@@ -19,12 +19,7 @@
       </section>
 
       <!-- Loading state -->
-      <div v-if="loading" class="py-20 text-center">
-        <div class="inline-flex items-center gap-3 text-muted-foreground">
-          <div class="h-5 w-5 animate-spin rounded-full border-2 border-purple-500 border-t-transparent"></div>
-          <span>Carregando dados...</span>
-        </div>
-      </div>
+      <BaseLoading v-if="loading" message="Carregando dados do Senado..." full-page />
 
       <template v-else>
         <!-- Overview Cards -->
@@ -227,6 +222,7 @@ import { Banknote, Users, Receipt, ChevronRight } from 'lucide-vue-next'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
+import BaseLoading from '@/components/ui/BaseLoading.vue'
 import { useSenadoresStore } from '@/stores/senadores'
 
 const store = useSenadoresStore()
@@ -326,7 +322,7 @@ const overviewStats = computed(() => [
     label: 'Total de Gastos',
     value: store.generalStats
       ? `R$ ${(store.generalStats.total_gastos / 1000000).toFixed(0)}M`
-      : 'Carregando...',
+      : '...',
     subvalue: 'Acumulado Total',
     icon: Banknote,
     color: 'text-purple-500',
@@ -336,7 +332,7 @@ const overviewStats = computed(() => [
     label: 'Média por Senador',
     value: store.generalStats
       ? `R$ ${(store.generalStats.media_por_senador / 1000).toFixed(0)}K`
-      : 'Carregando...',
+      : '...',
     icon: Users,
     color: 'text-accent',
     bgColor: 'bg-accent/10'
@@ -345,7 +341,7 @@ const overviewStats = computed(() => [
     label: 'Partidos com Gastos',
     value: store.generalStats
       ? store.generalStats.partidos.length.toString()
-      : 'Carregando...',
+      : '...',
     icon: Receipt,
     color: 'text-chart-2',
     bgColor: 'bg-chart-2/10'
@@ -359,7 +355,7 @@ const goToSenador = (id: number) => {
 
 const onImgError = (e: Event) => {
   const img = e.target as HTMLImageElement
-  img.src = 'https://placehold.co/40x40/e2e8f0/64748b?text=S'
+  img.src = '/placeholder-user.svg'
 }
 
 const getBgColorClass = (index: number) => {
