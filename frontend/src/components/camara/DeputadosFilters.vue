@@ -42,6 +42,20 @@
         </select>
         <ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
       </div>
+
+      <!-- Legislatura -->
+      <div class="relative">
+        <select
+          :value="store.legislatura"
+          @change="store.setLegislatura(Number(($event.target as HTMLSelectElement).value))"
+          class="input-base px-4 py-2.5 pr-10 rounded-full appearance-none cursor-pointer w-full sm:w-auto sm:min-w-[140px] border-primary/30 bg-primary/5 font-semibold text-primary"
+        >
+          <option :value="57">57ª (2023-2027)</option>
+          <option :value="56">56ª (2019-2023)</option>
+          <option :value="55">55ª (2015-2019)</option>
+        </select>
+        <ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary pointer-events-none" />
+      </div>
     </div>
 
     <div v-if="hasActiveFilters" class="flex items-center gap-2">

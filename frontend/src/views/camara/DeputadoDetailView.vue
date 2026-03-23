@@ -4,11 +4,25 @@
     <main class="flex-1">
       <!-- Breadcrumb -->
       <div class="bg-muted/30 border-b border-border">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <router-link to="/camara/deputados" class="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
             <ChevronLeft class="h-4 w-4" />
             Voltar para lista
           </router-link>
+
+          <!-- Legislatura Selector -->
+          <div class="flex items-center gap-3 bg-primary/5 px-3 py-1.5 rounded-full border border-primary/10">
+            <span class="text-xs font-bold text-primary/60 uppercase tracking-wider">Visualizando:</span>
+            <select
+              :value="store.legislatura"
+              @change="store.setLegislatura(Number(($event.target as HTMLSelectElement).value))"
+              class="text-sm font-bold text-primary bg-transparent border-none p-0 focus:ring-0 cursor-pointer"
+            >
+              <option :value="57">57ª Legislatura (2023-2027)</option>
+              <option :value="56">56ª Legislatura (2019-2023)</option>
+              <option :value="55">55ª Legislatura (2015-2019)</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -222,6 +236,10 @@ onMounted(() => {
 })
 
 watch(() => route.params.id, () => {
+    loadData()
+})
+
+watch(() => store.legislatura, () => {
     loadData()
 })
 

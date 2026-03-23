@@ -14,10 +14,28 @@
 
             </div>
           </div>
-          <h1 class="text-3xl font-bold text-foreground sm:text-4xl">Despesas e Gastos</h1>
-          <p class="mt-2 text-muted-foreground max-w-2xl">
-            Acompanhe a utilização da cota parlamentar.
-          </p>
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 class="text-3xl font-bold text-foreground sm:text-4xl">Despesas e Gastos</h1>
+              <p class="mt-2 text-muted-foreground max-w-2xl">
+                Acompanhe a utilização da cota parlamentar.
+              </p>
+            </div>
+
+            <!-- Legislatura Selector -->
+            <div class="flex items-center gap-3 bg-primary/10 px-4 py-2 rounded-xl border border-primary/20">
+              <span class="text-xs font-bold text-primary uppercase tracking-wider">Legislatura:</span>
+              <select
+                :value="store.legislatura"
+                @change="store.setLegislatura(Number(($event.target as HTMLSelectElement).value))"
+                class="text-sm font-bold text-primary bg-transparent border-none p-0 focus:ring-0 cursor-pointer"
+              >
+                <option :value="57">57ª (2023-2027)</option>
+                <option :value="56">56ª (2019-2023)</option>
+                <option :value="55">55ª (2015-2019)</option>
+              </select>
+            </div>
+          </div>
         </div>
       </section>
 

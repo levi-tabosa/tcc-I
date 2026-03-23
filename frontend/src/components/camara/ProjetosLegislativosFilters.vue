@@ -46,6 +46,17 @@
           {{ ano }}
         </option>
       </select>
+
+      <!-- Legislatura -->
+      <select
+        :value="store.legislatura"
+        @change="store.setLegislatura(Number(($event.target as HTMLSelectElement).value))"
+        class="w-full sm:w-auto px-4 py-3 sm:py-2 rounded-lg border border-purple-600/30 bg-purple-50 font-semibold text-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
+      >
+        <option :value="57">57ª (2023-2027)</option>
+        <option :value="56">56ª (2019-2023)</option>
+        <option :value="55">55ª (2015-2019)</option>
+      </select>
     </div>
 
     <div v-if="hasActiveFilters" class="flex items-center gap-2">

@@ -129,6 +129,7 @@ export const useDeputadosStore = defineStore("deputados", () => {
     deputado: "",
   })
 
+  const legislatura = ref(57)
   const apiUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000"
 
   // List state
@@ -170,7 +171,7 @@ export const useDeputadosStore = defineStore("deputados", () => {
     loading.value = true
     error.value = null
     try {
-      const response = await fetch(apiUrl + "/api/deputados/lista")
+      const response = await fetch(`${apiUrl}/api/deputados/lista?legislatura=${legislatura.value}`)
       if (!response.ok) throw new Error("Falha ao buscar deputados")
 
       const data = await response.json()
@@ -197,7 +198,7 @@ export const useDeputadosStore = defineStore("deputados", () => {
     totalDespesas.value = 0
 
     try {
-      const response = await fetch(`${apiUrl}/api/deputados/${id}`)
+      const response = await fetch(`${apiUrl}/api/deputados/${id}?legislatura=${legislatura.value}`)
       if (!response.ok) throw new Error("Falha ao buscar detalhes do deputado")
 
       const data = await response.json()
@@ -220,7 +221,7 @@ export const useDeputadosStore = defineStore("deputados", () => {
 
   const fetchEstatisticasGerais = async () => {
     try {
-      const response = await fetch(`${apiUrl}/api/deputados/despesas/estatisticas`)
+      const response = await fetch(`${apiUrl}/api/deputados/despesas/estatisticas?legislatura=${legislatura.value}`)
       if (!response.ok) throw new Error("Falha ao buscar estatísticas de despesas")
       generalStats.value = await response.json()
     } catch (e: any) {
@@ -230,7 +231,7 @@ export const useDeputadosStore = defineStore("deputados", () => {
 
   const fetchEstatisticasDeputados = async () => {
     try {
-      const response = await fetch(`${apiUrl}/api/deputados/estatisticas`)
+      const response = await fetch(`${apiUrl}/api/deputados/estatisticas?legislatura=${legislatura.value}`)
       if (!response.ok) throw new Error("Falha ao buscar estatísticas de deputados")
       deputadoStats.value = await response.json()
     } catch (e: any) {
@@ -392,6 +393,15 @@ export const useDeputadosStore = defineStore("deputados", () => {
     currentPage.value = page
   }
 
+  const setLegislatura = (val: number) => {
+    legislatura.value = val
+    // Invalidate/Refetch data
+    fetchDeputados()
+    fetchEstatisticasGerais()
+    fetchEstatisticasDeputados()
+    fetchProjetosLegislativos()
+  }
+
   const resetFilters = () => {
     filters.value = { search: "", partido: "", estado: "" }
     currentPage.value = 1
@@ -443,5 +453,7 @@ export const useDeputadosStore = defineStore("deputados", () => {
     setFilter,
     setPage,
     resetFilters,
+    legislatura,
+    setLegislatura,
   }
 })

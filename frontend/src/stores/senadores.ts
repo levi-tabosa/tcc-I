@@ -90,7 +90,18 @@ export interface SenadoresFilters {
     estado: string
 }
 
+import { useDeputadosStore } from "./deputados"
+
 export const useSenadoresStore = defineStore("senadores", () => {
+    const deputadosStore = useDeputadosStore()
+    const legislatura = computed(() => deputadosStore.legislatura)
+    const setLegislatura = (val: number) => {
+    deputadosStore.setLegislatura(val)
+    // Refetch senator-specific data
+    fetchSenadores()
+    fetchEstatisticasGerais()
+    fetchProjetosLegislativos()
+  }
     const apiUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000"
 
     const filters = ref<SenadoresFilters>({
@@ -138,7 +149,7 @@ export const useSenadoresStore = defineStore("senadores", () => {
         loading.value = true
         error.value = null
         try {
-            const response = await fetch(apiUrl + "/api/senado/lista")
+            const response = await fetch(`${apiUrl}/api/senado/lista?legislatura=${legislatura.value}`)
             if (!response.ok) throw new Error("Falha ao buscar senadores")
 
             const data = await response.json()
@@ -165,7 +176,7 @@ export const useSenadoresStore = defineStore("senadores", () => {
         currentCategorias.value = []
         totalDespesas.value = 0
         try {
-            const response = await fetch(`${apiUrl}/api/senado/${id}`)
+            const response = await fetch(`${apiUrl}/api/senado/${id}?legislatura=${legislatura.value}`)
             if (!response.ok) throw new Error("Falha ao buscar detalhes do senador")
             const data = await response.json()
             const s = data.senador
@@ -202,7 +213,7 @@ export const useSenadoresStore = defineStore("senadores", () => {
     const fetchDespesasSenador = async (id: number) => {
         loadingDetail.value = true
         try {
-            const response = await fetch(`${apiUrl}/api/senado/${id}/despesas`)
+            const response = await fetch(`${apiUrl}/api/senado/${id}/despesas?legislatura=${legislatura.value}`)
             if (!response.ok) throw new Error("Falha ao buscar despesas do senador")
             const data = await response.json()
             currentDespesas.value = data.despesas
@@ -225,7 +236,7 @@ export const useSenadoresStore = defineStore("senadores", () => {
 
     const fetchEstatisticasGerais = async () => {
         try {
-            const response = await fetch(`${apiUrl}/api/senado/despesas/estatisticas`)
+            const response = await fetch(`${apiUrl}/api/senado/despesas/estatisticas?legislatura=${legislatura.value}`)
             if (!response.ok) throw new Error('Falha ao buscar estatísticas do Senado')
             generalStats.value = await response.json()
         } catch (e: any) {
@@ -235,8 +246,7 @@ export const useSenadoresStore = defineStore("senadores", () => {
 
     const fetchEstatisticasSenadores = async () => {
         try {
-            const response = await fetch(`${apiUrl}/api/senado/estatisticas`)
-            if (!response.ok) throw new Error('Falha ao buscar estatísticas gerais do Senado')
+            const response = await fetch(`${apiUrl}/api/senado/estatisticas?legislatura=${legislatura.value}`)
             senadorStats.value = await response.json()
         } catch (e: any) {
             console.error('Erro ao buscar estatísticas gerais do senado:', e)
@@ -441,6 +451,8 @@ export const useSenadoresStore = defineStore("senadores", () => {
         setFilter,
         setPage,
         resetFilters,
+        legislatura,
+        setLegislatura,
         // Projetos Legislativos
         projetosLegislativosFilters,
         projetosLegislativosList,
