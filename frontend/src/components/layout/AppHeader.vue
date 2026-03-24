@@ -75,7 +75,8 @@
             </div>
           </div>
         </div>
-
+        
+        <!-- Metodologia -->
         <router-link
           to="/metodologia"
           class="text-sm font-semibold leading-6 transition-colors hover:text-primary"
@@ -83,6 +84,7 @@
         >
           Metodologia
         </router-link>
+
       </div>
 
       <div class="hidden lg:flex lg:flex-1 lg:justify-end lg:gap-x-4">
@@ -155,14 +157,18 @@
                 </router-link>
               </div>
 
-              <router-link
-                to="/metodologia"
-                class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 transition-colors hover:bg-muted"
-                :class="$route.path === '/metodologia' ? 'text-primary bg-muted' : 'text-foreground'"
-                @click="mobileMenuOpen = false"
-              >
-                Metodologia
-              </router-link>
+              <!-- Metodologia Section -->
+              <div class="pt-2">
+                <router-link
+                  to="/metodologia"
+                  class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 transition-colors hover:bg-muted"
+                  :class="$route.path === '/metodologia' ? 'text-primary bg-muted' : 'text-foreground'"
+                  @click="mobileMenuOpen = false"
+                >
+                  Metodologia
+                </router-link>
+              </div>
+
             </div>
           </div>
         </div>

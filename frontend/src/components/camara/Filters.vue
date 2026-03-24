@@ -73,9 +73,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { Search, ChevronDown } from 'lucide-vue-next'
-import { useDeputadosStore } from '@/stores/deputados'
+import { useCamaraStore } from '@/stores/camara'
 
-const store = useDeputadosStore()
+const store = useCamaraStore()
 
 const hasActiveFilters = computed(() => {
   return store.filters.search || store.filters.partido || store.filters.estado

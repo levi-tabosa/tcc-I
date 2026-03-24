@@ -13,13 +13,13 @@
       </section>
 
       <!-- Stats -->
-      <ProjetosLegislativosSenadoStats />
+      <ProjetosLegislativosStats />
 
       <!-- Main content -->
       <section class="py-8">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <ProjetosLegislativosSenadoFilters />
-          <ProjetosLegislativosSenadoList />
+          <ProjetosLegislativosFilters />
+          <ProjetosLegislativosList />
         </div>
       </section>
     </main>
@@ -31,12 +31,12 @@
 import { onMounted } from 'vue'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
-import ProjetosLegislativosSenadoFilters from '@/components/senado/ProjetosLegislativosSenadoFilters.vue'
-import ProjetosLegislativosSenadoList from '@/components/senado/ProjetosLegislativosSenadoList.vue'
-import ProjetosLegislativosSenadoStats from '@/components/senado/ProjetosLegislativosSenadoStats.vue'
-import { useSenadoresStore } from '@/stores/senadores'
+import ProjetosLegislativosFilters from '@/components/senado/ProjetosLegislativosFilters.vue'
+import ProjetosLegislativosList from '@/components/senado/ProjetosLegislativosList.vue'
+import ProjetosLegislativosStats from '@/components/senado/ProjetosLegislativosStats.vue'
+import { useSenadoStore } from '@/stores/senado'
 
-const store = useSenadoresStore()
+const store = useSenadoStore()
 
 onMounted(() => {
   if (store.projetosLegislativosList.length === 0) {

@@ -236,9 +236,9 @@ import { useRouter } from 'vue-router'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
-import { useDeputadosStore } from '@/stores/deputados'
+import { useCamaraStore } from "@/stores/camara"
 
-const store = useDeputadosStore()
+const store = useCamaraStore()
 const router = useRouter()
 
 const searchQuery = ref('')

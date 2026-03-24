@@ -93,9 +93,9 @@ import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import BaseLoading from '@/components/ui/BaseLoading.vue'
-import { useDeputadosStore } from '@/stores/deputados'
+import { useCamaraStore } from '@/stores/camara'
 
-const store = useDeputadosStore()
+const store = useCamaraStore()
 
 onMounted(() => {
   store.fetchDeputados()

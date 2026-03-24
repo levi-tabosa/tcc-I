@@ -66,9 +66,9 @@
 import { FileText, BarChart3, TrendingUp } from 'lucide-vue-next'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
-import { useSenadoresStore } from '@/stores/senadores'
+import { useSenadoStore } from '@/stores/senado'
 
-const store = useSenadoresStore()
+const store = useSenadoStore()
 
 const tiposNomes: Record<string, string> = {
   PLS: 'Projeto de Lei do Senado',

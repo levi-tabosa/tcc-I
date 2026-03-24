@@ -66,9 +66,9 @@
 import { FileText, BarChart3, TrendingUp } from 'lucide-vue-next'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
-import { useDeputadosStore } from '@/stores/deputados'
+import { useCamaraStore } from '@/stores/camara'
 
-const store = useDeputadosStore()
+const store = useCamaraStore()
 
 const tiposNomes: Record<string, string> = {
   PL: 'Projeto de Lei',

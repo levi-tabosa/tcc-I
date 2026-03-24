@@ -18,22 +18,52 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
-import { useDeputadosStore } from '@/stores/deputados'
-import { useSenadoresStore } from '@/stores/senadores'
+import { computed, onMounted, ref } from 'vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
 
-const store = useDeputadosStore()
-const senadoresStore = useSenadoresStore()
+const deputadosTotal = ref<number | null>(null)
+const senadoresTotal = ref<number | null>(null)
+const gastosCamara = ref<number | null>(null)
+const gastosSenado = ref<number | null>(null)
 
-onMounted(() => {
-  store.fetchEstatisticasGerais()
-  store.fetchEstatisticasDeputados()
-  senadoresStore.fetchEstatisticasGerais()
-  senadoresStore.fetchEstatisticasSenadores()
+onMounted(async () => {
+  const apiUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000"
+  
+  try {
+    const [depRes, senRes, camaraGastosRes, senadoGastosRes] = await Promise.all([
+      fetch(`${apiUrl}/api/camara/estatisticas`),
+      fetch(`${apiUrl}/api/senado/estatisticas`),
+      fetch(`${apiUrl}/api/camara/despesas/estatisticas`),
+      fetch(`${apiUrl}/api/senado/despesas/estatisticas`)
+    ])
+    
+    if (depRes.ok) {
+      const depData = await depRes.json()
+      deputadosTotal.value = depData.total_deputados
+    }
+    
+    if (senRes.ok) {
+      const senData = await senRes.json()
+      senadoresTotal.value = senData.total_senadores
+    }
+
+    if (camaraGastosRes.ok) {
+      const camaraData = await camaraGastosRes.json()
+      gastosCamara.value = camaraData.total_12_meses
+    }
+
+    if (senadoGastosRes.ok) {
+      const senadoData = await senadoGastosRes.json()
+      gastosSenado.value = senadoData.total_12_meses
+    }
+  } catch (err) {
+    console.error("Erro ao buscar estatísticas globais:", err)
+  }
 })
 
-const formatCurrency = (value: number) => {
+const formatCurrency = (value: number | undefined | null) => {
+  if (value === undefined || value === null || isNaN(value)) return "--"
+  
   if (value >= 1000000000) {
     return `R$ ${(value / 1000000000).toFixed(1)}B`
   }
@@ -47,29 +77,25 @@ const metrics = computed(() => [
   {
     id: 1,
     label: "Deputados",
-    value: store.deputadoStats ? store.deputadoStats.total_deputados : "--",
+    value: deputadosTotal.value !== null ? deputadosTotal.value : "--",
     description: "Câmara dos Deputados",
   },
   {
     id: 2,
     label: "Senadores",
-    value: senadoresStore.senadorStats ? senadoresStore.senadorStats.total_senadores : "--",
+    value: senadoresTotal.value !== null ? senadoresTotal.value : "--",
     description: "Senado Federal",
   },
   {
     id: 3,
     label: "Gastos Câmara",
-    value: store.generalStats
-      ? formatCurrency(store.generalStats.total_gastos_12_meses)
-      : "--",
+    value: formatCurrency(gastosCamara.value),
     description: "Últimos 12 meses",
   },
   {
     id: 4,
     label: "Gastos Senado",
-    value: senadoresStore.senadorStats
-      ? formatCurrency(senadoresStore.senadorStats.total_gastos)
-      : "--",
+    value: formatCurrency(gastosSenado.value),
     description: "Últimos 12 meses",
   }
 ])

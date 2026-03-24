@@ -93,9 +93,9 @@ import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import BaseLoading from '@/components/ui/BaseLoading.vue'
-import { useSenadoresStore } from '@/stores/senadores'
+import { useSenadoStore } from '@/stores/senado'
 
-const store = useSenadoresStore()
+const store = useSenadoStore()
 
 onMounted(() => {
   store.fetchSenadores()

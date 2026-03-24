@@ -7,8 +7,8 @@ import logging
 import database.db as db
 
 router = APIRouter(
-    prefix="/deputados",
-    tags=["Deputados"]
+    prefix="/camara",
+    tags=["Câmara"]
 )
 
 
@@ -848,6 +848,7 @@ def get_estatisticas_despesas(legislatura: int = Query(None)):
 
             return {
                 "total_gastos_12_meses": float(total_12_meses),
+                "total_12_meses": float(total_12_meses),
                 "total_gastos": float(total_geral),
                 "total_empresas_contratadas": int(total_empresas),
                 "gastos_por_categoria": gastos_categoria,

@@ -7,10 +7,10 @@
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div class="flex items-center gap-3 mb-2">
             <Scale class="h-8 w-8 text-primary" />
-            <h1 class="text-3xl font-bold text-foreground sm:text-4xl">Comparar Deputados</h1>
+            <h1 class="text-3xl font-bold text-foreground sm:text-4xl">Comparar Senadores</h1>
           </div>
           <p class="mt-2 text-muted-foreground max-w-2xl">
-            Compare lado a lado os perfis, gastos e categorias de despesas de dois deputados.
+            Compare lado a lado os perfis, gastos e categorias de despesas de dois senadores.
           </p>
         </div>
       </section>
@@ -21,7 +21,7 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Selector A -->
             <div>
-              <label class="block text-sm font-medium text-foreground mb-2">Deputado A</label>
+              <label class="block text-sm font-medium text-foreground mb-2">Senador A</label>
               <div class="relative">
                 <div class="flex items-center gap-2">
                   <div class="relative flex-1">
@@ -29,7 +29,7 @@
                     <input
                       v-model="searchA"
                       type="text"
-                      placeholder="Buscar deputado por nome..."
+                      placeholder="Buscar senador por nome..."
                       class="input-base pl-10 pr-4 py-2.5 rounded-lg"
                       @focus="showDropdownA = true"
                       @blur="hideDropdown('A')"
@@ -50,20 +50,20 @@
                   class="absolute z-20 mt-1 w-full max-h-60 overflow-y-auto rounded-lg border border-border bg-background shadow-lg"
                 >
                   <button
-                    v-for="dep in filteredListA"
-                    :key="dep.id"
+                    v-for="sen in filteredListA"
+                    :key="sen.id"
                     class="flex items-center gap-3 w-full px-4 py-2.5 text-left hover:bg-muted transition-colors"
-                    @mousedown.prevent="selectDeputado('A', dep)"
+                    @mousedown.prevent="selectSenador('A', sen)"
                   >
                     <img
-                      :src="dep.foto"
-                      :alt="dep.nome"
+                      :src="sen.foto"
+                      :alt="sen.nome"
                       class="h-8 w-8 rounded-full object-cover border border-border"
                       @error="($event.target as HTMLImageElement).src = '/placeholder-user.svg'"
                     />
                     <div>
-                      <p class="text-sm font-medium text-foreground">{{ dep.nome }}</p>
-                      <p class="text-xs text-muted-foreground">{{ dep.partido }} - {{ dep.estado }}</p>
+                      <p class="text-sm font-medium text-foreground">{{ sen.nome }}</p>
+                      <p class="text-xs text-muted-foreground">{{ sen.partido }} - {{ sen.estado }}</p>
                     </div>
                   </button>
                 </div>
@@ -85,7 +85,7 @@
 
             <!-- Selector B -->
             <div>
-              <label class="block text-sm font-medium text-foreground mb-2">Deputado B</label>
+              <label class="block text-sm font-medium text-foreground mb-2">Senador B</label>
               <div class="relative">
                 <div class="flex items-center gap-2">
                   <div class="relative flex-1">
@@ -93,7 +93,7 @@
                     <input
                       v-model="searchB"
                       type="text"
-                      placeholder="Buscar deputado por nome..."
+                      placeholder="Buscar senador por nome..."
                       class="input-base pl-10 pr-4 py-2.5 rounded-lg"
                       @focus="showDropdownB = true"
                       @blur="hideDropdown('B')"
@@ -114,20 +114,20 @@
                   class="absolute z-20 mt-1 w-full max-h-60 overflow-y-auto rounded-lg border border-border bg-background shadow-lg"
                 >
                   <button
-                    v-for="dep in filteredListB"
-                    :key="dep.id"
+                    v-for="sen in filteredListB"
+                    :key="sen.id"
                     class="flex items-center gap-3 w-full px-4 py-2.5 text-left hover:bg-muted transition-colors"
-                    @mousedown.prevent="selectDeputado('B', dep)"
+                    @mousedown.prevent="selectSenador('B', sen)"
                   >
                     <img
-                      :src="dep.foto"
-                      :alt="dep.nome"
+                      :src="sen.foto"
+                      :alt="sen.nome"
                       class="h-8 w-8 rounded-full object-cover border border-border"
                       @error="($event.target as HTMLImageElement).src = '/placeholder-user.jpg'"
                     />
                     <div>
-                      <p class="text-sm font-medium text-foreground">{{ dep.nome }}</p>
-                      <p class="text-xs text-muted-foreground">{{ dep.partido }} - {{ dep.estado }}</p>
+                      <p class="text-sm font-medium text-foreground">{{ sen.nome }}</p>
+                      <p class="text-xs text-muted-foreground">{{ sen.partido }} - {{ sen.estado }}</p>
                     </div>
                   </button>
                 </div>
@@ -152,10 +152,10 @@
           <div class="mt-6 flex justify-center">
             <BaseButton
               :disabled="!selectedA || !selectedB || loadingComparison"
-              @click="compareDeputados"
+              @click="compareSenadores"
             >
               <Scale class="h-4 w-4 mr-2" />
-              {{ loadingComparison ? '...' : 'Comparar Deputados' }}
+              {{ loadingComparison ? '...' : 'Comparar Senadores' }}
             </BaseButton>
           </div>
         </div>
@@ -164,7 +164,7 @@
       <BaseLoading v-if="loadingComparison" message="Carregando dados para comparação..." />
 
       <!-- Comparison Results -->
-      <template v-if="comparisonReady && deputadoA && deputadoB">
+      <template v-if="comparisonReady && senadorA && senadorB">
         <!-- Profile Comparison -->
         <section class="py-8">
           <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -173,67 +173,59 @@
               Perfil
             </h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <!-- Deputado A Profile -->
+              <!-- Senador A Profile -->
               <BaseCard>
                 <div class="text-center">
                   <div class="h-24 w-24 mx-auto rounded-full border-4 border-primary/20 overflow-hidden bg-primary/10">
                     <img
-                      :src="deputadoA.foto"
-                      :alt="deputadoA.nome_civil"
+                      :src="senadorA.foto"
+                      :alt="senadorA.nome_civil"
                       class="w-full h-full object-cover"
                       @error="($event.target as HTMLImageElement).src = '/placeholder-user.svg'"
                     />
                   </div>
-                  <h3 class="mt-3 text-lg font-bold text-foreground">{{ deputadoA.nome_civil }}</h3>
+                  <h3 class="mt-3 text-lg font-bold text-foreground">{{ senadorA.nome_civil }}</h3>
                   <div class="mt-2 flex flex-wrap items-center justify-center gap-2">
-                    <BaseBadge variant="outline">{{ deputadoA.sigla_partido }}</BaseBadge>
-                    <BaseBadge v-if="deputadoA.uf_nascimento" variant="outline">{{ deputadoA.uf_nascimento }}</BaseBadge>
+                    <BaseBadge variant="outline">{{ senadorA.sigla_partido }}</BaseBadge>
+                    <BaseBadge variant="outline">{{ senadorA.uf }}</BaseBadge>
                   </div>
                   <div class="mt-4 space-y-2 text-sm text-left">
-                    <div class="flex items-center gap-3 text-muted-foreground" v-if="deputadoA.email">
+                    <div class="flex items-center gap-3 text-muted-foreground" v-if="senadorA.email">
                       <Mail class="h-4 w-4 text-primary flex-shrink-0" />
-                      <span class="truncate">{{ deputadoA.email }}</span>
+                      <span class="truncate">{{ senadorA.email }}</span>
                     </div>
-                    <div class="flex items-center gap-3 text-muted-foreground" v-if="deputadoA.data_nascimento">
+                    <div class="flex items-center gap-3 text-muted-foreground" v-if="senadorA.data_nascimento">
                       <Calendar class="h-4 w-4 text-primary flex-shrink-0" />
-                      <span>{{ formatDate(deputadoA.data_nascimento) }}</span>
-                    </div>
-                    <div class="flex items-center gap-3 text-muted-foreground" v-if="deputadoA.escolaridade">
-                      <GraduationCap class="h-4 w-4 text-primary flex-shrink-0" />
-                      <span>{{ deputadoA.escolaridade }}</span>
+                      <span>{{ formatDate(senadorA.data_nascimento) }}</span>
                     </div>
                   </div>
                 </div>
               </BaseCard>
 
-              <!-- Deputado B Profile -->
+              <!-- Senador B Profile -->
               <BaseCard>
                 <div class="text-center">
                   <div class="h-24 w-24 mx-auto rounded-full border-4 border-accent/20 overflow-hidden bg-accent/10">
                     <img
-                      :src="deputadoB.foto"
-                      :alt="deputadoB.nome_civil"
+                      :src="senadorB.foto"
+                      :alt="senadorB.nome_civil"
                       class="w-full h-full object-cover"
                       @error="($event.target as HTMLImageElement).src = '/placeholder-user.svg'"
                     />
                   </div>
-                  <h3 class="mt-3 text-lg font-bold text-foreground">{{ deputadoB.nome_civil }}</h3>
+                  <h3 class="mt-3 text-lg font-bold text-foreground">{{ senadorB.nome_civil }}</h3>
                   <div class="mt-2 flex flex-wrap items-center justify-center gap-2">
-                    <BaseBadge variant="outline">{{ deputadoB.sigla_partido }}</BaseBadge>
-                    <BaseBadge v-if="deputadoB.uf_nascimento" variant="outline">{{ deputadoB.uf_nascimento }}</BaseBadge>
+                    <BaseBadge variant="outline">{{ senadorB.sigla_partido }}</BaseBadge>
+                    <BaseBadge variant="outline">{{ senadorB.uf }}</BaseBadge>
                   </div>
                   <div class="mt-4 space-y-2 text-sm text-left">
-                    <div class="flex items-center gap-3 text-muted-foreground" v-if="deputadoB.email">
+                    <div class="flex items-center gap-3 text-muted-foreground" v-if="senadorB.email">
                       <Mail class="h-4 w-4 text-accent flex-shrink-0" />
-                      <span class="truncate">{{ deputadoB.email }}</span>
+                      <span class="truncate">{{ senadorB.email }}</span>
                     </div>
-                    <div class="flex items-center gap-3 text-muted-foreground" v-if="deputadoB.data_nascimento">
+                    <div class="flex items-center gap-3 text-muted-foreground" v-if="senadorB.data_nascimento">
                       <Calendar class="h-4 w-4 text-accent flex-shrink-0" />
-                      <span>{{ formatDate(deputadoB.data_nascimento) }}</span>
-                    </div>
-                    <div class="flex items-center gap-3 text-muted-foreground" v-if="deputadoB.escolaridade">
-                      <GraduationCap class="h-4 w-4 text-accent flex-shrink-0" />
-                      <span>{{ deputadoB.escolaridade }}</span>
+                      <span>{{ formatDate(senadorB.data_nascimento) }}</span>
                     </div>
                   </div>
                 </div>
@@ -252,7 +244,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <BaseCard>
                 <div class="text-center">
-                  <p class="text-sm text-muted-foreground">{{ deputadoA.nome_civil }}</p>
+                  <p class="text-sm text-muted-foreground">{{ senadorA.nome_civil }}</p>
                   <p class="mt-1 text-3xl font-bold" :class="totalA <= totalB ? 'text-green-600' : 'text-red-500'">
                     R$ {{ formatCurrency(totalA) }}
                   </p>
@@ -262,7 +254,7 @@
               </BaseCard>
               <BaseCard>
                 <div class="text-center">
-                  <p class="text-sm text-muted-foreground">{{ deputadoB.nome_civil }}</p>
+                  <p class="text-sm text-muted-foreground">{{ senadorB.nome_civil }}</p>
                   <p class="mt-1 text-3xl font-bold" :class="totalB <= totalA ? 'text-green-600' : 'text-red-500'">
                     R$ {{ formatCurrency(totalB) }}
                   </p>
@@ -280,7 +272,7 @@
                   R$ {{ formatCurrency(Math.abs(totalA - totalB)) }}
                 </p>
                 <p class="mt-1 text-sm text-muted-foreground">
-                  <span class="font-medium text-foreground">{{ totalA > totalB ? deputadoA.nome_civil : deputadoB.nome_civil }}</span>
+                  <span class="font-medium text-foreground">{{ totalA > totalB ? senadorA.nome_civil : senadorB.nome_civil }}</span>
                   gastou {{ percentDiff }}% a mais
                 </p>
               </div>
@@ -350,14 +342,14 @@
           <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <h2 class="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
               <FileText class="h-5 w-5 text-primary" />
-              Últimas Despesas
+              Últimas Despesas (12 meses)
             </h2>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <!-- Table A -->
                 <BaseCard variant="elevated">
                 <h3 class="font-semibold text-foreground mb-4 flex items-center gap-2">
                   <div class="h-3 w-3 rounded-full bg-primary"></div>
-                  {{ deputadoA.nome_civil }}
+                  {{ senadorA.nome_civil }}
                 </h3>
                 <div class="overflow-x-auto">
                   <table class="table-professional">
@@ -366,23 +358,16 @@
                         <th>Data</th>
                         <th>Tipo</th>
                         <th class="text-right">Valor</th>
-                        <th class="text-center">Doc</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr v-for="(d, i) in despesasA.slice(0, 8)" :key="i">
                         <td class="whitespace-nowrap">{{ d.mes }}/{{ d.ano }}</td>
-                        <td class="truncate max-w-[150px]">{{ d.tipo_despesa }}</td>
+                        <td class="truncate max-w-[150px]" :title="d.tipoDespesa">{{ d.tipoDespesa }}</td>
                         <td class="text-right whitespace-nowrap font-medium">R$ {{ d.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</td>
-                        <td class="text-center">
-                          <a v-if="d.url_documento" :href="d.url_documento" target="_blank" class="text-primary hover:text-primary-700 transition-colors" title="Ver comprovante">
-                            <FileText class="h-4 w-4 mx-auto" />
-                          </a>
-                          <span v-else class="text-muted-foreground">--</span>
-                        </td>
                       </tr>
                       <tr v-if="despesasA.length === 0">
-                        <td colspan="4" class="py-6 text-center text-muted-foreground">Sem despesas.</td>
+                        <td colspan="3" class="py-6 text-center text-muted-foreground">Sem despesas.</td>
                       </tr>
                     </tbody>
                   </table>
@@ -393,7 +378,7 @@
               <BaseCard variant="elevated">
                 <h3 class="font-semibold text-foreground mb-4 flex items-center gap-2">
                   <div class="h-3 w-3 rounded-full bg-accent"></div>
-                  {{ deputadoB.nome_civil }}
+                  {{ senadorB.nome_civil }}
                 </h3>
                 <div class="overflow-x-auto">
                   <table class="table-professional">
@@ -402,23 +387,16 @@
                         <th>Data</th>
                         <th>Tipo</th>
                         <th class="text-right">Valor</th>
-                        <th class="text-center">Doc</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr v-for="(d, i) in despesasB.slice(0, 8)" :key="i">
                         <td class="whitespace-nowrap">{{ d.mes }}/{{ d.ano }}</td>
-                        <td class="truncate max-w-[150px]">{{ d.tipo_despesa }}</td>
+                        <td class="truncate max-w-[150px]" :title="d.tipoDespesa">{{ d.tipoDespesa }}</td>
                         <td class="text-right whitespace-nowrap font-medium">R$ {{ d.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</td>
-                        <td class="text-center">
-                          <a v-if="d.url_documento" :href="d.url_documento" target="_blank" class="text-primary hover:text-primary-700 transition-colors" title="Ver comprovante">
-                            <FileText class="h-4 w-4 mx-auto" />
-                          </a>
-                          <span v-else class="text-muted-foreground">--</span>
-                        </td>
                       </tr>
                       <tr v-if="despesasB.length === 0">
-                        <td colspan="4" class="py-6 text-center text-muted-foreground">Sem despesas.</td>
+                        <td colspan="3" class="py-6 text-center text-muted-foreground">Sem despesas.</td>
                       </tr>
                     </tbody>
                   </table>
@@ -432,7 +410,7 @@
       <!-- Empty state -->
       <div v-if="!comparisonReady && !loadingComparison" class="py-20 text-center">
         <Scale class="h-16 w-16 mx-auto text-muted-foreground/30" />
-        <p class="mt-4 text-lg text-muted-foreground">Selecione dois deputados acima para iniciar a comparação</p>
+        <p class="mt-4 text-lg text-muted-foreground">Selecione dois senadores acima para iniciar a comparação</p>
         <p class="mt-1 text-sm text-muted-foreground/70">As informações serão exibidas lado a lado automaticamente</p>
       </div>
     </main>
@@ -442,16 +420,16 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { Scale, Search, X, UserCheck, DollarSign, BarChart3, FileText, Mail, Calendar, GraduationCap } from 'lucide-vue-next'
+import { Scale, Search, X, UserCheck, DollarSign, BarChart3, FileText, Mail, Calendar } from 'lucide-vue-next'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseLoading from '@/components/ui/BaseLoading.vue'
-import { useDeputadosStore, type Deputado, type DeputadoDetail, type Despesa } from '@/stores/deputados'
+import { useSenadoStore, type Senador, type SenadorDetail } from '@/stores/senado'
 
-const store = useDeputadosStore()
+const store = useSenadoStore()
 
 const apiUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
 
@@ -460,38 +438,38 @@ const searchA = ref('')
 const searchB = ref('')
 const showDropdownA = ref(false)
 const showDropdownB = ref(false)
-const selectedA = ref<Deputado | null>(null)
-const selectedB = ref<Deputado | null>(null)
+const selectedA = ref<Senador | null>(null)
+const selectedB = ref<Senador | null>(null)
 
 // Comparison data
-const deputadoA = ref<DeputadoDetail | null>(null)
-const deputadoB = ref<DeputadoDetail | null>(null)
-const despesasA = ref<Despesa[]>([])
-const despesasB = ref<Despesa[]>([])
+const senadorA = ref<SenadorDetail & { total_gasto: number; categorias: any[] } | null>(null)
+const senadorB = ref<SenadorDetail & { total_gasto: number; categorias: any[] } | null>(null)
+const despesasA = ref<any[]>([])
+const despesasB = ref<any[]>([])
 const totalA = ref(0)
 const totalB = ref(0)
 const loadingComparison = ref(false)
 const comparisonReady = ref(false)
 
-// Ensure deputados list is loaded
-if (store.filteredDeputados.length === 0) {
-  store.fetchDeputados()
+// Ensure senadores list is loaded
+if (store.filteredSenadores.length === 0) {
+  store.fetchSenadores()
 }
 
 // Filtered lists for dropdowns
 const filteredListA = computed(() => {
   if (!searchA.value || searchA.value.length < 2) return []
   const term = searchA.value.toLowerCase()
-  return store.filteredDeputados
-    .filter(d => d.nome.toLowerCase().includes(term))
+  return store.filteredSenadores
+    .filter(s => s.nome.toLowerCase().includes(term))
     .slice(0, 15)
 })
 
 const filteredListB = computed(() => {
   if (!searchB.value || searchB.value.length < 2) return []
   const term = searchB.value.toLowerCase()
-  return store.filteredDeputados
-    .filter(d => d.nome.toLowerCase().includes(term))
+  return store.filteredSenadores
+    .filter(s => s.nome.toLowerCase().includes(term))
     .slice(0, 15)
 })
 
@@ -503,14 +481,14 @@ const hideDropdown = (side: 'A' | 'B') => {
   }, 200)
 }
 
-const selectDeputado = (side: 'A' | 'B', dep: Deputado) => {
+const selectSenador = (side: 'A' | 'B', sen: Senador) => {
   if (side === 'A') {
-    selectedA.value = dep
-    searchA.value = dep.nome
+    selectedA.value = sen
+    searchA.value = sen.nome
     showDropdownA.value = false
   } else {
-    selectedB.value = dep
-    searchB.value = dep.nome
+    selectedB.value = sen
+    searchB.value = sen.nome
     showDropdownB.value = false
   }
 }
@@ -519,13 +497,13 @@ const clearSelection = (side: 'A' | 'B') => {
   if (side === 'A') {
     selectedA.value = null
     searchA.value = ''
-    deputadoA.value = null
+    senadorA.value = null
     despesasA.value = []
     totalA.value = 0
   } else {
     selectedB.value = null
     searchB.value = ''
-    deputadoB.value = null
+    senadorB.value = null
     despesasB.value = []
     totalB.value = 0
   }
@@ -533,33 +511,50 @@ const clearSelection = (side: 'A' | 'B') => {
 }
 
 // Fetch comparison data
-const compareDeputados = async () => {
+const compareSenadores = async () => {
   if (!selectedA.value || !selectedB.value) return
 
   loadingComparison.value = true
   comparisonReady.value = false
 
   try {
-    const response = await fetch(`${apiUrl}/api/deputados/comparar?id1=${selectedA.value.id}&id2=${selectedB.value.id}`)
+    const response = await fetch(`${apiUrl}/api/senado/comparar?id1=${selectedA.value.id}&id2=${selectedB.value.id}`)
     
     if (!response.ok) throw new Error('Falha ao obter dados de comparação')
     
     const data = await response.json()
     
-    // O backend retorna uma lista com os dois deputados [depA, depB]
-    deputadoA.value = data[0]
-    deputadoB.value = data[1]
+    // Adapt the backend structure to the frontend needs
+    const buildSenadorEquivalent = (senadorData: any, despesasTotais: any[]) => {
+      const minhasDespesas = despesasTotais.filter((d: any) => d.senador === senadorData.codigo)
+      const totalGasto = minhasDespesas.reduce((acc: number, curr: any) => acc + curr.total, 0)
+      const categorias = minhasDespesas.map((d: any) => ({ categoria: d.tipoDespesa, valor: d.total }))
+      
+      return {
+        ...senadorData,
+        id: senadorData.codigo,
+        nome_civil: senadorData.nomeCompleto || senadorData.nomeParlamentar,
+        nome_parlamentar: senadorData.nomeParlamentar,
+        sigla_partido: senadorData.siglaPartido,
+        foto: senadorData.urlFoto,
+        total_gasto: totalGasto,
+        categorias: categorias
+      }
+    }
+
+    senadorA.value = buildSenadorEquivalent(data.senador1, data.despesas)
+    senadorB.value = buildSenadorEquivalent(data.senador2, data.despesas)
     
-    despesasA.value = data[0].despesas || []
-    despesasB.value = data[1].despesas || []
+    despesasA.value = data.despesas_recentes_1 || []
+    despesasB.value = data.despesas_recentes_2 || []
     
-    totalA.value = data[0].total_gasto || 0
-    totalB.value = data[1].total_gasto || 0
+    totalA.value = senadorA.value?.total_gasto || 0
+    totalB.value = senadorB.value?.total_gasto || 0
     
     comparisonReady.value = true
   } catch (e) {
-    console.error('Erro ao comparar deputados:', e)
-    alert('Erro ao carregar dados de comparação. Por favor, tente novamente.')
+    console.error('Erro ao comparar senadores:', e)
+    alert('Erro ao carregar dados de comparação. Por favor, tente novamente. Dica: Os senadores devem ser diferentes.')
   } finally {
     loadingComparison.value = false
   }
@@ -568,8 +563,8 @@ const compareDeputados = async () => {
 // Category comparison helpers
 interface CatEntry { categoria: string; valor: number }
 
-const categoriasA = computed<CatEntry[]>(() => deputadoA.value?.categorias || [])
-const categoriasB = computed<CatEntry[]>(() => deputadoB.value?.categorias || [])
+const categoriasA = computed<CatEntry[]>(() => senadorA.value?.categorias || [])
+const categoriasB = computed<CatEntry[]>(() => senadorB.value?.categorias || [])
 
 const allCategories = computed(() => {
   const set = new Set<string>()
@@ -581,7 +576,7 @@ const allCategories = computed(() => {
     const va = getCategoryValue(categoriasA.value, a) + getCategoryValue(categoriasB.value, a)
     const vb = getCategoryValue(categoriasA.value, b) + getCategoryValue(categoriasB.value, b)
     return vb - va
-  }).slice(0, 8)
+  }).slice(0, 8) // Limit to top 8 common categories for UI neatness
 })
 
 const getCategoryValue = (cats: CatEntry[], name: string): number => {

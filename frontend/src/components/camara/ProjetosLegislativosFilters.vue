@@ -73,9 +73,9 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useDeputadosStore } from '@/stores/deputados'
+import { useCamaraStore } from '@/stores/camara'
 
-const store = useDeputadosStore()
+const store = useCamaraStore()
 
 let searchTimeout: ReturnType<typeof setTimeout> | null = null
 let deputadoTimeout: ReturnType<typeof setTimeout> | null = null

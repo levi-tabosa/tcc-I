@@ -73,9 +73,9 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useSenadoresStore } from '@/stores/senadores'
+import { useSenadoStore } from '@/stores/senado'
 
-const store = useSenadoresStore()
+const store = useSenadoStore()
 
 let searchTimeout: ReturnType<typeof setTimeout> | null = null
 let senadorTimeout: ReturnType<typeof setTimeout> | null = null

@@ -6,7 +6,7 @@
       <StatsSection />
 
       <FeaturesSection />
-      <MethodologySection />
+
     </main>
     <AppFooter />
   </div>
@@ -19,5 +19,5 @@ import HeroSection from '@/components/home/HeroSection.vue'
 import StatsSection from '@/components/home/StatsSection.vue'
 
 import FeaturesSection from '@/components/home/FeaturesSection.vue'
-import MethodologySection from '@/components/home/MethodologySection.vue'
+
 </script>

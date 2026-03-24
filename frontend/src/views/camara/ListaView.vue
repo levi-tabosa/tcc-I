@@ -13,13 +13,13 @@
       </section>
 
       <!-- Stats -->
-      <DeputadosStats />
+      <Stats />
 
-      <!-- Main content -->
-      <section class="py-8">
+      <!-- Main Content -->
+      <section class="py-12">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <DeputadosFilters />
-          <DeputadosList />
+          <Filters />
+          <List />
         </div>
       </section>
     </main>
@@ -30,7 +30,7 @@
 <script setup lang="ts">
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
-import DeputadosFilters from '@/components/camara/DeputadosFilters.vue'
-import DeputadosList from '@/components/camara/DeputadosList.vue'
-import DeputadosStats from '@/components/camara/DeputadosStats.vue'
+import Filters from '@/components/camara/Filters.vue'
+import List from '@/components/camara/List.vue'
+import Stats from '@/components/camara/Stats.vue'
 </script>

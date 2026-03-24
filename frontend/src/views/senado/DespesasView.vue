@@ -241,9 +241,9 @@ import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseLoading from '@/components/ui/BaseLoading.vue'
-import { useSenadoresStore } from '@/stores/senadores'
+import { useSenadoStore } from '@/stores/senado'
 
-const store = useSenadoresStore()
+const store = useSenadoStore()
 const router = useRouter()
 
 const searchQuery = ref('')

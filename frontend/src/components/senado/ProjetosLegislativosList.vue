@@ -181,10 +181,10 @@ import { ref, computed } from 'vue'
 import { FileText, User, ExternalLink, ChevronDown, Vote, Search } from 'lucide-vue-next'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
-import { useSenadoresStore } from '@/stores/senadores'
-import type { VotoSenador } from '@/stores/senadores'
+import { useSenadoStore } from '@/stores/senado'
+import type { VotoSenador } from '@/stores/senado'
 
-const store = useSenadoresStore()
+const store = useSenadoStore()
 const votosSearch = ref('')
 
 const hiddenVotoTypes = ['P-NRV', 'AP', 'Presidente (art. 51 RISF)', 'LS', 'NCom']

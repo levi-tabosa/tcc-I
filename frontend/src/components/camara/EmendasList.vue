@@ -78,13 +78,13 @@ async function carregarEmendas(pagina = 1) {
   }
 
   try {
-    const resposta = await fetch(`${API_URL}/api/deputados/emendas?pagina=${pagina}`)
+    const response = await fetch(`${apiUrl}/api/camara/emendas?legislatura=${legislatura.value}&pagina=${pagina}&busca=${busca.value}`)
     
-    if (!resposta.ok) {
-        throw new Error(`HTTP error! status: ${resposta.status}`);
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const dados = await resposta.json()
+    const dados = await response.json()
     
     if (pagina === 1) {
       emendas.value = dados

@@ -115,11 +115,11 @@ import { Doughnut } from 'vue-chartjs'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
-import { useDeputadosStore } from '@/stores/deputados'
+import { useCamaraStore } from "@/stores/camara"
 
 ChartJS.register(ArcElement, Tooltip, Legend)
 
-const store = useDeputadosStore()
+const store = useCamaraStore()
 
 onMounted(() => {
   store.fetchEstatisticasGerais()

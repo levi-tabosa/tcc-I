@@ -86,9 +86,9 @@ import {
   GitCompare, 
   Store 
 } from 'lucide-vue-next'
-import { useSenadoresStore } from '@/stores/senadores'
+import { useSenadoStore } from '@/stores/senado'
 
-const senadoresStore = useSenadoresStore()
+const senadoresStore = useSenadoStore()
 onMounted(() => {
   senadoresStore.fetchEstatisticasGerais()
   senadoresStore.fetchEstatisticasSenadores()

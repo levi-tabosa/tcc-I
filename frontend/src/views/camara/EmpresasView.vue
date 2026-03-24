@@ -182,7 +182,7 @@ const error = ref<string | null>(null)
 
 onMounted(async () => {
   try {
-    const response = await fetch(`${apiUrl}/api/deputados/empresas/estatisticas?limit=20`)
+    const response = await fetch(`${apiUrl}/api/camara/empresas/estatisticas?limit=20`)
     
     if (!response.ok) throw new Error(`Erro na API: ${response.status}`)
     

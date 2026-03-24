@@ -180,10 +180,10 @@ import { FileText, User, ExternalLink, ChevronDown, Vote, ChevronRight } from 'l
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import BaseLoading from '@/components/ui/BaseLoading.vue'
-import { useDeputadosStore } from '@/stores/deputados'
-import type { VotoDeputado } from '@/stores/deputados'
+import { useCamaraStore } from '@/stores/camara'
+import type { VotoDeputado } from '@/stores/camara'
 
-const store = useDeputadosStore()
+const store = useCamaraStore()
 const expandedVotacaoIds = ref<Set<string>>(new Set())
 
 onMounted(() => {

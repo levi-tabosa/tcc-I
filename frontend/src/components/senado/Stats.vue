@@ -5,13 +5,13 @@
       <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
         <BaseCard hover>
           <div class="flex items-center gap-4">
-            <div class="p-3 rounded-xl bg-primary/10">
-              <Users class="h-6 w-6 text-primary" />
+            <div class="p-3 rounded-xl bg-purple-500/10">
+              <Users class="h-6 w-6 text-purple-600 dark:text-purple-400" />
             </div>
             <div>
-              <p class="text-sm text-muted-foreground">Total de Deputados</p>
+              <p class="text-sm text-muted-foreground">Total de Senadores</p>
               <p class="text-2xl font-bold text-foreground">
-                {{ store.deputadoStats?.total_deputados || '...' }}
+                {{ store.senadorStats?.total_senadores || '...' }}
               </p>
             </div>
           </div>
@@ -50,7 +50,9 @@
             </div>
             <div>
               <p class="text-sm text-muted-foreground">Estados (UF)</p>
-              <p class="text-2xl font-bold text-foreground">27</p>
+              <p class="text-2xl font-bold text-foreground">
+                {{ store.estadosUnicos.length || '...' }}
+              </p>
             </div>
           </div>
         </BaseCard>
@@ -76,7 +78,7 @@
               </div>
             </div>
           </div>
-          <BaseLoading v-else message="Carregando dados..." />
+          <BaseLoading v-else message="Carregando gastos..." />
         </BaseCard>
 
         <!-- Maiores Bancadas -->
@@ -92,13 +94,13 @@
               </div>
               <div class="flex items-center gap-2">
                 <div class="w-24 h-2 bg-muted rounded-full overflow-hidden">
-                  <div class="h-full bg-primary rounded-full" :style="{ width: `${(partido.deputados / maxBancada) * 100}%` }" />
+                  <div class="h-full bg-purple-600 rounded-full" :style="{ width: `${(partido.senadores / maxBancada) * 100}%` }" />
                 </div>
-                <span class="text-sm text-muted-foreground w-8 text-right">{{ partido.deputados }}</span>
+                <span class="text-sm text-muted-foreground w-8 text-right">{{ partido.senadores }}</span>
               </div>
             </div>
             <div class="pt-2 text-center">
-              <p class="text-xs text-muted-foreground">Top 6 partidos com mais deputados</p>
+              <p class="text-xs text-muted-foreground">Top 6 partidos com mais senadores</p>
             </div>
           </div>
           <BaseLoading v-else message="Buscando bancadas..." />
@@ -109,17 +111,17 @@
           <template #header>
             <h3 class="text-lg font-semibold text-foreground">Distribuição por Região</h3>
           </template>
-          <div v-if="store.deputadoStats?.deputados_por_regiao" class="space-y-4">
-            <div v-for="regiao in store.deputadoStats.deputados_por_regiao" :key="regiao.name" class="flex items-center gap-4">
+          <div v-if="store.senadorStats?.senadores_por_regiao" class="space-y-4">
+            <div v-for="regiao in store.senadorStats.senadores_por_regiao" :key="regiao.name" class="flex items-center gap-4">
               <div class="flex-1">
                 <div class="flex justify-between text-sm mb-1">
                   <span class="text-foreground font-medium">{{ regiao.name }}</span>
-                  <span class="text-muted-foreground">{{ regiao.value }} deputados</span>
+                  <span class="text-muted-foreground">{{ regiao.value }} senadores</span>
                 </div>
                 <div class="h-2 bg-muted rounded-full overflow-hidden">
                   <div 
-                    class="h-full rounded-full bg-accent" 
-                    :style="{ width: `${(regiao.value / store.deputadoStats.total_deputados) * 100}%` }" 
+                    class="h-full rounded-full bg-purple-500" 
+                    :style="{ width: `${(regiao.value / store.senadorStats.total_senadores) * 100}%` }" 
                   />
                 </div>
               </div>
@@ -137,15 +139,15 @@ import { computed, onMounted } from 'vue'
 import { Users, MapPin, Briefcase, Globe } from 'lucide-vue-next'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseLoading from '@/components/ui/BaseLoading.vue'
-import { useDeputadosStore } from '@/stores/deputados'
+import { useSenadoStore } from '@/stores/senado'
 
-const store = useDeputadosStore()
+const store = useSenadoStore()
 
 onMounted(() => {
   store.fetchEstatisticasGerais()
-  store.fetchEstatisticasDeputados()
-  if (store.deputadosList.length === 0) {
-    store.fetchDeputados()
+  store.fetchEstatisticasSenadores()
+  if (store.senadoresList.length === 0) {
+    store.fetchSenadores()
   }
 })
 
@@ -172,24 +174,23 @@ const gastosUltimosMeses = computed(() => {
 })
 
 const topPartidos = computed(() => {
-  if (!store.deputadosList.length) return []
+  if (!store.senadoresList.length) return []
 
   const contagem: Record<string, number> = {}
-  store.deputadosList.forEach(d => {
-    if (d.partido) {
-      contagem[d.partido] = (contagem[d.partido] || 0) + 1
+  store.senadoresList.forEach(s => {
+    if (s.partido) {
+      contagem[s.partido] = (contagem[s.partido] || 0) + 1
     }
   })
 
   return Object.entries(contagem)
-    .map(([sigla, deputados]) => ({ sigla, deputados }))
-    .sort((a, b) => b.deputados - a.deputados)
+    .map(([sigla, senadores]) => ({ sigla, senadores }))
+    .sort((a, b) => b.senadores - a.senadores)
     .slice(0, 6)
 })
 
 const maxBancada = computed(() => {
   if (!topPartidos.value.length) return 1
-  return topPartidos.value[0].deputados
+  return topPartidos.value[0].senadores
 })
 </script>
-

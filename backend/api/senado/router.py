@@ -36,8 +36,8 @@ def get_lista_senadores(legislatura: int = Query(None)):
             """
             params = []
             if legislatura:
-                query += " WHERE m.codigo_legislatura = %s"
-                params.append(legislatura)
+                query += " WHERE m.primeira_legislatura = %s OR m.segunda_legislatura = %s"
+                params.extend([str(legislatura), str(legislatura)])
                 
             query += " ORDER BY p.codigo, p.nome_parlamentar ASC"
             cursor.execute(query, tuple(params))
@@ -80,12 +80,12 @@ def get_estatisticas_senado(legislatura: int = Query(None)):
             query_total = "SELECT COUNT(DISTINCT codigo_parlamentar) FROM senado.mandato"
             params = []
             if legislatura:
-                query_total += " WHERE codigo_legislatura = %s"
-                params.append(legislatura)
+                query_total += " WHERE primeira_legislatura = %s OR segunda_legislatura = %s"
+                params.extend([str(legislatura), str(legislatura)])
             
             cursor.execute(query_total, tuple(params))
-            total_senadores = cursor.fetchone()[0]
-            total_senadores = cursor.fetchone()[0]
+            row = cursor.fetchone()
+            total_senadores = row[0] if row else 0
 
             query_gastos = "SELECT COALESCE(SUM(valor_reembolsado), 0) FROM senado.despesa_ceaps"
             # TODO: If we had a direct link to legislatura in despesa_ceaps or via mandato
@@ -110,8 +110,8 @@ def get_estatisticas_senado(legislatura: int = Query(None)):
             """
             params_reg = []
             if legislatura:
-                query_regiao += " WHERE m.codigo_legislatura = %s"
-                params_reg.append(legislatura)
+                query_regiao += " WHERE m.primeira_legislatura = %s OR m.segunda_legislatura = %s"
+                params_reg.extend([str(legislatura), str(legislatura)])
                 
             query_regiao += " GROUP BY regiao ORDER BY quantidade DESC"
             cursor.execute(query_regiao, tuple(params_reg))
@@ -355,8 +355,8 @@ WHERE d.cod_senador = %s
 """
             params_rec = [senador_codigo]
             if legislatura:
-                query_recente += " AND m.codigo_legislatura = %s"
-                params_rec.append(legislatura)
+                query_recente += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
+                params_rec.extend([str(legislatura), str(legislatura)])
                 
             query_recente += " ORDER BY d.data_despesa DESC LIMIT 50"
             cursor.execute(query_recente, tuple(params_rec))
@@ -373,8 +373,8 @@ WHERE d.cod_senador = %s
             """
             params_cat = [senador_codigo]
             if legislatura:
-                query_categorias += " AND m.codigo_legislatura = %s"
-                params_cat.append(legislatura)
+                query_categorias += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
+                params_cat.extend([str(legislatura), str(legislatura)])
             
             query_categorias += " GROUP BY d.tipo_despesa ORDER BY total DESC"
             cursor.execute(query_categorias, tuple(params_cat))
@@ -423,8 +423,8 @@ def get_despesas_estatisticas(legislatura: int = Query(None)):
 """
             params = []
             if legislatura:
-                query += " AND m.codigo_legislatura = %s "
-                params.append(legislatura)
+                query += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
+                params.extend([str(legislatura), str(legislatura)])
             
             cursor.execute(query, tuple(params))
             res_total = cursor.fetchone()
@@ -509,10 +509,12 @@ LIMIT 12;
 
             query = """SELECT 
     COALESCE(SUM(valor_reembolsado), 0) AS total_geral
-FROM senado.despesa_ceaps;
+FROM senado.despesa_ceaps
+WHERE data_despesa >= (CURRENT_DATE - INTERVAL '1 year');
 """
             cursor.execute(query)
-            total_12_meses = cursor.fetchone()[0] or 0
+            res_total_12 = cursor.fetchone()
+            total_12_meses = res_total_12[0] if res_total_12 else 0
             
             return {
                 "total_gastos": float(total_gastos),
@@ -841,160 +843,81 @@ def get_votacao_materia(codigo_materia: int):
             conn.close()
 
 
-@router.get("/materia/votacao", summary="Obtém o histórico de votações de um projeto legislativo")
-def get_votacao_materia(codigo_materia: int):
-    try:
-        conn = db.get_db_connection()
-        if not conn:
-            raise HTTPException(status_code=503, detail="Banco de dados indisponível")
-        
-        with conn.cursor() as cursor:
-            query = """
-                SELECT 
-                    m.sigla || ' ' || m.numero || '/' || m.ano AS materia,
-                    m.ementa,
-                    p.nome_parlamentar,
-                    p.sigla_partido,
-                    p.uf,
-                    vp.sigla_descricao_voto AS voto,
-                    vp.descricao_resultado AS resultado
-                FROM senado.votacao_parlamentar vp
-                JOIN senado.materia m ON vp.codigo_materia = m.codigo
-                JOIN senado.parlamentar p ON vp.codigo_parlamentar = p.codigo
-                WHERE vp.codigo_materia = %s
-                  AND vp.sigla_descricao_voto NOT IN ('P-NRV', 'AP', 'Presidente (art. 51 RISF)', 'LS', 'NCom')
-                ORDER BY m.ano DESC, m.sigla, m.numero, p.nome_parlamentar
-            """
-            cursor.execute(query, (codigo_materia,))
-            resultados = cursor.fetchall()
-            return {
-                "votacao": [
-                    {
-                        "materia": r[0],
-                        "ementa": r[1],
-                        "nomeParlamentar": r[2],
-                        "siglaPartido": r[3],
-                        "uf": r[4],
-                        "voto": r[5],
-                        "resultado": r[6]
-                    }
-                    for r in resultados
-                ]
-            }
-    
-    except Exception as e:
-        logging.error(f"Erro ao buscar histórico de votação: {e}")
-        raise HTTPException(status_code=500, detail="Erro ao processar histórico de votação")
-    finally:
-        if 'conn' in locals() and conn:
-            conn.close()
-
 @router.get("/estatisticas", summary="Obtém estatísticas gerais dos senadores")
-def get_estatisticas_gerais():
+def get_estatisticas_gerais(legislatura: int = Query(None)):
     try:
         conn = db.get_db_connection()
         if not conn:
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
         with conn.cursor() as cursor:
-            query = """SELECT COUNT(DISTINCT codigo) AS total_senadores
-FROM senado.parlamentar;"""
-            cursor.execute(query)
+            query = """SELECT COUNT(DISTINCT p.codigo) AS total_senadores
+FROM senado.parlamentar p
+INNER JOIN senado.mandato m ON p.codigo = m.codigo_parlamentar
+WHERE 1=1"""
+            params = []
+            if legislatura:
+                query += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
+                params.extend([str(legislatura), str(legislatura)])
+
+            cursor.execute(query, tuple(params))
             total_senadores = cursor.fetchone()[0]
 
             query = """SELECT COUNT(DISTINCT
     CASE
-        WHEN uf IN ('AC','AP','AM','PA','RO','RR','TO') THEN 'Norte'
-        WHEN uf IN ('AL','BA','CE','MA','PB','PE','PI','RN','SE') THEN 'Nordeste'
-        WHEN uf IN ('DF','GO','MT','MS') THEN 'Centro-Oeste'
-        WHEN uf IN ('ES','MG','RJ','SP') THEN 'Sudeste'
-        WHEN uf IN ('PR','RS','SC') THEN 'Sul'
+        WHEN p.uf IN ('AC','AP','AM','PA','RO','RR','TO') THEN 'Norte'
+        WHEN p.uf IN ('AL','BA','CE','MA','PB','PE','PI','RN','SE') THEN 'Nordeste'
+        WHEN p.uf IN ('DF','GO','MT','MS') THEN 'Centro-Oeste'
+        WHEN p.uf IN ('ES','MG','RJ','SP') THEN 'Sudeste'
+        WHEN p.uf IN ('PR','RS','SC') THEN 'Sul'
     END
 ) AS total_regioes
-FROM senado.parlamentar
-WHERE uf IS NOT NULL; """
-            cursor.execute(query)
+FROM senado.parlamentar p
+INNER JOIN senado.mandato m ON p.codigo = m.codigo_parlamentar
+WHERE p.uf IS NOT NULL"""
+            params = []
+            if legislatura:
+                query += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
+                params.extend([str(legislatura), str(legislatura)])
+            cursor.execute(query, tuple(params))
             total_regioes = cursor.fetchone()[0]
-
-            query = """SELECT COUNT(DISTINCT sigla_partido) AS total_partidos
-FROM senado.parlamentar
-WHERE sigla_partido IS NOT NULL;"""
-            cursor.execute(query)
-            total_partidos = cursor.fetchone()[0]
-            
-            query = """SELECT COUNT(DISTINCT uf) AS total_estados
-FROM senado.parlamentar
-WHERE uf IS NOT NULL;"""
-            cursor.execute(query)
-            total_estados = cursor.fetchone()[0]
-
-            query = """SELECT ano, mes, SUM(valor_reembolsado) AS valor
-FROM senado.despesa_ceaps
-WHERE data_despesa >= CURRENT_DATE - INTERVAL '12 months'
-GROUP BY ano, mes
-ORDER BY ano DESC, mes DESC;"""
-            cursor.execute(query)
-            despesas = cursor.fetchall()
-
-            query = """SELECT sigla_partido, COUNT(DISTINCT codigo) AS total_senadores
-FROM senado.parlamentar
-WHERE sigla_partido IS NOT NULL
-GROUP BY sigla_partido
-ORDER BY total_senadores DESC
-LIMIT 6;"""
-            cursor.execute(query)
-            partidos = cursor.fetchall()
 
             query = """SELECT 
     CASE
-        WHEN uf IN ('AC','AP','AM','PA','RO','RR','TO') THEN 'Norte'
-        WHEN uf IN ('AL','BA','CE','MA','PB','PE','PI','RN','SE') THEN 'Nordeste'
-        WHEN uf IN ('DF','GO','MT','MS') THEN 'Centro-Oeste'
-        WHEN uf IN ('ES','MG','RJ','SP') THEN 'Sudeste'
-        WHEN uf IN ('PR','RS','SC') THEN 'Sul'
+        WHEN p.uf IN ('AC','AP','AM','PA','RO','RR','TO') THEN 'Norte'
+        WHEN p.uf IN ('AL','BA','CE','MA','PB','PE','PI','RN','SE') THEN 'Nordeste'
+        WHEN p.uf IN ('DF','GO','MT','MS') THEN 'Centro-Oeste'
+        WHEN p.uf IN ('ES','MG','RJ','SP') THEN 'Sudeste'
+        WHEN p.uf IN ('PR','RS','SC') THEN 'Sul'
         ELSE 'Outros'
     END AS regiao,
-    COUNT(DISTINCT codigo) AS quantidade
-FROM senado.parlamentar
-WHERE uf IS NOT NULL
-GROUP BY regiao
-ORDER BY quantidade DESC;"""
-            cursor.execute(query)
+    COUNT(DISTINCT p.codigo) AS quantidade
+FROM senado.parlamentar p
+INNER JOIN senado.mandato m ON p.codigo = m.codigo_parlamentar
+WHERE p.uf IS NOT NULL"""
+            params = []
+            if legislatura:
+                query += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
+                params.extend([str(legislatura), str(legislatura)])
+                
+            query += " GROUP BY regiao ORDER BY quantidade DESC;"
+            cursor.execute(query, tuple(params))
             regioes = cursor.fetchall()
             
             return {
                 "total_senadores": total_senadores,
                 "total_regioes": total_regioes,
-                "total_partidos": total_partidos,
-                "total_estados": total_estados,
-                "despesas_12_meses":[
+                "senadores_por_regiao": [
                     {
-                        "ano": r[0],
-                        "mes": r[1],
-                        "valor": float(r[2])
-                    }
-                    for r in despesas
-                ],
-                "partidos":[
-                    {
-                        "sigla": r[0],
-                        "total_senadores": r[1]
-                    }
-                    for r in partidos
-                ]
-                ,
-                "regioes":[
-                    {
-                        "regiao": r[0],
-                        "quantidade": r[1]
+                        "name": r[0],
+                        "value": r[1]
                     }
                     for r in regioes
                 ]
-            
             }
             
     except Exception as e:
-        logging.error(f"Erro ao buscar estatísticas gerais: {e}")
+        logging.error(f"Erro ao buscar estatísticas gerais do senado: {e}")
         raise HTTPException(status_code=500, detail="Erro ao processar estatísticas gerais")
 
 @router.get("/{senador_codigo}/emendas/lista", summary="Obtém a lista de emendas parlamentares de um senador")

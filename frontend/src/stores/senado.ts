@@ -77,26 +77,26 @@ export interface VotacaoMateriaSenado {
     votacao: VotoSenador[]
 }
 
-export interface ProjetosLegislativosSenadoFilters {
+export interface ProjetosLegislativosFilters {
     search: string
     siglaTipo: string
     ano: string
     senador: string
 }
 
-export interface SenadoresFilters {
+export interface Filters {
     search: string
     partido: string
     estado: string
 }
 
-import { useDeputadosStore } from "./deputados"
+import { useCamaraStore } from "./camara"
 
-export const useSenadoresStore = defineStore("senadores", () => {
-    const deputadosStore = useDeputadosStore()
-    const legislatura = computed(() => deputadosStore.legislatura)
+export const useSenadoStore = defineStore("senado", () => {
+    const camaraStore = useCamaraStore()
+    const legislatura = computed(() => camaraStore.legislatura)
     const setLegislatura = (val: number) => {
-    deputadosStore.setLegislatura(val)
+    camaraStore.setLegislatura(val)
     // Refetch senator-specific data
     fetchSenadores()
     fetchEstatisticasGerais()
@@ -104,7 +104,7 @@ export const useSenadoresStore = defineStore("senadores", () => {
   }
     const apiUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000"
 
-    const filters = ref<SenadoresFilters>({
+    const filters = ref<Filters>({
         search: "",
         partido: "",
         estado: "",
@@ -131,7 +131,7 @@ export const useSenadoresStore = defineStore("senadores", () => {
     const senadorStats = ref<EstatisticasSenadoGerais | null>(null)
 
     // Projetos Legislativos state
-    const projetosLegislativosFilters = ref<ProjetosLegislativosSenadoFilters>({
+    const projetosLegislativosFilters = ref<ProjetosLegislativosFilters>({
         search: "",
         siglaTipo: "",
         ano: "",
@@ -285,7 +285,7 @@ export const useSenadoresStore = defineStore("senadores", () => {
         return filteredSenadores.value.slice(start, start + itemsPerPage)
     })
 
-    const setFilter = (key: keyof SenadoresFilters, value: string) => {
+    const setFilter = (key: keyof Filters, value: string) => {
         filters.value[key] = value
         currentPage.value = 1
     }
@@ -413,7 +413,7 @@ export const useSenadoresStore = defineStore("senadores", () => {
             .sort((a, b) => b.quantidade - a.quantidade)
     })
 
-    const setProjetosLegislativosFilter = (key: keyof ProjetosLegislativosSenadoFilters, value: string) => {
+    const setProjetosLegislativosFilter = (key: keyof ProjetosLegislativosFilters, value: string) => {
         projetosLegislativosFilters.value[key] = value
         fetchProjetosLegislativos(1)
     }

@@ -1,8 +1,8 @@
 from fastapi import APIRouter, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.deputados.router import router as deputados_router
-from api.senadores.router import router as senado_router
+from api.camara.router import router as camara_router
+from api.senado.router import router as senado_router
 import uvicorn
 
 
@@ -18,7 +18,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(deputados_router, prefix="/api")
+app.include_router(camara_router, prefix="/api")
 app.include_router(senado_router, prefix="/api")
 
 @app.get("/")
