@@ -11,6 +11,7 @@
           </p>
         </div>
       </section>
+      <BaseLoading v-if="store.loadingProjetosLegislativos && store.projetosLegislativosList.length === 0" message="Carregando projetos legislativos..." full-page />
 
       <!-- Stats -->
       <ProjetosLegislativosStats />
@@ -30,7 +31,11 @@
 <script setup lang="ts">
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
+import BaseLoading from '@/components/ui/BaseLoading.vue'
 import ProjetosLegislativosFilters from '@/components/camara/ProjetosLegislativosFilters.vue'
 import ProjetosLegislativosList from '@/components/camara/ProjetosLegislativosList.vue'
 import ProjetosLegislativosStats from '@/components/camara/ProjetosLegislativosStats.vue'
+import { useCamaraStore } from '@/stores/camara'
+
+const store = useCamaraStore()
 </script>

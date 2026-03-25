@@ -37,7 +37,7 @@
             </div>
           </div>
         </div>
-      </section>
+      <BaseLoading v-if="store.loadingStats" message="Carregando estatísticas da Câmara..." full-page />
 
       <!-- Overview -->
       <section class="py-8 bg-muted/30">
@@ -236,6 +236,7 @@ import { useRouter } from 'vue-router'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
+import BaseLoading from '@/components/ui/BaseLoading.vue'
 import { useCamaraStore } from "@/stores/camara"
 
 const store = useCamaraStore()

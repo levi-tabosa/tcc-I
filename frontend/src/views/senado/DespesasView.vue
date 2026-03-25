@@ -36,6 +36,12 @@
         </div>
       </section>
 
+      <section v-if="store.error" class="py-4 bg-destructive/10">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <p class="text-sm text-destructive font-medium">Erro ao carregar dados: {{ store.error }}. Verifique se o backend está rodando em {{ store.apiUrl }}.</p>
+        </div>
+      </section>
+
       <!-- Loading state -->
       <BaseLoading v-if="loading" message="Carregando dados do Senado..." full-page />
 
@@ -234,7 +240,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Banknote, Users, Receipt, ChevronRight } from 'lucide-vue-next'
 import AppHeader from '@/components/layout/AppHeader.vue'

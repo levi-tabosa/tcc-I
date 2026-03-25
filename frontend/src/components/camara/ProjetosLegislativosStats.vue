@@ -8,7 +8,7 @@
               <FileText class="h-6 w-6 text-primary" />
             </div>
             <div>
-              <p class="text-sm text-muted-foreground">Total Carregadas</p>
+              <p class="text-sm text-muted-foreground">Total de Projetos Legislativos</p>
               <p class="text-2xl font-bold text-foreground">{{ store.projetosLegislativosList.length }}</p>
             </div>
           </div>

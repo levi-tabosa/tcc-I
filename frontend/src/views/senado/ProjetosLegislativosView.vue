@@ -11,6 +11,7 @@
           </p>
         </div>
       </section>
+      <BaseLoading v-if="store.loadingProjetosLegislativos && store.projetosLegislativosList.length === 0" message="Carregando projetos legislativos..." full-page />
 
       <!-- Stats -->
       <ProjetosLegislativosStats />
@@ -34,6 +35,7 @@ import AppFooter from '@/components/layout/AppFooter.vue'
 import ProjetosLegislativosFilters from '@/components/senado/ProjetosLegislativosFilters.vue'
 import ProjetosLegislativosList from '@/components/senado/ProjetosLegislativosList.vue'
 import ProjetosLegislativosStats from '@/components/senado/ProjetosLegislativosStats.vue'
+import BaseLoading from '@/components/ui/BaseLoading.vue'
 import { useSenadoStore } from '@/stores/senado'
 
 const store = useSenadoStore()

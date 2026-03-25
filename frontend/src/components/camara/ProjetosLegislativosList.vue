@@ -15,7 +15,7 @@
     <!-- Lista -->
     <div v-else class="space-y-4">
       <div
-        v-for="projeto in store.projetosLegislativosList"
+        v-for="projeto in displayedProjetos"
         :key="projeto.id"
       >
         <BaseCard
@@ -163,12 +163,10 @@
     <div v-if="store.hasMoreProjetosLegislativos && store.projetosLegislativosList.length > 0" class="flex justify-center mt-8">
       <button
         @click="store.loadMoreProjetosLegislativos()"
-        :disabled="store.loadingProjetosLegislativos"
-        class="px-6 py-3 rounded-lg border border-border bg-background text-foreground font-medium hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
+        class="px-6 py-3 rounded-lg border border-border bg-background text-foreground font-medium hover:bg-muted transition-colors inline-flex items-center gap-2"
       >
-        <span v-if="store.loadingProjetosLegislativos">...</span>
-        <span v-else>Carregar mais</span>
-        <ChevronDown v-if="!store.loadingProjetosLegislativos" class="h-4 w-4" />
+        <span>Carregar mais</span>
+        <ChevronDown class="h-4 w-4" />
       </button>
     </div>
   </div>
@@ -182,9 +180,14 @@ import BaseBadge from '@/components/ui/BaseBadge.vue'
 import BaseLoading from '@/components/ui/BaseLoading.vue'
 import { useCamaraStore } from '@/stores/camara'
 import type { VotoDeputado } from '@/stores/camara'
+import { computed } from 'vue'
 
 const store = useCamaraStore()
 const expandedVotacaoIds = ref<Set<string>>(new Set())
+
+const displayedProjetos = computed(() => {
+  return store.projetosLegislativosList.slice(0, store.displayedProjetosCount)
+})
 
 onMounted(() => {
   if (store.projetosLegislativosList.length === 0) {

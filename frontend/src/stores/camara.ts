@@ -159,12 +159,15 @@ export const useCamaraStore = defineStore("camara", () => {
   // Projetos Legislativos state
   const projetosLegislativosList = ref<ProjetoLegislativo[]>([])
   const loadingProjetosLegislativos = ref(false)
-  const projetosLegislativosPage = ref(1)
-  const hasMoreProjetosLegislativos = ref(true)
+  const displayedProjetosCount = ref(15)
+  const hasMoreProjetosLegislativos = computed(() => {
+    return displayedProjetosCount.value < projetosLegislativosList.value.length
+  })
 
   // Votos state
   const currentVotos = ref<VotosProjetoLegislativo | null>(null)
   const loadingVotos = ref(false)
+  const loadingStats = ref(false)
   const selectedProjetoLegislativoId = ref<number | null>(null)
 
   const fetchDeputados = async () => {
@@ -220,33 +223,40 @@ export const useCamaraStore = defineStore("camara", () => {
 
 
   const fetchEstatisticasGerais = async () => {
+    loadingStats.value = true
     try {
       const response = await fetch(`${apiUrl}/api/camara/despesas/estatisticas?legislatura=${legislatura.value}`)
       if (!response.ok) throw new Error("Falha ao buscar estatísticas de despesas")
       generalStats.value = await response.json()
     } catch (e: any) {
       console.error("Erro ao buscar estatísticas gerais de despesas:", e)
+    } finally {
+      loadingStats.value = false
     }
   }
 
   const fetchEstatisticasDeputados = async () => {
+    loadingStats.value = true
     try {
       const response = await fetch(`${apiUrl}/api/camara/estatisticas?legislatura=${legislatura.value}`)
       if (!response.ok) throw new Error("Falha ao buscar estatísticas de deputados")
       deputadoStats.value = await response.json()
     } catch (e: any) {
       console.error("Erro ao buscar estatísticas gerais de deputados:", e)
+    } finally {
+      loadingStats.value = false
     }
   }
 
 
-  const fetchProjetosLegislativos = async (pagina = 1) => {
+  const fetchProjetosLegislativos = async () => {
     loadingProjetosLegislativos.value = true
     error.value = null
+    displayedProjetosCount.value = 15 // Reset display count on new fetch
 
     try {
       const params = new URLSearchParams()
-      params.append("pagina", String(pagina))
+      params.append("limite", "1000") // Fetch a large amount for stats
 
       if (projetosLegislativosFilters.value.siglaTipo) {
         params.append("siglaTipo", projetosLegislativosFilters.value.siglaTipo)
@@ -265,15 +275,7 @@ export const useCamaraStore = defineStore("camara", () => {
       if (!response.ok) throw new Error("Falha ao buscar projetos legislativos")
 
       const data: ProjetoLegislativo[] = await response.json()
-
-      if (pagina === 1) {
-        projetosLegislativosList.value = data
-      } else {
-        projetosLegislativosList.value = [...projetosLegislativosList.value, ...data]
-      }
-
-      projetosLegislativosPage.value = pagina
-      hasMoreProjetosLegislativos.value = data.length === 15
+      projetosLegislativosList.value = data
     } catch (e: any) {
       console.error("Erro ao buscar projetos legislativos:", e)
       error.value = "Erro ao carregar projetos legislativos."
@@ -282,10 +284,8 @@ export const useCamaraStore = defineStore("camara", () => {
     }
   }
 
-  const loadMoreProjetosLegislativos = async () => {
-    if (!loadingProjetosLegislativos.value && hasMoreProjetosLegislativos.value) {
-      await fetchProjetosLegislativos(projetosLegislativosPage.value + 1)
-    }
+  const loadMoreProjetosLegislativos = () => {
+    displayedProjetosCount.value += 15
   }
 
   const tiposUnicosProjetosLegislativos = computed(() => {
@@ -344,12 +344,12 @@ export const useCamaraStore = defineStore("camara", () => {
 
   const setProjetosLegislativosFilter = (key: keyof ProjetosLegislativosFilters, value: string) => {
     projetosLegislativosFilters.value[key] = value
-    fetchProjetosLegislativos(1)
+    fetchProjetosLegislativos()
   }
 
   const resetProjetosLegislativosFilters = () => {
     projetosLegislativosFilters.value = { search: "", siglaTipo: "", ano: "", deputado: "" }
-    fetchProjetosLegislativos(1)
+    fetchProjetosLegislativos()
   }
 
   const partidosUnicos = computed(() => {
@@ -427,6 +427,7 @@ export const useCamaraStore = defineStore("camara", () => {
     loadingDetail,
     generalStats,
     deputadoStats,
+    loadingStats,
     categorias,
     loadingCategorias,
     fetchDeputados,
@@ -435,8 +436,8 @@ export const useCamaraStore = defineStore("camara", () => {
     fetchEstatisticasDeputados,
     projetosLegislativosList,
     loadingProjetosLegislativos,
-    projetosLegislativosPage,
     hasMoreProjetosLegislativos,
+    displayedProjetosCount,
     projetosLegislativosFilters,
     fetchProjetosLegislativos,
     loadMoreProjetosLegislativos,

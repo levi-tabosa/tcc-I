@@ -8,9 +8,18 @@
           variant="flat"
           class="hover:border-primary/20"
         >
-          <p class="text-sm text-muted-foreground">{{ metric.label }}</p>
-          <p class="mt-1 text-2xl font-bold text-foreground">{{ metric.value }}</p>
-          <p class="text-xs text-muted-foreground mt-1">{{ metric.description }}</p>
+          <div v-if="loading">
+            <div class="animate-pulse flex flex-col gap-2">
+              <div class="h-4 w-20 bg-muted rounded"></div>
+              <div class="h-8 w-24 bg-muted rounded"></div>
+              <div class="h-3 w-16 bg-muted rounded"></div>
+            </div>
+          </div>
+          <div v-else>
+            <p class="text-sm text-muted-foreground">{{ metric.label }}</p>
+            <p class="mt-1 text-2xl font-bold text-foreground">{{ metric.value }}</p>
+            <p class="text-xs text-muted-foreground mt-1">{{ metric.description }}</p>
+          </div>
         </BaseCard>
       </div>
     </div>
@@ -26,8 +35,11 @@ const senadoresTotal = ref<number | null>(null)
 const gastosCamara = ref<number | null>(null)
 const gastosSenado = ref<number | null>(null)
 
+const loading = ref(true)
+
 onMounted(async () => {
   const apiUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000"
+  loading.value = true
   
   try {
     const [depRes, senRes, camaraGastosRes, senadoGastosRes] = await Promise.all([
@@ -49,7 +61,7 @@ onMounted(async () => {
 
     if (camaraGastosRes.ok) {
       const camaraData = await camaraGastosRes.json()
-      gastosCamara.value = camaraData.total_12_meses
+      gastosCamara.value = camaraData.total_12_meses || camaraData.total_gastos_12_meses
     }
 
     if (senadoGastosRes.ok) {
@@ -58,6 +70,8 @@ onMounted(async () => {
     }
   } catch (err) {
     console.error("Erro ao buscar estatísticas globais:", err)
+  } finally {
+    loading.value = false
   }
 })
 

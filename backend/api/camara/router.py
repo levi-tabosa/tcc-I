@@ -167,10 +167,10 @@ def get_lista_proposicoes(
     ementa: str = Query(None), 
     deputado: str = Query(None),
     legislatura: int = Query(None),
+    limite: int = Query(15),
     pagina: int = 1
 ):
-    itens_por_pagina = 15
-    offset = (pagina - 1) * itens_por_pagina
+    offset = (pagina - 1) * limite
     
     try:
         conn = db.get_db_connection()
@@ -218,7 +218,7 @@ def get_lista_proposicoes(
                 params.extend([start_year, end_year])
                 
             query += " ORDER BY p.id DESC LIMIT %s OFFSET %s"
-            params.extend([itens_por_pagina, offset])
+            params.extend([limite, offset])
 
             cursor.execute(query, tuple(params))
             columns = [desc[0] for desc in cursor.description]

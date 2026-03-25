@@ -144,6 +144,7 @@ export const useSenadoStore = defineStore("senado", () => {
     const selectedProjetoLegislativoId = ref<number | null>(null)
     const currentVotos = ref<VotacaoMateriaSenado | null>(null)
     const loadingVotos = ref(false)
+    const loadingStats = ref(false)
 
     const fetchSenadores = async () => {
         loading.value = true
@@ -235,21 +236,29 @@ export const useSenadoStore = defineStore("senado", () => {
     }
 
     const fetchEstatisticasGerais = async () => {
+        loadingStats.value = true
+        error.value = null
         try {
             const response = await fetch(`${apiUrl}/api/senado/despesas/estatisticas?legislatura=${legislatura.value}`)
             if (!response.ok) throw new Error('Falha ao buscar estatísticas do Senado')
             generalStats.value = await response.json()
         } catch (e: any) {
             console.error('Erro ao buscar estatísticas do senado:', e)
+            error.value = "Não foi possível carregar as estatísticas do Senado."
+        } finally {
+            loadingStats.value = false
         }
     }
 
     const fetchEstatisticasSenadores = async () => {
+        loadingStats.value = true
         try {
             const response = await fetch(`${apiUrl}/api/senado/estatisticas?legislatura=${legislatura.value}`)
             senadorStats.value = await response.json()
         } catch (e: any) {
             console.error('Erro ao buscar estatísticas gerais do senado:', e)
+        } finally {
+            loadingStats.value = false
         }
     }
 
@@ -443,6 +452,7 @@ export const useSenadoStore = defineStore("senado", () => {
         loadingDetail,
         generalStats,
         senadorStats,
+        loadingStats,
         fetchSenadores,
         fetchSenador,
         fetchDespesasSenador,
@@ -471,5 +481,6 @@ export const useSenadoStore = defineStore("senado", () => {
         loadingVotos,
         setProjetosLegislativosFilter,
         resetProjetosLegislativosFilters,
+        apiUrl,
     }
 })
