@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Query
 from datetime import date
 import psycopg2
 import logging
+from functools import lru_cache
 
 # Garanta que este import está correto para sua estrutura
 import database.db as db
@@ -13,6 +14,7 @@ router = APIRouter(
 
 @router.get("/lista", summary="Lista todos os senadores ativos")
 def get_lista_senadores(legislatura: int = Query(None)):
+    conn = None
     try:
         conn = db.get_db_connection()
         if not conn:
@@ -23,14 +25,9 @@ def get_lista_senadores(legislatura: int = Query(None)):
                 SELECT DISTINCT ON (p.codigo)
                     p.codigo,
                     p.nome_parlamentar,
-                    p.nome_completo,
-                    p.sexo,
                     p.sigla_partido,
                     p.uf,
-                    p.email,
-                    p.url_foto,
-                    p.url_pagina,
-                    p.data_nascimento
+                    p.url_foto
                 FROM senado.parlamentar p
                 INNER JOIN senado.mandato m ON p.codigo = m.codigo_parlamentar
             """
@@ -49,14 +46,9 @@ def get_lista_senadores(legislatura: int = Query(None)):
                 {
                     "codigo": r[0],
                     "nomeParlamentar": r[1],
-                    "nomeCompleto": r[2],
-                    "sexo": r[3],
-                    "siglaPartido": r[4],
-                    "uf": r[5],
-                    "email": r[6],
-                    "urlFoto": r[7],
-                    "urlPagina": r[8],
-                    "dataNascimento": r[9]
+                    "siglaPartido": r[2],
+                    "uf": r[3],
+                    "urlFoto": r[4]
                 }
                 for r in resultados
             ]
@@ -65,12 +57,17 @@ def get_lista_senadores(legislatura: int = Query(None)):
         logging.error(f"Erro ao buscar senadores: {e}")
         raise HTTPException(status_code=500, detail="Erro ao processar senadores")
     finally:
-        if 'conn' in locals() and conn:
-            conn.close()
+        if conn:
+            db.release_db_connection(conn)
+
+
+
 
 
 @router.get("/estatisticas")
+@lru_cache(maxsize=16)
 def get_estatisticas_senado(legislatura: int = Query(None)):
+    conn = None
     try:
         conn = db.get_db_connection()
         if not conn:
@@ -88,8 +85,6 @@ def get_estatisticas_senado(legislatura: int = Query(None)):
             total_senadores = row[0] if row else 0
 
             query_gastos = "SELECT COALESCE(SUM(valor_reembolsado), 0) FROM senado.despesa_ceaps"
-            # TODO: If we had a direct link to legislatura in despesa_ceaps or via mandato
-            # For now, let's keep it global or filter by year if we assume fixed years for legislatures
             cursor.execute(query_gastos)
             total_gastos = cursor.fetchone()[0] or 0
 
@@ -129,12 +124,13 @@ def get_estatisticas_senado(legislatura: int = Query(None)):
         logging.error(f"Erro ao buscar estatísticas: {e}")
         raise HTTPException(status_code=500, detail="Erro ao processar estatísticas")
     finally:
-        if 'conn' in locals() and conn:
-            conn.close()
+        if conn:
+            db.release_db_connection(conn)
 
 
 @router.get("/comparar")
 def get_comparativo_senadores(id1: int, id2: int, ano: int = None, legislatura: int = Query(None)):
+    conn = None
     try:
         conn = db.get_db_connection()
         if not conn:
@@ -176,9 +172,6 @@ WHERE d.cod_senador IN (%s, %s)
             """
             params_stat = [id1, id2]
             if legislatura:
-                # We need to filter despesas by legislature. Since despesa_ceaps has ano/mes, 
-                # and mandato has primeira_legislatura/segunda_legislatura, this is tricky.
-                # However, the user wants it to work, so we filter by mandato's legislature.
                 query_despesas += " AND m.codigo_legislatura = %s"
                 params_stat.append(legislatura)
                 
@@ -266,12 +259,13 @@ ORDER BY data_despesa DESC;
         logging.error(f"Erro ao buscar senador: {e}")
         raise HTTPException(status_code=500, detail="Erro ao processar senador")
     finally:
-        if 'conn' in locals() and conn:
-            conn.close()
+        if conn:
+            db.release_db_connection(conn)
                 
 
 @router.get("/{senador_codigo}", summary="Obtém o perfil detalhado de um senador")
 def get_perfil_senador(senador_codigo: int, legislatura: int = Query(None)):    
+    conn = None
     try:
         conn = db.get_db_connection()
         if not conn:
@@ -329,40 +323,58 @@ WHERE codigo = %s;"""
         logging.error(f"Erro ao buscar senador: {e}")
         raise HTTPException(status_code=500, detail="Erro ao processar senador")
     finally:
-        if 'conn' in locals() and conn:
-            conn.close()
+        if conn:
+            db.release_db_connection(conn)
 
 
 @router.get("/{senador_codigo}/despesas", summary="Obtém o extrato de despesas de um senador")
-def get_despesas_senador(senador_codigo: int, legislatura: int = Query(None)):
+def get_despesas_senador(senador_codigo: int, legislatura: int = Query(None), pagina: int = 1):
+    itens_per_page = 20
+    offset = (pagina - 1) * itens_per_page
+    conn = None
     try:
         conn = db.get_db_connection()
         if not conn:
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
         with conn.cursor() as cursor:
-            # 1. Buscar as 12 despesas mais recentes
+            # 1. Buscar o total de despesas para paginação
+            query_count = """SELECT COUNT(*) 
+                FROM senado.despesa_ceaps d
+                INNER JOIN senado.mandato m ON d.cod_senador = m.codigo_parlamentar
+                WHERE d.cod_senador = %s"""
+            params_count = [senador_codigo]
+            if legislatura:
+                query_count += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
+                params_count.extend([str(legislatura), str(legislatura)])
+            
+            cursor.execute(query_count, tuple(params_count))
+            total_items = cursor.fetchone()[0]
+            total_paginas = (total_items + itens_per_page - 1) // itens_per_page
+
+            # 2. Buscar as despesas paginadas
             query_recente = """SELECT 
-    d.ano, 
-    d.mes, 
-    d.tipo_despesa, 
-    d.fornecedor, 
-    d.valor_reembolsado, 
-    d.data_despesa
-FROM senado.despesa_ceaps d
-INNER JOIN senado.mandato m ON d.cod_senador = m.codigo_parlamentar
-WHERE d.cod_senador = %s 
-"""
+                    d.ano, 
+                    d.mes, 
+                    d.tipo_despesa, 
+                    d.fornecedor, 
+                    d.valor_reembolsado, 
+                    d.data_despesa
+                FROM senado.despesa_ceaps d
+                INNER JOIN senado.mandato m ON d.cod_senador = m.codigo_parlamentar
+                WHERE d.cod_senador = %s 
+            """
             params_rec = [senador_codigo]
             if legislatura:
                 query_recente += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
                 params_rec.extend([str(legislatura), str(legislatura)])
                 
-            query_recente += " ORDER BY d.data_despesa DESC LIMIT 50"
+            query_recente += " ORDER BY d.data_despesa DESC LIMIT %s OFFSET %s"
+            params_rec.extend([itens_per_page, offset])
             cursor.execute(query_recente, tuple(params_rec))
             resultado = cursor.fetchall()
 
-            # 2. Buscar o resumo por categoria (considerando TODA a história)
+            # 3. Buscar o resumo por categoria
             query_categorias = """
                 SELECT 
                     d.tipo_despesa, 
@@ -398,17 +410,25 @@ WHERE d.cod_senador = %s
                 "categorias": [
                     {"categoria": c[0], "valor": float(c[1])}
                     for c in categorias_raw
-                ]
+                ],
+                "paginacao": {
+                    "total": total_items,
+                    "pagina": pagina,
+                    "total_paginas": total_paginas,
+                    "itens_por_pagina": itens_per_page
+                }
             }
     except Exception as e:
-        logging.error(f"Erro ao buscar senador: {e}")
-        raise HTTPException(status_code=500, detail="Erro ao processar senador")
+        logging.error(f"Erro ao buscar despesas do senador: {e}")
+        raise HTTPException(status_code=500, detail="Erro ao processar despesas")
     finally:
-        if 'conn' in locals() and conn:
-            conn.close()
+        if conn:
+            db.release_db_connection(conn)
 
 @router.get("/despesas/estatisticas")
+@lru_cache(maxsize=16)
 def get_despesas_estatisticas(legislatura: int = Query(None)):
+    conn = None
     try:
         conn = db.get_db_connection()
         if not conn:
@@ -430,15 +450,15 @@ def get_despesas_estatisticas(legislatura: int = Query(None)):
             res_total = cursor.fetchone()
             total_gastos = res_total[0] if res_total else 0
 
-            query = """SELECT 
+            query_media = """SELECT 
     COALESCE(SUM(valor_reembolsado) / NULLIF(COUNT(DISTINCT cod_senador), 0), 0) AS media_por_senador
 FROM senado.despesa_ceaps;
 """
-            cursor.execute(query)
+            cursor.execute(query_media)
             res_media = cursor.fetchone()
             media_por_senador = res_media[0] if res_media else 0
             
-            query = """WITH total_geral AS (
+            query_partidos = """WITH total_geral AS (
     SELECT COALESCE(SUM(valor_reembolsado), 1) as soma_total 
     FROM senado.despesa_ceaps 
 )
@@ -454,10 +474,10 @@ JOIN senado.parlamentar p ON d.cod_senador = p.codigo
 GROUP BY p.sigla_partido
 ORDER BY total_valor DESC;
 """
-            cursor.execute(query)
+            cursor.execute(query_partidos)
             partidos = cursor.fetchall()
             
-            query = """WITH ranking_categorias AS (
+            query_cat = """WITH ranking_categorias AS (
     SELECT 
         tipo_despesa, 
         SUM(valor_reembolsado) AS valor,
@@ -470,13 +490,12 @@ SELECT
     SUM(valor) AS total_valor
 FROM ranking_categorias
 GROUP BY 1
-ORDER BY (CASE WHEN rank <= 9 THEN tipo_despesa ELSE 'Outros' END = 'Outros'), total_valor DESC;
+ORDER BY (CASE WHEN SUM(valor) > 0 THEN 0 ELSE 1 END), total_valor DESC;
 """
-            # Refined the ORDER BY slightly for Postgres compatibility and used GROUP BY index
-            cursor.execute(query.replace("GROUP BY categoria", "GROUP BY 1").replace("(categoria = 'Outros')", "(CASE WHEN rank <= 9 THEN tipo_despesa ELSE 'Outros' END = 'Outros')"))
+            cursor.execute(query_cat)
             categorias = cursor.fetchall()
             
-            query = """SELECT 
+            query_top = """SELECT 
     p.codigo, 
     p.nome_parlamentar, 
     p.sigla_partido, 
@@ -489,11 +508,11 @@ GROUP BY p.codigo, p.nome_parlamentar, p.sigla_partido, p.uf, p.url_foto
 ORDER BY total_valor DESC
 LIMIT 10;
 """
-            cursor.execute(query)
+            cursor.execute(query_top)
             top_10 = cursor.fetchall()
 
-            # Evolução Mensal (últimos 12 meses com dados disponíveis)
-            query = """SELECT 
+            # Evolução Mensal
+            query_evolucao = """SELECT 
     EXTRACT(YEAR FROM data_despesa)::int AS ano,
     EXTRACT(MONTH FROM data_despesa)::int AS mes,
     SUM(valor_reembolsado) AS valor
@@ -504,15 +523,15 @@ GROUP BY 1, 2
 ORDER BY 1 DESC, 2 DESC
 LIMIT 12;
 """
-            cursor.execute(query)
+            cursor.execute(query_evolucao)
             gastos_mensais = cursor.fetchall()
 
-            query = """SELECT 
+            query_12m = """SELECT 
     COALESCE(SUM(valor_reembolsado), 0) AS total_geral
 FROM senado.despesa_ceaps
 WHERE data_despesa >= (CURRENT_DATE - INTERVAL '1 year');
 """
-            cursor.execute(query)
+            cursor.execute(query_12m)
             res_total_12 = cursor.fetchone()
             total_12_meses = res_total_12[0] if res_total_12 else 0
             
@@ -552,11 +571,11 @@ WHERE data_despesa >= (CURRENT_DATE - INTERVAL '1 year');
                 ]
             }
     except Exception as e:
-        logging.error(f"Erro ao buscar estatísticas: {e}")
+        logging.error(f"Erro ao buscar estatísticas de despesas: {e}")
         raise HTTPException(status_code=500, detail="Erro ao processar estatísticas")
     finally:
-        if 'conn' in locals() and conn:
-            conn.close()
+        if conn:
+            db.release_db_connection(conn)
 
 
 @router.get("/materia/listar")
@@ -570,7 +589,7 @@ def get_materia_listar(
 ):
     itens_por_pagina = 15
     offset = (pagina - 1) * itens_por_pagina
-
+    conn = None
     try:
         conn = db.get_db_connection()
         if not conn:
@@ -641,8 +660,8 @@ def get_materia_listar(
         logging.error(f"Erro ao buscar matéria: {e}")
         raise HTTPException(status_code=500, detail="Erro ao processar matéria")
     finally:
-        if 'conn' in locals() and conn:
-            conn.close()
+        if conn:
+            db.release_db_connection(conn)
 
 
 @router.get("/emendas", summary="Busca uma lista de emendas parlamentares do Senado")
@@ -653,21 +672,41 @@ def get_lista_emendas(
 ):
     itens_por_pagina = 15
     offset = (pagina - 1) * itens_por_pagina
-
+    conn = None
     try:
         conn = db.get_db_connection()
         if not conn:
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
         with conn.cursor() as cursor:
+            # 1. Total para paginação
+            query_count = """
+                SELECT COUNT(*)
+                FROM portal.emendas e
+                JOIN senado.parlamentar s 
+                   ON (lower(e.nome_autor) = lower(s.nome_completo) 
+                       OR lower(e.nome_autor) = lower(s.nome_parlamentar))
+                WHERE e.autor_tipo = 'SENADOR'
+            """
+            params_count = []
+            if nome_senador:
+                query_count += " AND s.nome_parlamentar ILIKE %s"
+                params_count.append(f"%{nome_senador}%")
+            if ano:
+                query_count += " AND e.ano = %s"
+                params_count.append(ano)
+            
+            cursor.execute(query_count, tuple(params_count))
+            total_items = cursor.fetchone()[0]
+            total_paginas = (total_items + itens_por_pagina - 1) // itens_por_pagina
+
+            # 2. Dados paginados (Seleção Seletiva)
             query = """
                 SELECT 
                     s.nome_parlamentar as senador,
                     e.codigo_emenda as codigo,
                     e.ano,
                     e.tipo_emenda as tipo,
-                    e.valor_empenhado,
-                    e.valor_liquidado,
                     e.valor_pago,
                     e.funcao,
                     e.localidade_gasto as localidade
@@ -675,7 +714,7 @@ def get_lista_emendas(
                 JOIN senado.parlamentar s 
                   ON (lower(e.nome_autor) = lower(s.nome_completo) 
                       OR lower(e.nome_autor) = lower(s.nome_parlamentar))
-                WHERE 1=1
+                WHERE e.autor_tipo = 'SENADOR'
             """
             params = []
             if nome_senador:
@@ -689,28 +728,40 @@ def get_lista_emendas(
             params.extend([itens_por_pagina, offset])
 
             cursor.execute(query, tuple(params))
-            columns = [desc[0] for desc in cursor.description]
-            resultados = [dict(zip(columns, row)) for row in cursor.fetchall()]
-            
-            for r in resultados:
-                r["valorEmpenhado"] = float(r["valor_empenhado"]) if r["valor_empenhado"] else 0.0
-                r["valorLiquidado"] = float(r["valor_liquidado"]) if r["valor_liquidado"] else 0.0
-                r["valorPago"] = float(r["valor_pago"]) if r["valor_pago"] else 0.0
-                del r["valor_empenhado"]
-                del r["valor_liquidado"]
-                del r["valor_pago"]
-                
-            return resultados
+            res = cursor.fetchall()
+
+            return {
+                "emendas": [
+                    {
+                        "senador": r[0],
+                        "codigo": r[1],
+                        "ano": r[2],
+                        "tipo": r[3],
+                        "valorPago": float(r[4]),
+                        "funcao": r[5],
+                        "localidade": r[6]
+                    }
+                    for r in res
+                ],
+                "paginacao": {
+                    "total": total_items,
+                    "pagina": pagina,
+                    "total_paginas": total_paginas,
+                    "itens_por_pagina": itens_por_pagina
+                }
+            }
     except Exception as e:
-        logging.error(f"Erro ao buscar emendas do senado: {e}")
+        logging.error(f"Erro ao buscar emendas: {e}")
         raise HTTPException(status_code=500, detail="Erro ao processar emendas")
     finally:
-        if 'conn' in locals() and conn:
-            conn.close()
+        if conn:
+            db.release_db_connection(conn)
 
 
 @router.get("/emendas/resumo", summary="Obtém resumo das emendas do Senado")
+@lru_cache(maxsize=8)
 def get_resumo_emendas():
+    conn = None
     try:
         conn = db.get_db_connection()
         if not conn:
@@ -791,12 +842,13 @@ def get_resumo_emendas():
         logging.error(f"Erro ao buscar resumo emendas: {e}")
         raise HTTPException(status_code=500, detail="Erro ao processar emendas")
     finally:
-        if 'conn' in locals() and conn:
-            conn.close()
+        if conn:
+            db.release_db_connection(conn)
 
 
 @router.get("/materia/votacao", summary="Obtém o histórico de votações de um projeto legislativo")
 def get_votacao_materia(codigo_materia: int):
+    conn = None
     try:
         conn = db.get_db_connection()
         if not conn:
@@ -839,12 +891,14 @@ def get_votacao_materia(codigo_materia: int):
         logging.error(f"Erro ao buscar votação: {e}")
         raise HTTPException(status_code=500, detail="Erro ao processar votação")
     finally:
-        if 'conn' in locals() and conn:
-            conn.close()
+        if conn:
+            db.release_db_connection(conn)
 
 
 @router.get("/estatisticas", summary="Obtém estatísticas gerais dos senadores")
+@lru_cache(maxsize=4)
 def get_estatisticas_gerais(legislatura: int = Query(None)):
+    conn = None
     try:
         conn = db.get_db_connection()
         if not conn:
@@ -863,7 +917,7 @@ WHERE 1=1"""
             cursor.execute(query, tuple(params))
             total_senadores = cursor.fetchone()[0]
 
-            query = """SELECT COUNT(DISTINCT
+            query_regioes_count = """SELECT COUNT(DISTINCT
     CASE
         WHEN p.uf IN ('AC','AP','AM','PA','RO','RR','TO') THEN 'Norte'
         WHEN p.uf IN ('AL','BA','CE','MA','PB','PE','PI','RN','SE') THEN 'Nordeste'
@@ -877,12 +931,12 @@ INNER JOIN senado.mandato m ON p.codigo = m.codigo_parlamentar
 WHERE p.uf IS NOT NULL"""
             params = []
             if legislatura:
-                query += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
+                query_regioes_count += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
                 params.extend([str(legislatura), str(legislatura)])
-            cursor.execute(query, tuple(params))
+            cursor.execute(query_regioes_count, tuple(params))
             total_regioes = cursor.fetchone()[0]
 
-            query = """SELECT 
+            query_regioes = """SELECT 
     CASE
         WHEN p.uf IN ('AC','AP','AM','PA','RO','RR','TO') THEN 'Norte'
         WHEN p.uf IN ('AL','BA','CE','MA','PB','PE','PI','RN','SE') THEN 'Nordeste'
@@ -897,11 +951,11 @@ INNER JOIN senado.mandato m ON p.codigo = m.codigo_parlamentar
 WHERE p.uf IS NOT NULL"""
             params = []
             if legislatura:
-                query += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
+                query_regioes += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
                 params.extend([str(legislatura), str(legislatura)])
                 
-            query += " GROUP BY regiao ORDER BY quantidade DESC;"
-            cursor.execute(query, tuple(params))
+            query_regioes += " GROUP BY regiao ORDER BY quantidade DESC;"
+            cursor.execute(query_regioes, tuple(params))
             regioes = cursor.fetchall()
             
             return {
@@ -919,22 +973,40 @@ WHERE p.uf IS NOT NULL"""
     except Exception as e:
         logging.error(f"Erro ao buscar estatísticas gerais do senado: {e}")
         raise HTTPException(status_code=500, detail="Erro ao processar estatísticas gerais")
+    finally:
+        if conn:
+            db.release_db_connection(conn)
 
 @router.get("/{senador_codigo}/emendas/lista", summary="Obtém a lista de emendas parlamentares de um senador")
-def get_emendas_lista_senador(senador_codigo: int):
+def get_emendas_lista_senador(senador_codigo: int, pagina: int = 1):
+    itens_per_page = 15
+    offset = (pagina - 1) * itens_per_page
+    conn = None
     try:
         conn = db.get_db_connection()
         if not conn:
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
         with conn.cursor() as cursor:
+            # 1. Total para paginação
+            query_count = """
+                SELECT COUNT(*)
+                FROM portal.emendas e
+                JOIN senado.parlamentar s 
+                   ON (lower(e.nome_autor) = lower(s.nome_completo) 
+                       OR lower(e.nome_autor) = lower(s.nome_parlamentar))
+                WHERE s.codigo = %s
+            """
+            cursor.execute(query_count, (senador_codigo,))
+            total_items = cursor.fetchone()[0]
+            total_paginas = (total_items + itens_per_page - 1) // itens_per_page
+
+            # 2. Dados paginados (Seleção Seletiva)
             query = """
                 SELECT 
                     e.codigo_emenda as codigo,
                     e.ano,
                     e.tipo_emenda as tipo,
-                    e.valor_empenhado,
-                    e.valor_liquidado,
                     e.valor_pago,
                     e.funcao,
                     e.localidade_gasto as localidade
@@ -944,47 +1016,59 @@ def get_emendas_lista_senador(senador_codigo: int):
                       OR lower(e.nome_autor) = lower(s.nome_parlamentar))
                 WHERE s.codigo = %s
                 ORDER BY e.ano DESC, e.valor_pago DESC
+                LIMIT %s OFFSET %s
             """
-            cursor.execute(query, (senador_codigo,))
-            columns = [desc[0] for desc in cursor.description]
-            resultados = [dict(zip(columns, row)) for row in cursor.fetchall()]
+            cursor.execute(query, (senador_codigo, itens_per_page, offset))
+            res = cursor.fetchall()
             
-            for r in resultados:
-                r["valorEmpenhado"] = float(r["valor_empenhado"]) if r["valor_empenhado"] else 0.0
-                r["valorLiquidado"] = float(r["valor_liquidado"]) if r["valor_liquidado"] else 0.0
-                r["valorPago"] = float(r["valor_pago"]) if r["valor_pago"] else 0.0
-                del r["valor_empenhado"]
-                del r["valor_liquidado"]
-                del r["valor_pago"]
-                
-            return resultados
+            return {
+                "emendas": [
+                    {
+                        "codigo": r[0],
+                        "ano": r[1],
+                        "tipo": r[2],
+                        "valorPago": float(r[3]),
+                        "funcao": r[4],
+                        "localidade": r[5]
+                    }
+                    for r in res
+                ],
+                "paginacao": {
+                    "total": total_items,
+                    "pagina": pagina,
+                    "total_paginas": total_paginas,
+                    "itens_por_pagina": itens_per_page
+                }
+            }
     except Exception as e:
         logging.error(f"Erro ao buscar emendas do senador: {e}")
         raise HTTPException(status_code=500, detail="Erro ao processar emendas")
     finally:
-        if 'conn' in locals() and conn:
-            conn.close()
+        if conn:
+            db.release_db_connection(conn)
 
 
 @router.get("/empresas/estatisticas", summary="Obtém estatísticas gerais das empresas")
+@lru_cache(maxsize=4)
 def get_estatisticas_empresas():
+    conn = None
     try:
         conn = db.get_db_connection()
         if not conn:
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
         with conn.cursor() as cursor:
-            query = """
+            query_gerais = """
                SELECT
                     COUNT(DISTINCT cpf_cnpj) as total_empresas,
                     SUM(valor_reembolsado) as total_pago,
                     COUNT(*) as total_contratos
                 FROM senado.despesa_ceaps;
             """
-            cursor.execute(query)
-            resultados_gerais = cursor.fetchall()
+            cursor.execute(query_gerais)
+            row_gerais = cursor.fetchone()
 
-            query = """
+            query_top_10 = """
                 SELECT
                     fornecedor as empresa,
                     SUM(valor_reembolsado) as valor_total
@@ -993,11 +1077,10 @@ def get_estatisticas_empresas():
                 ORDER BY valor_total DESC
                 LIMIT 10;
             """
-            cursor.execute(query)
-            resultados_top_10 = cursor.fetchall()
+            cursor.execute(query_top_10)
+            res_top_10 = cursor.fetchall()
             
-            query = """WITH EmpresaStats AS (
-    -- Agrupa os gastos por fornecedor e CNPJ
+            query_top_20 = """WITH EmpresaStats AS (
     SELECT
         fornecedor,
         cpf_cnpj,
@@ -1007,11 +1090,9 @@ def get_estatisticas_empresas():
     GROUP BY fornecedor, cpf_cnpj
 ),
 TotalGeral AS (
-    -- Calcula o total de tudo para fazer a porcentagem
     SELECT SUM(valor_reembolsado) as soma_total FROM senado.despesa_ceaps
 ),
 EmpresaPartidos AS (
-    -- Identifica quais partidos de senadores pagaram para cada empresa
     SELECT
         d.fornecedor,
         d.cpf_cnpj,
@@ -1034,19 +1115,19 @@ CROSS JOIN TotalGeral tg
 ORDER BY es.valor_total DESC
 LIMIT 20;
             """
-            cursor.execute(query)
-            resultados_top_20 = cursor.fetchall()
+            cursor.execute(query_top_20)
+            res_top_20 = cursor.fetchall()
             
             return {
-                "total_empresas": resultados_gerais[0][0],
-                "total_pago": resultados_gerais[0][1],
-                "total_contratos": resultados_gerais[0][2],
+                "total_empresas": row_gerais[0],
+                "total_pago": float(row_gerais[1] or 0),
+                "total_contratos": row_gerais[2],
                 "top_10_empresas": [
                     {
                         "empresa": r[0],
-                        "valor_total": r[1]
+                        "valor_total": float(r[1])
                     }
-                    for r in resultados_top_10
+                    for r in res_top_10
                 ],
                 "top_20_empresas": [
                     {
@@ -1054,13 +1135,16 @@ LIMIT 20;
                         "empresa": r[1],
                         "partidos": r[2],
                         "cnpj": r[3],
-                        "valor_total": r[4],
+                        "valor_total": float(r[4]),
                         "contratos": r[5],
-                        "percentual": r[6]
+                        "percentual": float(r[6])
                     }
-                    for r in resultados_top_20
+                    for r in res_top_20
                 ]
             }
     except Exception as e:
-        logging.error(f"Erro ao buscar estatísticas gerais: {e}")
-        raise HTTPException(status_code=500, detail="Erro ao processar estatísticas gerais")
+        logging.error(f"Erro ao buscar estatísticas de empresas: {e}")
+        raise HTTPException(status_code=500, detail="Erro ao processar estatísticas")
+    finally:
+        if conn:
+            db.release_db_connection(conn)

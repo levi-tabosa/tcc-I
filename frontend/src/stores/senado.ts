@@ -119,11 +119,16 @@ export const useSenadoStore = defineStore("senado", () => {
 
     // Detail state
     const currentSenador = ref<SenadorDetail | null>(null)
-    const currentDespesas = ref<any[]>([])
-    const currentCategorias = ref<any[]>([])
-    const totalDespesas = ref(0)
     const currentEmendas = ref<EmendaSenado[]>([])
     const totalEmendas = ref(0)
+    const emendasPage = ref(1)
+    const emendasTotalPages = ref(1)
+
+    const currentDespesas = ref<any[]>([])
+    const totalDespesas = ref(0)
+    const despesasPage = ref(1)
+    const despesasTotalPages = ref(1)
+    const currentCategorias = ref<any[]>([])
     const loadingDetail = ref(false)
 
     // General Stats state
@@ -176,6 +181,12 @@ export const useSenadoStore = defineStore("senado", () => {
         currentDespesas.value = []
         currentCategorias.value = []
         totalDespesas.value = 0
+        despesasPage.value = 1
+        despesasTotalPages.value = 1
+        currentEmendas.value = []
+        totalEmendas.value = 0
+        emendasPage.value = 1
+        emendasTotalPages.value = 1
         try {
             const response = await fetch(`${apiUrl}/api/senado/${id}?legislatura=${legislatura.value}`)
             if (!response.ok) throw new Error("Falha ao buscar detalhes do senador")
@@ -211,25 +222,30 @@ export const useSenadoStore = defineStore("senado", () => {
         }
     }
 
-    const fetchDespesasSenador = async (id: number) => {
+    const fetchDespesasSenador = async (id: number, page: number = 1) => {
         loadingDetail.value = true
         try {
-            const response = await fetch(`${apiUrl}/api/senado/${id}/despesas?legislatura=${legislatura.value}`)
+            const response = await fetch(`${apiUrl}/api/senado/${id}/despesas?legislatura=${legislatura.value}&pagina=${page}`)
             if (!response.ok) throw new Error("Falha ao buscar despesas do senador")
             const data = await response.json()
             currentDespesas.value = data.despesas
             currentCategorias.value = data.categorias || []
             totalDespesas.value = data.total_despesas
+            despesasPage.value = data.paginacao.pagina
+            despesasTotalPages.value = data.paginacao.total_paginas
         } finally {
             loadingDetail.value = false
         }
     }
 
-    const fetchEmendasSenador = async (id: number) => {
+    const fetchEmendasSenador = async (id: number, page: number = 1) => {
         try {
-            const response = await fetch(`${apiUrl}/api/senado/${id}/emendas/lista`)
+            const response = await fetch(`${apiUrl}/api/senado/${id}/emendas/lista?pagina=${page}`)
             if (!response.ok) throw new Error("Falha ao buscar emendas")
-            currentEmendas.value = await response.json()
+            const data = await response.json()
+            currentEmendas.value = data.emendas
+            emendasPage.value = data.paginacao.pagina
+            emendasTotalPages.value = data.paginacao.total_paginas
         } catch (e: any) {
             console.error("Erro ao buscar emendas do senador:", e)
         }
@@ -444,11 +460,15 @@ export const useSenadoStore = defineStore("senado", () => {
         loading,
         error,
         currentSenador,
-        currentDespesas,
-        currentCategorias,
-        totalDespesas,
         currentEmendas,
         totalEmendas,
+        emendasPage,
+        emendasTotalPages,
+        currentDespesas,
+        totalDespesas,
+        despesasPage,
+        despesasTotalPages,
+        currentCategorias,
         loadingDetail,
         generalStats,
         senadorStats,
@@ -456,6 +476,7 @@ export const useSenadoStore = defineStore("senado", () => {
         fetchSenadores,
         fetchSenador,
         fetchDespesasSenador,
+        fetchEmendasSenador,
         fetchEstatisticasGerais,
         fetchEstatisticasSenadores,
         setFilter,

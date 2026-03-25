@@ -158,6 +158,31 @@
                         </table>
                     </div>
                 </BaseCard>
+
+                <!-- Pagination Emendas -->
+                <div v-if="store.emendasTotalPages > 1" class="mt-4 flex items-center justify-between">
+                    <p class="text-sm text-muted-foreground">
+                        Página {{ store.emendasPage }} de {{ store.emendasTotalPages }}
+                    </p>
+                    <div class="flex gap-2">
+                        <BaseButton 
+                            variant="outline" 
+                            size="sm" 
+                            :disabled="store.emendasPage <= 1"
+                            @click="store.fetchEmendasSenador(store.currentSenador!.id, store.emendasPage - 1)"
+                        >
+                            <ChevronLeft class="h-4 w-4 mr-1" /> Anterior
+                        </BaseButton>
+                        <BaseButton 
+                            variant="outline" 
+                            size="sm" 
+                            :disabled="store.emendasPage >= store.emendasTotalPages"
+                            @click="store.fetchEmendasSenador(store.currentSenador!.id, store.emendasPage + 1)"
+                        >
+                            Próxima <ChevronRight class="h-4 w-4 ml-1" />
+                        </BaseButton>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -190,6 +215,31 @@
                         </table>
                     </div>
                 </BaseCard>
+
+                <!-- Pagination Despesas -->
+                <div v-if="store.despesasTotalPages > 1" class="mt-4 flex items-center justify-between">
+                    <p class="text-sm text-muted-foreground">
+                        Página {{ store.despesasPage }} de {{ store.despesasTotalPages }}
+                    </p>
+                    <div class="flex gap-2">
+                        <BaseButton 
+                            variant="outline" 
+                            size="sm" 
+                            :disabled="store.despesasPage <= 1"
+                            @click="store.fetchDespesasSenador(store.currentSenador!.id, store.despesasPage - 1)"
+                        >
+                            <ChevronLeft class="h-4 w-4 mr-1" /> Anterior
+                        </BaseButton>
+                        <BaseButton 
+                            variant="outline" 
+                            size="sm" 
+                            :disabled="store.despesasPage >= store.despesasTotalPages"
+                            @click="store.fetchDespesasSenador(store.currentSenador!.id, store.despesasPage + 1)"
+                        >
+                            Próxima <ChevronRight class="h-4 w-4 ml-1" />
+                        </BaseButton>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -206,12 +256,13 @@
 <script setup lang="ts">
 import { computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { ChevronLeft, Mail, Calendar, User, GraduationCap } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight, Mail, Calendar, User, GraduationCap } from 'lucide-vue-next'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import BaseLoading from '@/components/ui/BaseLoading.vue'
+import BaseButton from '@/components/ui/BaseButton.vue'
 import { useSenadoStore } from '@/stores/senado'
 
 const route = useRoute()

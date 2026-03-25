@@ -11,18 +11,20 @@
           </p>
         </div>
       </section>
-      <BaseLoading v-if="store.loadingProjetosLegislativos && store.projetosLegislativosList.length === 0" message="Carregando projetos legislativos..." full-page />
+      <BaseLoading v-if="store.loadingProjetosLegislativos" message="Carregando projetos legislativos..." full-page />
 
-      <!-- Stats -->
-      <ProjetosLegislativosStats />
+      <template v-if="!store.loadingProjetosLegislativos || store.projetosLegislativosList.length > 0">
+        <!-- Stats -->
+        <ProjetosLegislativosStats />
 
-      <!-- Main content -->
-      <section class="py-8">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <ProjetosLegislativosFilters />
-          <ProjetosLegislativosList />
-        </div>
-      </section>
+        <!-- Main content -->
+        <section class="py-8">
+          <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <ProjetosLegislativosFilters />
+            <ProjetosLegislativosList />
+          </div>
+        </section>
+      </template>
     </main>
     <AppFooter />
   </div>
