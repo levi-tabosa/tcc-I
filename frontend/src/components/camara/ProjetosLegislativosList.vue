@@ -2,7 +2,7 @@
   <div>
     <!-- Results count -->
     <p class="text-sm text-muted-foreground mb-4">
-      {{ store.projetosLegislativosList.length }} projetos legislativos encontrados
+      {{ store.totalProjetosLegislativos.toLocaleString('pt-BR') }} projetos legislativos encontrados
     </p>
 
     <BaseLoading v-if="store.loadingProjetosLegislativos && store.projetosLegislativosList.length === 0" message="Carregando projetos legislativos..." />

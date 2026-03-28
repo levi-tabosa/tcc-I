@@ -158,6 +158,7 @@ export const useCamaraStore = defineStore("camara", () => {
 
   // Projetos Legislativos state
   const projetosLegislativosList = ref<ProjetoLegislativo[]>([])
+  const totalProjetosLegislativos = ref(0)
   const loadingProjetosLegislativos = ref(false)
   const displayedProjetosCount = ref(15)
   const hasMoreProjetosLegislativos = computed(() => {
@@ -277,6 +278,7 @@ export const useCamaraStore = defineStore("camara", () => {
 
       const data = await response.json()
       projetosLegislativosList.value = data.proposicoes || []
+      totalProjetosLegislativos.value = data.paginacao?.total || 0
     } catch (e: any) {
       console.error("Erro ao buscar projetos legislativos:", e)
       error.value = "Erro ao carregar projetos legislativos."
@@ -436,6 +438,7 @@ export const useCamaraStore = defineStore("camara", () => {
     fetchEstatisticasGerais,
     fetchEstatisticasDeputados,
     projetosLegislativosList,
+    totalProjetosLegislativos,
     loadingProjetosLegislativos,
     hasMoreProjetosLegislativos,
     displayedProjetosCount,
