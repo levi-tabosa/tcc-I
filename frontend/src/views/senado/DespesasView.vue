@@ -329,12 +329,16 @@ const partidosUnicos = computed(() => {
   return Array.from(set).sort()
 })
 
+const normalizeString = (str: string) => {
+  return str ? str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() : ''
+}
+
 const senadorsFiltrados = computed(() => {
   const lista = store.generalStats?.top_10 || []
   const maxGasto = lista[0]?.total || 1
   return lista
     .filter(s => {
-      if (searchQuery.value && !s.nome.toLowerCase().includes(searchQuery.value.toLowerCase())) return false
+      if (searchQuery.value && !normalizeString(s.nome).includes(normalizeString(searchQuery.value))) return false
       if (filterPartido.value && s.partido !== filterPartido.value) return false
       return true
     })

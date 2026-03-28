@@ -452,20 +452,24 @@ if (store.filteredSenadores.length === 0) {
   store.fetchSenadores()
 }
 
+const normalizeString = (str: string) => {
+  return str ? str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() : ''
+}
+
 // Filtered lists for dropdowns
 const filteredListA = computed(() => {
   if (!searchA.value || searchA.value.length < 2) return []
-  const term = searchA.value.toLowerCase()
+  const term = normalizeString(searchA.value)
   return store.filteredSenadores
-    .filter(s => s.nome.toLowerCase().includes(term))
+    .filter(s => normalizeString(s.nome).includes(term))
     .slice(0, 15)
 })
 
 const filteredListB = computed(() => {
   if (!searchB.value || searchB.value.length < 2) return []
-  const term = searchB.value.toLowerCase()
+  const term = normalizeString(searchB.value)
   return store.filteredSenadores
-    .filter(s => s.nome.toLowerCase().includes(term))
+    .filter(s => normalizeString(s.nome).includes(term))
     .slice(0, 15)
 })
 

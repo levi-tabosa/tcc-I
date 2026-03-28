@@ -382,9 +382,13 @@ export const useCamaraStore = defineStore("camara", () => {
     return Array.from(set).sort()
   })
 
+  const normalizeString = (str: string) => {
+    return str ? str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() : ''
+  }
+
   const filteredDeputados = computed(() => {
     return deputadosList.value.filter((dep) => {
-      if (filters.value.search && !dep.nome.toLowerCase().includes(filters.value.search.toLowerCase())) {
+      if (filters.value.search && !normalizeString(dep.nome).includes(normalizeString(filters.value.search))) {
         return false
       }
       if (filters.value.partido && dep.partido !== filters.value.partido) {

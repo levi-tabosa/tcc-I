@@ -347,11 +347,15 @@ const partidosUnicosRanking = computed(() => {
   return Array.from(set).sort()
 })
 
+const normalizeString = (str: string) => {
+  return str ? str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() : ''
+}
+
 const deputadosFiltrados = computed(() => {
   const maxGasto = deputadosComGasto.value[0]?.totalGasto || 1
   return deputadosComGasto.value
     .filter(d => {
-      if (searchQuery.value && !d.nome.toLowerCase().includes(searchQuery.value.toLowerCase())) return false
+      if (searchQuery.value && !normalizeString(d.nome).includes(normalizeString(searchQuery.value))) return false
       if (filterPartido.value && d.partido !== filterPartido.value) return false
       return true
     })

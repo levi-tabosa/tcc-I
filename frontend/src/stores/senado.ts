@@ -306,9 +306,13 @@ export const useSenadoStore = defineStore("senado", () => {
         return Array.from(set).sort()
     })
 
+    const normalizeString = (str: string) => {
+        return str ? str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() : ''
+    }
+
     const filteredSenadores = computed(() => {
         return senadoresList.value.filter((sen) => {
-            if (filters.value.search && !sen.nome.toLowerCase().includes(filters.value.search.toLowerCase())) {
+            if (filters.value.search && !normalizeString(sen.nome).includes(normalizeString(filters.value.search))) {
                 return false
             }
             if (filters.value.partido && sen.partido !== filters.value.partido) {
