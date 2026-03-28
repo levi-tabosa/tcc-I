@@ -30,9 +30,9 @@ def get_legislaturas_senado():
             mandatos = cursor.fetchall()
             legis_set = set()
             for m in mandatos:
-                if m[0] and str(m[0]).strip().isdigit():
+                if m[0] and str(m[0]).strip().isdigit() and int(str(m[0]).strip()) <= 57:
                     legis_set.add(int(str(m[0]).strip()))
-                if m[1] and str(m[1]).strip().isdigit():
+                if m[1] and str(m[1]).strip().isdigit() and int(str(m[1]).strip()) <= 57:
                     legis_set.add(int(str(m[1]).strip()))
             
             return sorted(list(legis_set), reverse=True)
@@ -345,9 +345,9 @@ WHERE codigo = %s;"""
             mandatos = cursor.fetchall()
             legis_set = set()
             for m in mandatos:
-                if m[0] and str(m[0]).strip().isdigit():
+                if m[0] and str(m[0]).strip().isdigit() and int(str(m[0]).strip()) <= 57:
                     legis_set.add(int(str(m[0]).strip()))
-                if m[1] and str(m[1]).strip().isdigit():
+                if m[1] and str(m[1]).strip().isdigit() and int(str(m[1]).strip()) <= 57:
                     legis_set.add(int(str(m[1]).strip()))
             legislaturas_ativas = sorted(list(legis_set), reverse=True)
 

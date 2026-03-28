@@ -26,6 +26,7 @@ def get_legislaturas_camara():
             query = """
                 SELECT DISTINCT legislatura_id
                 FROM camara.deputados_mandatos
+                WHERE legislatura_id <= 57
                 ORDER BY legislatura_id DESC
             """
             cursor.execute(query)
@@ -717,7 +718,7 @@ def get_perfil_deputado(deputado_id: int, legislatura: int = Query(None)):
             query_legis = """
                 SELECT DISTINCT legislatura_id
                 FROM camara.deputados_mandatos
-                WHERE deputado_id = %s
+                WHERE deputado_id = %s AND legislatura_id <= 57
                 ORDER BY legislatura_id DESC
             """
             cursor.execute(query_legis, (deputado_id,))
