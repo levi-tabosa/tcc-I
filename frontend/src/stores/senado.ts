@@ -24,6 +24,7 @@ export interface SenadorDetail {
     uf: string
     foto: string
     total_emendas?: number
+    legislaturas_ativas?: number[]
 }
 
 export interface EmendaSenado {
@@ -103,6 +104,22 @@ export const useSenadoStore = defineStore("senado", () => {
     fetchProjetosLegislativos()
   }
     const apiUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000"
+
+    const legislaturasDisponiveis = ref<number[]>([57, 56, 55])
+    
+    const fetchLegislaturasDisponiveis = async () => {
+      try {
+        const response = await fetch(`${apiUrl}/api/senado/legislaturas`)
+        if (!response.ok) throw new Error("Falha ao buscar legislaturas do senado")
+        const data = await response.json()
+        if (data && data.length > 0) {
+          legislaturasDisponiveis.value = data
+        }
+      } catch (e: any) {
+        console.error("Erro ao carregar legislaturas globais (senado):", e)
+      }
+    }
+    fetchLegislaturasDisponiveis()
 
     const filters = ref<Filters>({
         search: "",
@@ -206,7 +223,8 @@ export const useSenadoStore = defineStore("senado", () => {
                 sigla_partido: s.siglaPartido,
                 uf: s.uf,
                 foto: s.urlFoto,
-                total_emendas: s.total_emendas || 0
+                total_emendas: s.total_emendas || 0,
+                legislaturas_ativas: s.legislaturas_ativas || []
             }
             totalEmendas.value = s.total_emendas || 0
 
@@ -503,5 +521,7 @@ export const useSenadoStore = defineStore("senado", () => {
         setProjetosLegislativosFilter,
         resetProjetosLegislativosFilters,
         apiUrl,
+        legislaturasDisponiveis,
+        fetchLegislaturasDisponiveis,
     }
 })

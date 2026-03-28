@@ -29,9 +29,7 @@
                 @change="store.setLegislatura(Number(($event.target as HTMLSelectElement).value))"
                 class="text-sm font-bold text-primary bg-transparent border-none p-0 focus:ring-0 cursor-pointer"
               >
-                <option :value="57">57ª (2023-2027)</option>
-                <option :value="56">56ª (2019-2023)</option>
-                <option :value="55">55ª (2015-2019)</option>
+                <option v-for="leg in store.legislaturasDisponiveis" :key="leg" :value="leg">{{ formatLegislatura(leg) }}</option>
               </select>
             </div>
           </div>
@@ -242,6 +240,15 @@ const router = useRouter()
 
 const searchQuery = ref('')
 const filterPartido = ref('')
+
+const formatLegislatura = (legis: number) => {
+  if (legis === 57) return '57ª (2023-2027)'
+  if (legis === 56) return '56ª (2019-2023)'
+  if (legis === 55) return '55ª (2015-2019)'
+  if (legis === 54) return '54ª (2011-2015)'
+  if (legis === 53) return '53ª (2007-2011)'
+  return `${legis}ª`
+}
 
 onMounted(() => {
   store.fetchEstatisticasGerais()

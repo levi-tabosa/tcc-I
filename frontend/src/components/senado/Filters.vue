@@ -50,9 +50,7 @@
           @change="store.setLegislatura(Number(($event.target as HTMLSelectElement).value))"
           class="input-base px-4 py-2.5 pr-10 rounded-full appearance-none cursor-pointer w-full sm:w-auto sm:min-w-[140px] border-purple-600/30 bg-purple-50 font-semibold text-purple-700"
         >
-          <option :value="57">57ª (2023-2027)</option>
-          <option :value="56">56ª (2019-2023)</option>
-          <option :value="55">55ª (2015-2019)</option>
+          <option v-for="leg in store.legislaturasDisponiveis" :key="leg" :value="leg">{{ formatLegislatura(leg) }}</option>
         </select>
         <ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-purple-700 pointer-events-none" />
       </div>
@@ -80,4 +78,13 @@ const store = useSenadoStore()
 const hasActiveFilters = computed(() => {
   return store.filters.search || store.filters.partido || store.filters.estado
 })
+
+const formatLegislatura = (legis: number) => {
+  if (legis === 57) return '57ª (2023-2027)'
+  if (legis === 56) return '56ª (2019-2023)'
+  if (legis === 55) return '55ª (2015-2019)'
+  if (legis === 54) return '54ª (2011-2015)'
+  if (legis === 53) return '53ª (2007-2011)'
+  return `${legis}ª`
+}
 </script>

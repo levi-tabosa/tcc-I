@@ -13,6 +13,30 @@ router = APIRouter(
 )
 
 
+@router.get("/legislaturas", summary="Lista todas as legislaturas disponíveis na base")
+@lru_cache(maxsize=1)
+def get_legislaturas_camara():
+    conn = None
+    try:
+        conn = db.get_db_connection()
+        if not conn:
+            raise HTTPException(status_code=503, detail="Banco de dados indisponível")
+        
+        with conn.cursor() as cursor:
+            query = """
+                SELECT DISTINCT legislatura_id
+                FROM camara.deputados_mandatos
+                ORDER BY legislatura_id DESC
+            """
+            cursor.execute(query)
+            return [row[0] for row in cursor.fetchall()]
+    except Exception as e:
+        logging.error(f"Erro ao buscar legislaturas ativas camara: {e}")
+        raise HTTPException(status_code=500, detail="Erro ao processar legislaturas")
+    finally:
+        if conn:
+            db.release_db_connection(conn)
+
 @router.get("/emendas", summary="Busca uma lista de emendas parlamentares")
 def get_lista_emendas(
     nome_deputado: str = Query(None),
@@ -689,12 +713,23 @@ def get_perfil_deputado(deputado_id: int, legislatura: int = Query(None)):
             row_emendas = cursor.fetchone()
             total_emendas = float(row_emendas[0]) if row_emendas and row_emendas[0] else 0.0
 
+            # 5. Legislaturas Ativas
+            query_legis = """
+                SELECT DISTINCT legislatura_id
+                FROM camara.deputados_mandatos
+                WHERE deputado_id = %s
+                ORDER BY legislatura_id DESC
+            """
+            cursor.execute(query_legis, (deputado_id,))
+            legislaturas_ativas = [row[0] for row in cursor.fetchall()]
+
             return {
                 **res,
                 "despesas": despesas,
                 "total_despesas": total_despesas,
                 "categorias": categorias,
-                "total_emendas": total_emendas
+                "total_emendas": total_emendas,
+                "legislaturas_ativas": legislaturas_ativas
             }
     except HTTPException:
         raise

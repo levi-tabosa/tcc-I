@@ -35,6 +35,7 @@ export interface DeputadoDetail {
   despesas?: Despesa[]
   total_gasto?: number
   total_emendas?: number
+  legislaturas_ativas?: number[]
 }
 
 export interface Emenda {
@@ -131,6 +132,22 @@ export const useCamaraStore = defineStore("camara", () => {
 
   const legislatura = ref(57)
   const apiUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000"
+
+  const legislaturasDisponiveis = ref<number[]>([57, 56, 55])
+  
+  const fetchLegislaturasDisponiveis = async () => {
+    try {
+      const response = await fetch(`${apiUrl}/api/camara/legislaturas`)
+      if (!response.ok) throw new Error("Falha ao buscar legislaturas da câmara")
+      const data = await response.json()
+      if (data && data.length > 0) {
+        legislaturasDisponiveis.value = data
+      }
+    } catch (e: any) {
+      console.error("Erro ao carregar legislaturas globais:", e)
+    }
+  }
+  fetchLegislaturasDisponiveis()
 
   // List state
   const deputadosList = ref<Deputado[]>([])
@@ -460,5 +477,7 @@ export const useCamaraStore = defineStore("camara", () => {
     resetFilters,
     legislatura,
     setLegislatura,
+    legislaturasDisponiveis,
+    fetchLegislaturasDisponiveis,
   }
 })

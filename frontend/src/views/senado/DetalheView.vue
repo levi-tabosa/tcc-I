@@ -17,9 +17,16 @@
               @change="store.setLegislatura(Number(($event.target as HTMLSelectElement).value))"
               class="text-sm font-bold text-purple-700 bg-transparent border-none p-0 focus:ring-0 cursor-pointer"
             >
-              <option :value="57">57ª Legislatura (2023-2027)</option>
-              <option :value="56">56ª Legislatura (2019-2023)</option>
-              <option :value="55">55ª Legislatura (2015-2019)</option>
+              <template v-if="store.currentSenador?.legislaturas_ativas?.length">
+                <option v-for="legis in store.currentSenador.legislaturas_ativas" :key="legis" :value="legis">
+                  {{ formatLegislatura(legis) }}
+                </option>
+              </template>
+              <template v-else>
+                <option :value="57">57ª Legislatura (2023-2027)</option>
+                <option :value="56">56ª Legislatura (2019-2023)</option>
+                <option :value="55">55ª Legislatura (2015-2019)</option>
+              </template>
             </select>
           </div>
         </div>
@@ -287,6 +294,15 @@ const formatDate = (dateString: string) => {
     if (!dateString) return '--'
     const date = new Date(dateString)
     return date.toLocaleDateString('pt-BR')
+}
+
+const formatLegislatura = (legis: number) => {
+  if (legis === 57) return '57ª Legislatura (2023-2027)'
+  if (legis === 56) return '56ª Legislatura (2019-2023)'
+  if (legis === 55) return '55ª Legislatura (2015-2019)'
+  if (legis === 54) return '54ª Legislatura (2011-2015)'
+  if (legis === 53) return '53ª Legislatura (2007-2011)'
+  return `${legis}ª Legislatura`
 }
 
 watch(() => store.currentSenador, (newVal) => {

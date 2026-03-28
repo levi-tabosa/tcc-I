@@ -53,9 +53,7 @@
         @change="store.setLegislatura(Number(($event.target as HTMLSelectElement).value))"
         class="w-full sm:w-auto px-4 py-3 sm:py-2 rounded-lg border border-purple-600/30 bg-purple-50 font-semibold text-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
       >
-        <option :value="57">57ª (2023-2027)</option>
-        <option :value="56">56ª (2019-2023)</option>
-        <option :value="55">55ª (2015-2019)</option>
+        <option v-for="leg in store.legislaturasDisponiveis" :key="leg" :value="leg">{{ formatLegislatura(leg) }}</option>
       </select>
     </div>
 
@@ -110,4 +108,13 @@ const anosDisponiveis = computed(() => {
 const hasActiveFilters = computed(() => {
   return store.projetosLegislativosFilters.search || store.projetosLegislativosFilters.siglaTipo || store.projetosLegislativosFilters.ano || store.projetosLegislativosFilters.deputado
 })
+
+const formatLegislatura = (legis: number) => {
+  if (legis === 57) return '57ª (2023-2027)'
+  if (legis === 56) return '56ª (2019-2023)'
+  if (legis === 55) return '55ª (2015-2019)'
+  if (legis === 54) return '54ª (2011-2015)'
+  if (legis === 53) return '53ª (2007-2011)'
+  return `${legis}ª`
+}
 </script>

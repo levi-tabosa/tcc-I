@@ -32,7 +32,7 @@
         <BaseCard hover>
           <div class="flex items-center gap-4">
             <div class="p-3 rounded-xl bg-chart-1/10">
-              <Briefcase class="h-6 w-6 text-chart-1" />
+              <Flag class="h-6 w-6 text-chart-1" />
             </div>
             <div>
               <p class="text-sm text-muted-foreground">Partidos Ativos</p>
@@ -46,7 +46,7 @@
         <BaseCard hover>
           <div class="flex items-center gap-4">
             <div class="p-3 rounded-xl bg-chart-2/10">
-              <Globe class="h-6 w-6 text-chart-2" />
+              <Map class="h-6 w-6 text-chart-2" />
             </div>
             <div>
               <p class="text-sm text-muted-foreground">Estados (UF)</p>
@@ -134,7 +134,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
-import { Users, MapPin, Briefcase, Globe } from 'lucide-vue-next'
+import { Users, MapPin, Flag, Map } from 'lucide-vue-next'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseLoading from '@/components/ui/BaseLoading.vue'
 import { useCamaraStore } from '@/stores/camara'

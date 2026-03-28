@@ -2,7 +2,7 @@
   <div class="min-h-screen flex flex-col relative w-full h-full text-foreground bg-background">
     <AppHeader />
     
-    <main class="flex-1 relative flex flex-col">
+    <main class="flex-1 relative flex flex-col z-0">
       <!-- Loading Overlay -->
       <div 
         v-if="isLoading && $route.name !== 'home'" 

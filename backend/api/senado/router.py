@@ -12,6 +12,37 @@ router = APIRouter(
     tags=["Senado"]
 )
 
+@router.get("/legislaturas", summary="Lista todas as legislaturas disponíveis na base")
+@lru_cache(maxsize=1)
+def get_legislaturas_senado():
+    conn = None
+    try:
+        conn = db.get_db_connection()
+        if not conn:
+            raise HTTPException(status_code=503, detail="Banco de dados indisponível")
+        
+        with conn.cursor() as cursor:
+            query = """
+                SELECT DISTINCT primeira_legislatura, segunda_legislatura 
+                FROM senado.mandato
+            """
+            cursor.execute(query)
+            mandatos = cursor.fetchall()
+            legis_set = set()
+            for m in mandatos:
+                if m[0] and str(m[0]).strip().isdigit():
+                    legis_set.add(int(str(m[0]).strip()))
+                if m[1] and str(m[1]).strip().isdigit():
+                    legis_set.add(int(str(m[1]).strip()))
+            
+            return sorted(list(legis_set), reverse=True)
+    except Exception as e:
+        logging.error(f"Erro ao buscar legislaturas ativas senado: {e}")
+        raise HTTPException(status_code=500, detail="Erro ao processar legislaturas")
+    finally:
+        if conn:
+            db.release_db_connection(conn)
+
 @router.get("/lista", summary="Lista todos os senadores ativos")
 def get_lista_senadores(legislatura: int = Query(None)):
     conn = None
@@ -304,6 +335,22 @@ WHERE codigo = %s;"""
             emendas_res_row = cursor.fetchone()
             total_emendas = float(emendas_res_row[0]) if emendas_res_row and emendas_res_row[0] else 0.0
 
+            # 3. Legislaturas Ativas
+            query_legis = """
+                SELECT primeira_legislatura, segunda_legislatura
+                FROM senado.mandato
+                WHERE codigo_parlamentar = %s
+            """
+            cursor.execute(query_legis, (senador_codigo,))
+            mandatos = cursor.fetchall()
+            legis_set = set()
+            for m in mandatos:
+                if m[0] and str(m[0]).strip().isdigit():
+                    legis_set.add(int(str(m[0]).strip()))
+                if m[1] and str(m[1]).strip().isdigit():
+                    legis_set.add(int(str(m[1]).strip()))
+            legislaturas_ativas = sorted(list(legis_set), reverse=True)
+
             return {
                 "senador": {
                     "codigo": resultado[0],
@@ -316,7 +363,8 @@ WHERE codigo = %s;"""
                     "urlFoto": resultado[7],
                     "urlPagina": resultado[8],
                     "dataNascimento": resultado[9],
-                    "total_emendas": total_emendas
+                    "total_emendas": total_emendas,
+                    "legislaturas_ativas": legislaturas_ativas
                 }
             }
     except Exception as e:
