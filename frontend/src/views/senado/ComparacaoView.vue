@@ -1,6 +1,5 @@
 <template>
   <div class="min-h-screen flex flex-col">
-    <AppHeader />
     <main class="flex-1">
       <!-- Hero -->
       <section class="bg-gradient-to-br from-primary/10 via-background to-accent/10 py-12">
@@ -414,15 +413,12 @@
         <p class="mt-1 text-sm text-muted-foreground/70">As informações serão exibidas lado a lado automaticamente</p>
       </div>
     </main>
-    <AppFooter />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { Scale, Search, X, UserCheck, DollarSign, BarChart3, FileText, Mail, Calendar } from 'lucide-vue-next'
-import AppHeader from '@/components/layout/AppHeader.vue'
-import AppFooter from '@/components/layout/AppFooter.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'

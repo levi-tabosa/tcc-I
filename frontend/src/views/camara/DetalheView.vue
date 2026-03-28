@@ -1,6 +1,5 @@
 <template>
   <div class="min-h-screen flex flex-col">
-    <AppHeader />
     <main class="flex-1">
       <!-- Breadcrumb -->
       <div class="bg-muted/30 border-b border-border">
@@ -206,7 +205,6 @@
         <p class="text-muted-foreground">Deputado não encontrado.</p>
       </div>
     </main>
-    <AppFooter />
   </div>
 </template>
 
@@ -214,8 +212,6 @@
 import { computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { ChevronLeft, Mail, Calendar, GraduationCap, User, FileText } from 'lucide-vue-next'
-import AppHeader from '@/components/layout/AppHeader.vue'
-import AppFooter from '@/components/layout/AppFooter.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import BaseLoading from '@/components/ui/BaseLoading.vue'

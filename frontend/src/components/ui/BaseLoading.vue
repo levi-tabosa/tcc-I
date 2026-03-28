@@ -1,5 +1,5 @@
 <template>
-  <div :class="['flex flex-col items-center justify-center py-12', fullPage ? 'fixed inset-0 bg-background/80 backdrop-blur-sm z-50' : '']">
+  <div :class="['flex flex-col items-center justify-center py-12', fullPage ? 'absolute inset-0 bg-background/80 backdrop-blur-sm z-[100]' : '']">
     <div class="relative">
       <!-- Outer spinning ring -->
       <div 

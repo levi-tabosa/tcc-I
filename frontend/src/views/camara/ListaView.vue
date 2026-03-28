@@ -1,6 +1,5 @@
 <template>
   <div class="min-h-screen flex flex-col">
-    <AppHeader />
     <main class="flex-1">
       <!-- Hero -->
       <section class="bg-gradient-to-br from-primary/10 via-background to-accent/10 py-12">
@@ -23,13 +22,10 @@
         </div>
       </section>
     </main>
-    <AppFooter />
   </div>
 </template>
 
 <script setup lang="ts">
-import AppHeader from '@/components/layout/AppHeader.vue'
-import AppFooter from '@/components/layout/AppFooter.vue'
 import Filters from '@/components/camara/Filters.vue'
 import List from '@/components/camara/List.vue'
 import Stats from '@/components/camara/Stats.vue'

@@ -1,6 +1,5 @@
 <template>
   <div class="min-h-screen flex flex-col">
-    <AppHeader />
     <main class="flex-1">
       <!-- Hero -->
       <section class="bg-gradient-to-br from-purple-500/10 via-background to-accent/10 py-12">
@@ -113,7 +112,6 @@
         </section>
       </template>
     </main>
-    <AppFooter />
   </div>
 </template>
 
@@ -121,8 +119,6 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Landmark, Users, TrendingUp } from 'lucide-vue-next'
-import AppHeader from '@/components/layout/AppHeader.vue'
-import AppFooter from '@/components/layout/AppFooter.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseLoading from '@/components/ui/BaseLoading.vue'
 

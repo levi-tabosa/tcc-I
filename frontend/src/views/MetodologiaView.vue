@@ -1,6 +1,5 @@
 <template>
   <div class="min-h-screen flex flex-col bg-background">
-    <AppHeader />
     <main class="flex-1">
       <!-- Hero -->
       <section class="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-accent/10 py-20 lg:py-28">
@@ -179,7 +178,6 @@
       </section>
 
     </main>
-    <AppFooter />
   </div>
 </template>
 
@@ -190,8 +188,6 @@ import {
   Vote, ChevronRight, ChevronDown, Check, ArrowRight,
   Lightbulb, RefreshCw, Scale, Users
 } from 'lucide-vue-next'
-import AppHeader from '@/components/layout/AppHeader.vue'
-import AppFooter from '@/components/layout/AppFooter.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 
 // Steps

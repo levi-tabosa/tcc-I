@@ -1,6 +1,5 @@
 <template>
   <div class="min-h-screen flex flex-col">
-    <AppHeader />
     <main class="flex-1">
       <!-- Hero -->
       <section class="bg-gradient-to-br from-primary/10 via-background to-accent/10 py-12">
@@ -26,14 +25,11 @@
         </section>
       </template>
     </main>
-    <AppFooter />
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import AppHeader from '@/components/layout/AppHeader.vue'
-import AppFooter from '@/components/layout/AppFooter.vue'
 import ProjetosLegislativosFilters from '@/components/senado/ProjetosLegislativosFilters.vue'
 import ProjetosLegislativosList from '@/components/senado/ProjetosLegislativosList.vue'
 import ProjetosLegislativosStats from '@/components/senado/ProjetosLegislativosStats.vue'

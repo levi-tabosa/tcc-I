@@ -1,6 +1,5 @@
 <template>
   <div class="min-h-screen flex flex-col">
-    <AppHeader />
     <main class="flex-1">
       <!-- Hero -->
       <section class="bg-gradient-to-br from-primary/10 via-background to-accent/10 py-12">
@@ -227,7 +226,6 @@
         </div>
       </section>
     </main>
-    <AppFooter />
   </div>
 </template>
 
@@ -235,8 +233,6 @@
 import { Banknote, Users, Building2, ChevronRight } from 'lucide-vue-next'
 import { onMounted, computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import AppHeader from '@/components/layout/AppHeader.vue'
-import AppFooter from '@/components/layout/AppFooter.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseLoading from '@/components/ui/BaseLoading.vue'
 import { useCamaraStore } from "@/stores/camara"
