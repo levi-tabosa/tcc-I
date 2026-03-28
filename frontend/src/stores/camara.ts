@@ -270,12 +270,13 @@ export const useCamaraStore = defineStore("camara", () => {
       if (projetosLegislativosFilters.value.deputado) {
         params.append("deputado", projetosLegislativosFilters.value.deputado)
       }
+      params.append("legislatura", legislatura.value.toString())
 
       const response = await fetch(`${apiUrl}/api/camara/proposicoes?${params.toString()}`)
       if (!response.ok) throw new Error("Falha ao buscar projetos legislativos")
 
-      const data: ProjetoLegislativo[] = await response.json()
-      projetosLegislativosList.value = data
+      const data = await response.json()
+      projetosLegislativosList.value = data.proposicoes || []
     } catch (e: any) {
       console.error("Erro ao buscar projetos legislativos:", e)
       error.value = "Erro ao carregar projetos legislativos."

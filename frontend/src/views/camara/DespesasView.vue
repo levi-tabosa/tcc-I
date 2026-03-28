@@ -37,6 +37,8 @@
             </div>
           </div>
         </div>
+      </section>
+
       <BaseLoading v-if="store.loadingStats" message="Carregando estatísticas da Câmara..." full-page />
 
       <!-- Overview -->

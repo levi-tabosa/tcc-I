@@ -231,6 +231,11 @@ def get_lista_proposicoes(
             if deputado:
                 query_count += " AND d.nome_civil ILIKE %s"
                 params_count.append(f"%{deputado}%")
+            if legislatura:
+                start_year = 2023 - (57 - legislatura) * 4
+                end_year = start_year + 3
+                query_count += " AND p.ano BETWEEN %s AND %s"
+                params_count.extend([start_year, end_year])
             
             cursor.execute(query_count, tuple(params_count))
             total_items = cursor.fetchone()[0]
