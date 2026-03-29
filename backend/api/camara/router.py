@@ -613,6 +613,110 @@ def get_comparativo_deputados(id1: int, id2: int, ano: int = None, legislatura: 
         if conn:
             db.release_db_connection(conn)
 
+
+@router.get("/comissoes", summary="Lista todas as comissões da Câmara com membros")
+def get_comissoes_camara():
+    conn = None
+    try:
+        conn = db.get_db_connection()
+        if not conn:
+            raise HTTPException(status_code=503, detail="Banco de dados indisponível")
+        
+        with conn.cursor() as cursor:
+            query = """
+                SELECT
+                    o.id,
+                    o.sigla,
+                    o.nome,
+                    o.tipo_orgao AS tipo,
+                    COUNT(DISTINCT od.deputado_id) AS total_membros
+                FROM camara.orgaos o
+                LEFT JOIN camara.orgaos_deputados od ON o.id = od.orgao_id
+                GROUP BY o.id, o.sigla, o.nome, o.tipo_orgao
+                ORDER BY o.tipo_orgao, o.nome
+            """
+            cursor.execute(query)
+            orgaos_raw = cursor.fetchall()
+            
+            comissoes = []
+            for row in orgaos_raw:
+                orgao_id = row[0]
+
+                query_membros = """
+                     SELECT
+                            d.nome_civil,
+                            m.sigla_partido,
+                            m.sigla_uf,
+                            od.cargo,
+                            d.id AS deputado_id
+                    FROM camara.orgaos_deputados od
+                    JOIN camara.deputados d ON od.deputado_id = d.id
+                    LEFT JOIN (
+                        SELECT DISTINCT ON (deputado_id) deputado_id, sigla_partido, sigla_uf
+                        FROM camara.deputados_mandatos
+                        ORDER BY deputado_id, id DESC
+                    ) m ON d.id = m.deputado_id
+                    WHERE od.orgao_id = %s
+                    ORDER BY od.cargo NULLS LAST, d.nome_civil
+            """
+
+                cursor.execute(query_membros, (orgao_id,))
+                membros_raw = cursor.fetchall()
+
+                query = """
+                 SELECT m.sigla_partido, COUNT(*) AS qtd
+                    FROM camara.orgaos_deputados od
+                    JOIN camara.deputados d ON od.deputado_id = d.id
+                    LEFT JOIN (
+                        SELECT DISTINCT ON (deputado_id) deputado_id, sigla_partido
+                        FROM camara.deputados_mandatos
+                        ORDER BY deputado_id, id DESC
+                    ) m ON d.id = m.deputado_id
+                    WHERE od.orgao_id = %s AND m.sigla_partido IS NOT NULL
+                    GROUP BY m.sigla_partido
+                    ORDER BY qtd DESC
+                    LIMIT 4
+                """
+
+                cursor.execute(query, (orgao_id,))
+                partidos_raw = cursor.fetchall()
+
+                presidente = next((mb[0] for mb in membros_raw if mb[3] and "presidente" in mb[3].lower()), None)
+
+                comissoes.append({
+                    "id": row[0],
+                    "sigla": row[1],
+                    "nome": row[2],
+                    "tipo": row[3],
+                    "total_membros": row[4],
+                    "presidente": presidente,
+                    "partidos_destaque": [p[0] for p in partidos_raw],
+                    "membros": [
+                        {
+                            "nome": mb[0],
+                            "partido": mb[1] or "S/P",
+                            "uf": mb[2] or "BR",
+                            "cargo": mb[3],
+                            "id": mb[4]
+                        }
+                        for mb in membros_raw
+                    ]
+                })
+            return {
+                "total": len(comissoes),
+                "comissoes": comissoes
+            }
+            
+    except Exception as e:
+        logging.error(f"Erro ao buscar comissões da câmara: {e}")
+        raise HTTPException(status_code=500, detail="Erro ao processar comissões")
+    finally:
+        if conn:
+            db.release_db_connection(conn)
+
+
+
+
 @router.get("/{deputado_id}", summary="Obtém os detalhes do perfil e despesas do deputado pelo ID")
 def get_perfil_deputado(deputado_id: int, legislatura: int = Query(None)):
     conn = None
@@ -961,19 +1065,20 @@ def get_estatisticas_despesas(legislatura: int = Query(None)):
             cursor.execute(query_total_geral, tuple(params_total))
             total_geral = cursor.fetchone()[0] or 0
             
-            query_total_fornecedores = "SELECT COUNT(DISTINCT cnpj_cpf_fornecedor) FROM camara.deputados_despesas desp"
-            params_forn = []
-            if legislatura:
-                query_total_fornecedores = """
-                    SELECT COUNT(DISTINCT desp.cnpj_cpf_fornecedor)
-                    FROM camara.deputados_despesas desp
-                    JOIN camara.deputados_mandatos m ON desp.mandato_id = m.id
-                    WHERE m.legislatura_id = %s
-                """
-                params_forn.append(legislatura)
-                
-            cursor.execute(query_total_fornecedores, tuple(params_forn))
-            total_empresas = cursor.fetchone()[0] or 0
+            # ── EMPRESAS (desativado) ────────────────────────────────────
+            # query_total_fornecedores = "SELECT COUNT(DISTINCT cnpj_cpf_fornecedor) FROM camara.deputados_despesas desp"
+            # params_forn = []
+            # if legislatura:
+            #     query_total_fornecedores = """
+            #         SELECT COUNT(DISTINCT desp.cnpj_cpf_fornecedor)
+            #         FROM camara.deputados_despesas desp
+            #         JOIN camara.deputados_mandatos m ON desp.mandato_id = m.id
+            #         WHERE m.legislatura_id = %s
+            #     """
+            #     params_forn.append(legislatura)
+            # cursor.execute(query_total_fornecedores, tuple(params_forn))
+            # total_empresas = cursor.fetchone()[0] or 0
+            total_empresas = 0  # desativado
 
             query_gastos_dep = """
             SELECT 
@@ -1012,7 +1117,7 @@ def get_estatisticas_despesas(legislatura: int = Query(None)):
                 "total_gastos_12_meses": float(total_12_meses),
                 "total_12_meses": float(total_12_meses),
                 "total_gastos": float(total_geral),
-                "total_empresas_contratadas": int(total_empresas),
+                # "total_empresas_contratadas": int(total_empresas),
                 "gastos_por_categoria": gastos_categoria,
                 "gastos_por_mes": gastos_mensais,
                 "gastos_por_estado": gastos_estado,
@@ -1026,105 +1131,36 @@ def get_estatisticas_despesas(legislatura: int = Query(None)):
         if conn:
             db.release_db_connection(conn)
 
-@router.get("/empresas/estatisticas", summary="Obtém as estatísticas e ranking das empresas contratadas")
-@lru_cache(maxsize=4)
-def get_estatisticas_empresas(limit: int = 20):
-    conn = None
-    try:
-        conn = db.get_db_connection()
-        if not conn:
-            raise HTTPException(status_code=503, detail="Banco de dados indisponível")
-        
-        with conn.cursor() as cursor:
-            # 1. Estatísticas Gerais
-            cursor.execute("""
-                SELECT 
-                    COUNT(DISTINCT cnpj_cpf_fornecedor) as total_empresas,
-                    SUM(valor_documento) as total_pago,
-                    COUNT(*) as total_contratos
-                FROM camara.deputados_despesas
-                WHERE LENGTH(cnpj_cpf_fornecedor) > 11
-            """)
-            res_stats = cursor.fetchone()
-            total_geral_empresas = float(res_stats[1]) if res_stats[1] else 1.0
-
-            # 2. Ranking de Empresas
-            cursor.execute("""
-            WITH top_fornecedores AS (
-                SELECT 
-                    cnpj_cpf_fornecedor,
-                    MAX(nome_fornecedor) as nome,
-                    SUM(valor_documento) as total_valor,
-                    COUNT(*) as qtd_contratos
-                FROM camara.deputados_despesas
-                WHERE LENGTH(cnpj_cpf_fornecedor) > 11
-                GROUP BY cnpj_cpf_fornecedor
-                ORDER BY total_valor DESC
-                LIMIT %s
-            ),
-            partidos_pagadores AS (
-                SELECT 
-                    d.cnpj_cpf_fornecedor,
-                    m.sigla_partido,
-                    SUM(d.valor_documento) as valor
-                FROM camara.deputados_despesas d
-                JOIN camara.deputados_mandatos m ON d.mandato_id = m.id
-                JOIN top_fornecedores tf ON d.cnpj_cpf_fornecedor = tf.cnpj_cpf_fornecedor
-                GROUP BY d.cnpj_cpf_fornecedor, m.sigla_partido
-            )
-            SELECT 
-                tf.cnpj_cpf_fornecedor,
-                tf.nome,
-                tf.total_valor,
-                tf.qtd_contratos,
-                (
-                    SELECT string_agg(sub.sigla_partido, ', ')
-                    FROM (
-                        SELECT pp.sigla_partido
-                        FROM partidos_pagadores pp
-                        WHERE pp.cnpj_cpf_fornecedor = tf.cnpj_cpf_fornecedor
-                        ORDER BY pp.valor DESC
-                        LIMIT 3
-                    ) sub
-                ) as principais_partidos
-            FROM top_fornecedores tf
-            ORDER BY tf.total_valor DESC
-            """, (limit,))
-            res_ranking = cursor.fetchall()
-            
-            ranking_formatado = []
-            for i, r in enumerate(res_ranking):
-                nome_bruto = r[1]
-                nome_limpo = nome_bruto.split("-")[0].strip().title() if nome_bruto else "Não Informado"
-                valor_empresa = float(r[2]) 
-                percentual = (valor_empresa / total_geral_empresas) * 100
-                                 
-                ranking_formatado.append({
-                    "rank": i + 1,
-                    "cnpj": r[0],
-                    "nome": nome_limpo,
-                    "valor_total": valor_empresa,
-                    "contratos": int(r[3]),
-                    "principais_partidos": r[4] if r[4] else "N/A",
-                    "percentual": round(percentual, 2)
-                })
-
-            return {
-                "geral": {
-                    "total_empresas": res_stats[0],
-                    "total_pago": float(res_stats[1]) if res_stats[1] else 0.0,
-                    "total_contratos": res_stats[2]
-                },
-                "ranking": ranking_formatado
-            }
-    except Exception as e:
-        logging.error(f"Erro ao buscar estatísticas de empresas: {e}")
-        raise HTTPException(status_code=500, detail="Erro ao processar estatísticas de empresas")
-    finally:
-        if conn:
-            db.release_db_connection(conn)
 
 
-
+# ── ENDPOINT EMPRESAS (desativado - substituído por Comissões) ────────────────
+# @router.get("/empresas/estatisticas", summary="Obtém as estatísticas e ranking das empresas contratadas")
+# @lru_cache(maxsize=4)
+# def get_estatisticas_empresas(limit: int = 20):
+#     conn = None
+#     try:
+#         conn = db.get_db_connection()
+#         if not conn:
+#             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
+#
+#         with conn.cursor() as cursor:
+#             # 1. Estatísticas Gerais
+#             cursor.execute("""
+#                 SELECT
+#                     COUNT(DISTINCT cnpj_cpf_fornecedor) as total_empresas,
+#                     SUM(valor_documento) as total_pago,
+#                     COUNT(*) as total_contratos
+#                 FROM camara.deputados_despesas
+#                 WHERE LENGTH(cnpj_cpf_fornecedor) > 11
+#             """)
+#             res_stats = cursor.fetchone()
+#             total_geral_empresas = float(res_stats[1]) if res_stats[1] else 1.0
+#             # ... (ranking omitido)
+#     except Exception as e:
+#         logging.error(f"Erro ao buscar estatísticas de empresas: {e}")
+#         raise HTTPException(status_code=500, detail="Erro ao processar estatísticas de empresas")
+#     finally:
+#         if conn:
+#             db.release_db_connection(conn)
 
 

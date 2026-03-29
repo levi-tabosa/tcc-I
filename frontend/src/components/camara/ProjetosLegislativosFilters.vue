@@ -8,7 +8,7 @@
           placeholder="Buscar por ementa..."
           :value="store.projetosLegislativosFilters.search"
           @input="onSearchInput"
-          class="w-full px-4 py-3 rounded-full border border-gray-300 bg-background text-foreground placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:shadow-md transition-shadow"
+          class="w-full px-6 py-4 rounded-full border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-black/20 hover:shadow-md transition-shadow text-base"
         />
       </div>
 
@@ -19,7 +19,7 @@
           placeholder="Buscar por deputado que votou..."
           :value="store.projetosLegislativosFilters.deputado"
           @input="onDeputadoInput"
-          class="w-full px-4 py-3 rounded-full border border-gray-300 bg-background text-foreground placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:shadow-md transition-shadow"
+          class="w-full px-6 py-4 rounded-full border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-black/20 hover:shadow-md transition-shadow text-base"
         />
       </div>
 
@@ -27,7 +27,7 @@
       <select
         :value="store.projetosLegislativosFilters.siglaTipo"
         @change="store.setProjetosLegislativosFilter('siglaTipo', ($event.target as HTMLSelectElement).value)"
-        class="w-full sm:w-auto px-4 py-3 sm:py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+        class="w-full sm:w-auto px-6 py-4 sm:py-3.5 rounded-full border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-black/20 text-sm"
       >
         <option value="">Todos os tipos</option>
         <option v-for="tipo in tiposProjetoLegislativo" :key="tipo" :value="tipo">
@@ -39,7 +39,7 @@
       <select
         :value="store.projetosLegislativosFilters.ano"
         @change="store.setProjetosLegislativosFilter('ano', ($event.target as HTMLSelectElement).value)"
-        class="w-full sm:w-auto px-4 py-3 sm:py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+        class="w-full sm:w-auto px-6 py-4 sm:py-3.5 rounded-full border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-black/20 text-sm"
       >
         <option value="">Todos os anos</option>
         <option v-for="ano in anosDisponiveis" :key="ano" :value="ano">
@@ -51,7 +51,7 @@
       <select
         :value="store.legislatura"
         @change="store.setLegislatura(Number(($event.target as HTMLSelectElement).value))"
-        class="w-full sm:w-auto px-4 py-3 sm:py-2 rounded-lg border border-purple-600/30 bg-purple-50 font-semibold text-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
+        class="w-full sm:w-auto px-6 py-4 sm:py-3.5 rounded-full border border-foreground/20 bg-background font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-black/20 text-sm"
       >
         <option v-for="leg in store.legislaturasDisponiveis" :key="leg" :value="leg">{{ formatLegislatura(leg) }}</option>
       </select>
@@ -61,7 +61,7 @@
       <span class="text-sm text-muted-foreground">Filtros ativos:</span>
       <button
         @click="store.resetProjetosLegislativosFilters()"
-        class="text-sm text-primary hover:underline"
+        class="text-sm text-foreground/60 hover:text-foreground hover:underline font-medium transition-colors"
       >
         Limpar todos
       </button>

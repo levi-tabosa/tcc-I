@@ -83,8 +83,7 @@ import {
   Building2, 
   ArrowRight, 
   FileText, 
-  GitCompare, 
-  Store 
+  GitCompare
 } from 'lucide-vue-next'
 import { useSenadoStore } from '@/stores/senado'
 
@@ -127,10 +126,10 @@ const camaraItems = [
     href: "/camara/comparar",
   },
   {
-    title: "Empresas",
-    description: "Maiores fornecedores e recebedores",
-    icon: Store,
-    href: "/camara/empresas",
+    title: "Comissões",
+    description: "Veja quem compõe cada comissão",
+    icon: Landmark,
+    href: "/camara/comissoes",
   },
 ]
 
@@ -166,10 +165,10 @@ const senadoItems = [
     href: "/senado/comparar",
   },
   {
-    title: "Empresas",
-    description: "Fornecedores e gastos do Senado",
-    icon: Store,
-    href: "/senado/empresas",
+    title: "Comissões",
+    description: "Membros e cargos das comissões",
+    icon: Landmark,
+    href: "/senado/comissoes",
   },
 ]
 </script>

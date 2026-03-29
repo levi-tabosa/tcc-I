@@ -293,6 +293,95 @@ ORDER BY data_despesa DESC;
         if conn:
             db.release_db_connection(conn)
                 
+@router.get("/comissoes", summary="Lista todas as comissões do Senado com membros")
+def get_comissoes_senado():
+    conn = None
+    try:
+        conn = db.get_db_connection()
+        if not conn:
+            raise HTTPException(status_code=503, detail="Banco de dados indisponível")
+        
+        with conn.cursor() as cursor:
+            query = """
+                 SELECT
+                    c.codigo,
+                    c.sigla,
+                    c.nome,
+                    'Comissão' AS tipo,
+                    COUNT(DISTINCT mc.codigo_parlamentar) AS total_membros
+                FROM senado.comissao c
+                LEFT JOIN senado.membro_comissao mc ON c.codigo = mc.codigo_comissao
+                GROUP BY c.codigo, c.sigla, c.nome
+                ORDER BY c.nome
+            """
+            cursor.execute(query)
+            comissoes_raw = cursor.fetchall()
+            
+            comissoes = []
+            for row in comissoes_raw:
+                cod_comissao = row[0]
+
+                query_membros = """
+                    SELECT
+                        p.nome_parlamentar,
+                        p.sigla_partido,
+                        p.uf,
+                        mc.tipo_vaga AS cargo,
+                        p.codigo,
+                        p.url_foto
+                    FROM senado.membro_comissao mc
+                    JOIN senado.parlamentar p ON mc.codigo_parlamentar = p.codigo
+                    WHERE mc.codigo_comissao = %s
+                    ORDER BY mc.tipo_vaga NULLS LAST, p.nome_parlamentar
+                """
+                cursor.execute(query_membros, (cod_comissao,))
+                membros_raw = cursor.fetchall()
+
+                query = """
+                    SELECT p.sigla_partido, COUNT(*) AS qtd
+                    FROM senado.membro_comissao mc
+                    JOIN senado.parlamentar p ON mc.codigo_parlamentar = p.codigo
+                    WHERE mc.codigo_comissao = %s AND p.sigla_partido IS NOT NULL
+                    GROUP BY p.sigla_partido
+                    ORDER BY qtd DESC
+                    LIMIT 4
+                """
+                cursor.execute(query, (cod_comissao,))
+                partidos_raw = cursor.fetchall()
+
+                presidente = next((m[0] for m in membros_raw if m[3] and "presidente" in m[3].lower()), None)
+                
+                comissoes.append({
+                    "id": row[0],
+                    "sigla": row[1],
+                    "nome": row[2],
+                    "tipo": row[3],
+                    "total_membros": row[4],
+                    "presidente": presidente,
+                    "partidos_destaque": [p[0] for p in partidos_raw],
+                    "membros": [
+                        {
+                            "nome": mb[0],
+                            "partido": mb[1] or "S/P",
+                            "uf": mb[2] or "BR",
+                            "cargo": mb[3],
+                            "id": mb[4],
+                            "foto": mb[5]
+                        }
+                        for mb in membros_raw
+                    ]
+                })
+            return {
+                "total": len(comissoes),
+                "comissoes": comissoes
+            }
+
+    except Exception as e:
+        logging.error(f"Erro ao buscar comissões do senado: {e}")
+        raise HTTPException(status_code=500, detail="Erro ao processar comissões")
+    finally:
+        if conn:
+            db.release_db_connection(conn)
 
 @router.get("/{senador_codigo}", summary="Obtém o perfil detalhado de um senador")
 def get_perfil_senador(senador_codigo: int, legislatura: int = Query(None)):    
@@ -1094,105 +1183,8 @@ def get_emendas_lista_senador(senador_codigo: int, pagina: int = 1):
     finally:
         if conn:
             db.release_db_connection(conn)
+#     finally:
+#         if conn:
+#             db.release_db_connection(conn)
 
 
-@router.get("/empresas/estatisticas", summary="Obtém estatísticas gerais das empresas")
-@lru_cache(maxsize=4)
-def get_estatisticas_empresas():
-    conn = None
-    try:
-        conn = db.get_db_connection()
-        if not conn:
-            raise HTTPException(status_code=503, detail="Banco de dados indisponível")
-        
-        with conn.cursor() as cursor:
-            query_gerais = """
-               SELECT
-                    COUNT(DISTINCT cpf_cnpj) as total_empresas,
-                    SUM(valor_reembolsado) as total_pago,
-                    COUNT(*) as total_contratos
-                FROM senado.despesa_ceaps;
-            """
-            cursor.execute(query_gerais)
-            row_gerais = cursor.fetchone()
-
-            query_top_10 = """
-                SELECT
-                    fornecedor as empresa,
-                    SUM(valor_reembolsado) as valor_total
-                FROM senado.despesa_ceaps
-                GROUP BY fornecedor
-                ORDER BY valor_total DESC
-                LIMIT 10;
-            """
-            cursor.execute(query_top_10)
-            res_top_10 = cursor.fetchall()
-            
-            query_top_20 = """WITH EmpresaStats AS (
-    SELECT
-        fornecedor,
-        cpf_cnpj,
-        SUM(valor_reembolsado) as valor_total,
-        COUNT(*) as contratos
-    FROM senado.despesa_ceaps
-    GROUP BY fornecedor, cpf_cnpj
-),
-TotalGeral AS (
-    SELECT SUM(valor_reembolsado) as soma_total FROM senado.despesa_ceaps
-),
-EmpresaPartidos AS (
-    SELECT
-        d.fornecedor,
-        d.cpf_cnpj,
-        STRING_AGG(DISTINCT p.sigla_partido, ', ') as partidos
-    FROM senado.despesa_ceaps d
-    LEFT JOIN senado.parlamentar p ON d.cod_senador = p.codigo
-    GROUP BY d.fornecedor, d.cpf_cnpj
-)
-SELECT
-    ROW_NUMBER() OVER (ORDER BY es.valor_total DESC) as rank,
-    es.fornecedor as empresa,
-    COALESCE(ep.partidos, 'N/A') as partidos,
-    es.cpf_cnpj as cnpj,
-    es.valor_total,
-    es.contratos,
-    ROUND((es.valor_total / tg.soma_total) * 100, 2) as percentual
-FROM EmpresaStats es
-JOIN EmpresaPartidos ep ON es.fornecedor = ep.fornecedor AND es.cpf_cnpj = ep.cpf_cnpj
-CROSS JOIN TotalGeral tg
-ORDER BY es.valor_total DESC
-LIMIT 20;
-            """
-            cursor.execute(query_top_20)
-            res_top_20 = cursor.fetchall()
-            
-            return {
-                "total_empresas": row_gerais[0],
-                "total_pago": float(row_gerais[1] or 0),
-                "total_contratos": row_gerais[2],
-                "top_10_empresas": [
-                    {
-                        "empresa": r[0],
-                        "valor_total": float(r[1])
-                    }
-                    for r in res_top_10
-                ],
-                "top_20_empresas": [
-                    {
-                        "rank": r[0],
-                        "empresa": r[1],
-                        "partidos": r[2],
-                        "cnpj": r[3],
-                        "valor_total": float(r[4]),
-                        "contratos": r[5],
-                        "percentual": float(r[6])
-                    }
-                    for r in res_top_20
-                ]
-            }
-    except Exception as e:
-        logging.error(f"Erro ao buscar estatísticas de empresas: {e}")
-        raise HTTPException(status_code=500, detail="Erro ao processar estatísticas")
-    finally:
-        if conn:
-            db.release_db_connection(conn)

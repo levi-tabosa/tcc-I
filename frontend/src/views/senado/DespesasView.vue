@@ -19,12 +19,12 @@
             </div>
 
             <!-- Legislatura Selector -->
-            <div class="flex items-center gap-3 bg-purple-500/10 px-4 py-2 rounded-xl border border-purple-500/20">
-              <span class="text-xs font-bold text-purple-600 uppercase tracking-wider">Legislatura:</span>
+            <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-border shadow-sm">
+              <span class="text-[10px] font-bold text-foreground/50 uppercase tracking-wider">Legislatura:</span>
               <select
                 :value="store.legislatura"
                 @change="store.setLegislatura(Number(($event.target as HTMLSelectElement).value))"
-                class="text-sm font-bold text-purple-700 bg-transparent border-none p-0 focus:ring-0 cursor-pointer"
+                class="text-xs font-bold text-foreground bg-transparent border-none p-0 focus:ring-0 cursor-pointer"
               >
                 <option v-for="leg in store.legislaturasDisponiveis" :key="leg" :value="leg">{{ formatLegislatura(leg) }}</option>
               </select>
@@ -158,11 +158,11 @@
                   v-model="searchQuery"
                   type="text"
                   placeholder="Buscar senador..."
-                  class="px-3 py-1.5 text-sm rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                  class="px-3 py-1.5 text-xs rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-black/20"
                 />
                 <select
                   v-model="filterPartido"
-                  class="px-3 py-1.5 text-sm rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                  class="px-3 py-1.5 text-xs rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-black/20"
                 >
                   <option value="">Todos os partidos</option>
                   <option v-for="p in partidosUnicos" :key="p" :value="p">{{ p }}</option>
@@ -241,9 +241,11 @@ import { useRouter } from 'vue-router'
 import { Banknote, Users, Receipt, ChevronRight } from 'lucide-vue-next'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseLoading from '@/components/ui/BaseLoading.vue'
+import { useLoadingStore } from '@/stores/loading'
 import { useSenadoStore } from '@/stores/senado'
 
 const store = useSenadoStore()
+const loadingStore = useLoadingStore()
 const router = useRouter()
 
 const searchQuery = ref('')
@@ -260,15 +262,23 @@ const formatLegislatura = (legis: number) => {
 }
 
 onMounted(async () => {
-  loading.value = true
-  await store.fetchEstatisticasGerais()
-  loading.value = false
+  loadingStore.startLoading('Carregando dados financeiros do Senado...')
+  try {
+    await store.fetchEstatisticasGerais()
+  } finally {
+    loadingStore.stopLoading()
+    loading.value = false
+  }
 })
 
 watch(() => store.legislatura, async () => {
-  loading.value = true
-  await store.fetchEstatisticasGerais()
-  loading.value = false
+  loadingStore.startLoading('Atualizando dados legislativos...')
+  try {
+    await store.fetchEstatisticasGerais()
+  } finally {
+    loadingStore.stopLoading()
+    loading.value = false
+  }
 })
 
 // ── Gastos por Partido ──────────────────────────────────────────────────────

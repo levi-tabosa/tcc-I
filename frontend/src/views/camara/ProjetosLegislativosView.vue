@@ -10,7 +10,7 @@
           </p>
         </div>
       </section>
-      <BaseLoading v-if="store.loadingProjetosLegislativos && store.projetosLegislativosList.length === 0" message="Carregando projetos legislativos..." full-page />
+      <!-- Global loading is handled via loadingStore in App.vue -->
 
       <!-- Stats -->
       <ProjetosLegislativosStats />
@@ -27,11 +27,24 @@
 </template>
 
 <script setup lang="ts">
-import BaseLoading from '@/components/ui/BaseLoading.vue'
 import ProjetosLegislativosFilters from '@/components/camara/ProjetosLegislativosFilters.vue'
 import ProjetosLegislativosList from '@/components/camara/ProjetosLegislativosList.vue'
 import ProjetosLegislativosStats from '@/components/camara/ProjetosLegislativosStats.vue'
+import { useLoadingStore } from '@/stores/loading'
 import { useCamaraStore } from '@/stores/camara'
 
 const store = useCamaraStore()
+const loadingStore = useLoadingStore()
+
+import { onMounted } from 'vue'
+onMounted(async () => {
+  if (store.projetosLegislativosList.length === 0) {
+    loadingStore.startLoading('Carregando projetos legislativos...')
+    try {
+      await store.fetchProjetosLegislativos()
+    } finally {
+      loadingStore.stopLoading()
+    }
+  }
+})
 </script>

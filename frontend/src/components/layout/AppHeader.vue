@@ -190,7 +190,7 @@ const camaraItems = [
   { name: 'Projetos Legislativos', href: '/camara/projetos-legislativos' },
   { name: 'Despesas', href: '/camara/despesas' },
   { name: 'Emendas', href: '/camara/emendas' },
-  { name: 'Empresas', href: '/camara/empresas' },
+  { name: 'Comissões', href: '/camara/comissoes' },
 ]
 
 const senadoItems = [
@@ -199,7 +199,7 @@ const senadoItems = [
   { name: 'Projetos Legislativos', href: '/senado/projetos-legislativos' },
   { name: 'Despesas', href: '/senado/despesas' },
   { name: 'Emendas', href: '/senado/emendas' },
-  { name: 'Empresas', href: '/senado/empresas' },
+  { name: 'Comissões', href: '/senado/comissoes' },
 ]
 
 const mobileMenuOpen = ref(false)

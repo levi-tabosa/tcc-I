@@ -112,13 +112,20 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js'
 import { Doughnut } from 'vue-chartjs'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import { useCamaraStore } from "@/stores/camara"
+import { useLoadingStore } from "@/stores/loading"
 
 ChartJS.register(ArcElement, Tooltip, Legend)
 
 const store = useCamaraStore()
+const loadingStore = useLoadingStore()
 
-onMounted(() => {
-  store.fetchEstatisticasGerais()
+onMounted(async () => {
+  loadingStore.startLoading('Analisando dados...')
+  try {
+    await store.fetchEstatisticasGerais()
+  } finally {
+    loadingStore.stopLoading()
+  }
 })
 
 const categorias = computed(() => {

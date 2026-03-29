@@ -121,6 +121,7 @@ import { useRouter } from 'vue-router'
 import { Landmark, Users, TrendingUp } from 'lucide-vue-next'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseLoading from '@/components/ui/BaseLoading.vue'
+import { useLoadingStore } from '@/stores/loading'
 
 const estatisticas = ref({
   totais: { senadores: 0, municipios: 0, areas: 0, valor_total: 0 },
@@ -128,11 +129,13 @@ const estatisticas = ref({
   ranking: [] as any[]
 })
 
+const loadingStore = useLoadingStore()
 const router = useRouter()
 const carregando = ref(true)
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 async function carregarEstatisticas() {
+  loadingStore.startLoading('Carregando resumo de emendas...')
   try {
     const resposta = await fetch(`${API_URL}/api/senado/emendas/resumo`)
     if (!resposta.ok) throw new Error('Erro ao buscar estatísticas')
@@ -141,6 +144,7 @@ async function carregarEstatisticas() {
     console.error('Falha ao carregar estatísticas:', erro)
   } finally {
     carregando.value = false
+    loadingStore.stopLoading()
   }
 }
 

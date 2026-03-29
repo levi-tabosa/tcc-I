@@ -10,12 +10,12 @@
           </router-link>
 
           <!-- Legislatura Selector -->
-          <div class="flex items-center gap-3 bg-primary/5 px-3 py-1.5 rounded-full border border-primary/10">
-            <span class="text-xs font-bold text-primary/60 uppercase tracking-wider">Visualizando:</span>
+          <div class="flex items-center gap-3 bg-white px-4 py-2.5 rounded-xl border border-border shadow-sm">
+            <span class="text-xs font-bold text-foreground/50 uppercase tracking-wider">Visualizando:</span>
             <select
               :value="store.legislatura"
               @change="store.setLegislatura(Number(($event.target as HTMLSelectElement).value))"
-              class="text-sm font-bold text-primary bg-transparent border-none p-0 focus:ring-0 cursor-pointer"
+              class="text-sm font-bold text-foreground bg-transparent border-none p-0 focus:ring-0 cursor-pointer"
             >
               <template v-if="store.currentDeputado?.legislaturas_ativas?.length">
                 <option v-for="legis in store.currentDeputado.legislaturas_ativas" :key="legis" :value="legis">
@@ -222,15 +222,22 @@ import { ChevronLeft, Mail, Calendar, GraduationCap, User, FileText } from 'luci
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import BaseLoading from '@/components/ui/BaseLoading.vue'
+import { useLoadingStore } from '@/stores/loading'
 import { useCamaraStore } from "@/stores/camara"
 
 const route = useRoute()
 const store = useCamaraStore()
+const loadingStore = useLoadingStore()
 
-const loadData = () => {
+const loadData = async () => {
     const id = Number(route.params.id)
     if (id) {
-        store.fetchDeputado(id)
+        loadingStore.startLoading('Carregando informações do deputado...')
+        try {
+            await store.fetchDeputado(id)
+        } finally {
+            loadingStore.stopLoading()
+        }
     }
 }
 

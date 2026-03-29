@@ -10,7 +10,7 @@
           </p>
         </div>
       </section>
-      <BaseLoading v-if="store.loadingProjetosLegislativos" message="Carregando projetos legislativos..." full-page />
+      <!-- Global loading is handled via loadingStore in App.vue -->
 
       <template v-if="!store.loadingProjetosLegislativos || store.projetosLegislativosList.length > 0">
         <!-- Stats -->
@@ -33,14 +33,20 @@ import { onMounted } from 'vue'
 import ProjetosLegislativosFilters from '@/components/senado/ProjetosLegislativosFilters.vue'
 import ProjetosLegislativosList from '@/components/senado/ProjetosLegislativosList.vue'
 import ProjetosLegislativosStats from '@/components/senado/ProjetosLegislativosStats.vue'
-import BaseLoading from '@/components/ui/BaseLoading.vue'
+import { useLoadingStore } from '@/stores/loading'
 import { useSenadoStore } from '@/stores/senado'
 
 const store = useSenadoStore()
+const loadingStore = useLoadingStore()
 
-onMounted(() => {
+onMounted(async () => {
   if (store.projetosLegislativosList.length === 0) {
-    store.fetchProjetosLegislativos()
+    loadingStore.startLoading('Carregando projetos legislativos...')
+    try {
+      await store.fetchProjetosLegislativos()
+    } finally {
+      loadingStore.stopLoading()
+    }
   }
 })
 </script>
