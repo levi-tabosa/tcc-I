@@ -17,30 +17,6 @@
                 Explore as comissões permanentes e temporárias da Câmara dos Deputados. Saiba quem são os membros, presidentes e relatores de cada uma.
               </p>
             </div>
-            <!-- Filtros -->
-            <div class="flex flex-wrap items-center gap-3">
-              <div class="flex items-center gap-3 bg-white px-4 py-2.5 rounded-xl border border-border shadow-sm transition-all hover:border-foreground/20">
-                <span class="text-xs font-bold text-foreground/50 uppercase tracking-wider">Legislatura:</span>
-                <select
-                  v-model="filterLegislatura"
-                  class="text-sm font-bold text-foreground bg-transparent border-none p-0 focus:ring-0 cursor-pointer"
-                >
-                  <option :value="0">Todas</option>
-                  <option v-for="leg in availableLegislaturas" :key="leg" :value="leg">{{ leg }}ª</option>
-                </select>
-              </div>
-
-              <div class="flex items-center gap-3 bg-white px-4 py-2.5 rounded-xl border border-border shadow-sm transition-all hover:border-foreground/20">
-                <span class="text-xs font-bold text-foreground/50 uppercase tracking-wider">Tipo:</span>
-                <select
-                  v-model="filterTipo"
-                  class="text-sm font-bold text-foreground bg-transparent border-none p-0 focus:ring-0 cursor-pointer"
-                >
-                  <option value="">Todos</option>
-                  <option v-for="tipo in tiposDisponiveis" :key="tipo" :value="tipo">{{ tipo }}</option>
-                </select>
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -96,7 +72,7 @@
       <!-- Search + List -->
       <section class="py-8">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
             <div class="relative">
               <Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
@@ -114,6 +90,28 @@
                 placeholder="Buscar por membro (deputado)..."
                 class="pl-10 pr-4 py-2.5 text-sm rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-black/20 w-full"
               />
+            </div>
+            <!-- Filtros -->
+            <div class="flex items-center gap-3 bg-white px-4 py-2.5 rounded-xl border border-border shadow-sm transition-all hover:border-foreground/20">
+              <span class="text-xs font-bold text-foreground/50 uppercase tracking-wider">Legislatura:</span>
+              <select
+                v-model="filterLegislatura"
+                class="text-sm font-bold text-foreground bg-transparent border-none p-0 focus:ring-0 cursor-pointer w-full"
+              >
+                <option :value="0">Todas</option>
+                <option v-for="leg in availableLegislaturas" :key="leg" :value="leg">{{ leg }}ª</option>
+              </select>
+            </div>
+
+            <div class="flex items-center gap-3 bg-white px-4 py-2.5 rounded-xl border border-border shadow-sm transition-all hover:border-foreground/20">
+              <span class="text-xs font-bold text-foreground/50 uppercase tracking-wider flex-shrink-0">Tipo:</span>
+              <select
+                v-model="filterTipo"
+                class="text-sm font-bold text-foreground bg-transparent border-none p-0 focus:ring-0 cursor-pointer w-full"
+              >
+                <option value="">Todos</option>
+                <option v-for="tipo in tiposDisponiveis" :key="tipo" :value="tipo">{{ tipo }}</option>
+              </select>
             </div>
           </div>
 

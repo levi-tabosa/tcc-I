@@ -1,59 +1,65 @@
 <template>
   <div class="mb-6 space-y-4">
-    <div class="flex flex-col sm:flex-row gap-3">
-      <!-- Search -->
-      <div class="relative flex-1">
-        <Search class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-        <input
-          type="text"
-          placeholder="Buscar deputado..."
-          :value="store.filters.search"
-          @input="store.setFilter('search', ($event.target as HTMLInputElement).value)"
-          class="input-base pl-12 pr-6 py-4 rounded-full border border-border bg-background text-foreground focus:ring-black/20 text-base"
-        />
+    <div class="flex flex-col gap-4">
+      <!-- Linha 1: Busca e Legislatura -->
+      <div class="flex flex-col sm:flex-row gap-4">
+        <!-- Search -->
+        <div class="relative flex-1">
+          <Search class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Buscar deputado..."
+            :value="store.filters.search"
+            @input="store.setFilter('search', ($event.target as HTMLInputElement).value)"
+            class="input-base pl-12 pr-6 py-4 rounded-full border border-border bg-background text-foreground focus:ring-black/20 text-base w-full"
+          />
+        </div>
+
+        <!-- Legislatura -->
+        <div class="relative">
+          <select
+            :value="store.legislatura"
+            @change="store.setLegislatura(Number(($event.target as HTMLSelectElement).value))"
+            class="input-base px-6 py-3.5 pr-12 rounded-full appearance-none cursor-pointer w-full sm:w-auto sm:min-w-[220px] border border-foreground/20 bg-background font-semibold text-foreground focus:ring-black/20 text-sm"
+          >
+            <option :value="0">Todas as legislaturas</option>
+            <option v-for="leg in store.legislaturasDisponiveis" :key="leg" :value="leg">{{ formatLegislatura(leg) }}</option>
+          </select>
+          <ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/50 pointer-events-none" />
+        </div>
       </div>
 
-      <!-- Partido -->
-      <div class="relative">
-        <select
-          :value="store.filters.partido"
-          @change="store.setFilter('partido', ($event.target as HTMLSelectElement).value)"
-          class="input-base px-6 py-3.5 pr-12 rounded-full appearance-none cursor-pointer w-full sm:w-auto sm:min-w-[200px] border border-border bg-background text-foreground focus:ring-black/20 text-sm"
-        >
-          <option value="">Todos os partidos</option>
-          <option v-for="partido in store.partidosUnicos" :key="partido" :value="partido">
-            {{ partido }}
-          </option>
-        </select>
-        <ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-      </div>
+      <!-- Linha 2: Partido e Estado -->
+      <div class="flex flex-col sm:flex-row gap-4">
+        <!-- Partido -->
+        <div class="relative flex-1 sm:flex-none">
+          <select
+            :value="store.filters.partido"
+            @change="store.setFilter('partido', ($event.target as HTMLSelectElement).value)"
+            class="input-base px-6 py-3.5 pr-12 rounded-full appearance-none cursor-pointer w-full sm:w-auto sm:min-w-[200px] border border-border bg-background text-foreground focus:ring-black/20 text-sm"
+          >
+            <option value="">Todos os partidos</option>
+            <option v-for="partido in store.partidosUnicos" :key="partido" :value="partido">
+              {{ partido }}
+            </option>
+          </select>
+          <ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+        </div>
 
-      <!-- Estado -->
-      <div class="relative">
-        <select
-          :value="store.filters.estado"
-          @change="store.setFilter('estado', ($event.target as HTMLSelectElement).value)"
-          class="input-base px-6 py-3.5 pr-12 rounded-full appearance-none cursor-pointer w-full sm:w-auto sm:min-w-[200px] border border-border bg-background text-foreground focus:ring-black/20 text-sm"
-        >
-          <option value="">Todos os estados</option>
-          <option v-for="estado in store.estadosUnicos" :key="estado" :value="estado">
-            {{ estado }}
-          </option>
-        </select>
-        <ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-      </div>
-
-      <!-- Legislatura -->
-      <div class="relative">
-        <select
-          :value="store.legislatura"
-          @change="store.setLegislatura(Number(($event.target as HTMLSelectElement).value))"
-          class="input-base px-6 py-3.5 pr-12 rounded-full appearance-none cursor-pointer w-full sm:w-auto sm:min-w-[160px] border border-foreground/20 bg-background font-semibold text-foreground focus:ring-black/20 text-sm"
-        >
-          <option :value="0">Todas as legislaturas</option>
-          <option v-for="leg in store.legislaturasDisponiveis" :key="leg" :value="leg">{{ formatLegislatura(leg) }}</option>
-        </select>
-        <ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/50 pointer-events-none" />
+        <!-- Estado -->
+        <div class="relative flex-1 sm:flex-none">
+          <select
+            :value="store.filters.estado"
+            @change="store.setFilter('estado', ($event.target as HTMLSelectElement).value)"
+            class="input-base px-6 py-3.5 pr-12 rounded-full appearance-none cursor-pointer w-full sm:w-auto sm:min-w-[200px] border border-border bg-background text-foreground focus:ring-black/20 text-sm"
+          >
+            <option value="">Todos os estados</option>
+            <option v-for="estado in store.estadosUnicos" :key="estado" :value="estado">
+              {{ estado }}
+            </option>
+          </select>
+          <ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+        </div>
       </div>
     </div>
 

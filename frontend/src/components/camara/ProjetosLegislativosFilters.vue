@@ -1,61 +1,67 @@
 <template>
   <div class="mb-6 space-y-4">
-    <div class="flex flex-col sm:flex-row gap-4">
-      <!-- Search by ementa -->
-      <div class="relative flex-1">
-        <input
-          type="text"
-          placeholder="Buscar por ementa..."
-          :value="store.projetosLegislativosFilters.search"
-          @input="onSearchInput"
-          class="w-full px-6 py-4 rounded-full border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-black/20 hover:shadow-md transition-shadow text-base"
-        />
+    <div class="flex flex-col gap-4">
+      <!-- Linha 1: Projetos -->
+      <div class="flex flex-col sm:flex-row gap-4">
+        <!-- Search by ementa -->
+        <div class="relative flex-1">
+          <input
+            type="text"
+            placeholder="Buscar por ementa..."
+            :value="store.projetosLegislativosFilters.search"
+            @input="onSearchInput"
+            class="w-full px-6 py-4 rounded-full border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-black/20 hover:shadow-md transition-shadow text-base"
+          />
+        </div>
+
+        <!-- Tipo -->
+        <select
+          :value="store.projetosLegislativosFilters.siglaTipo"
+          @change="store.setProjetosLegislativosFilter('siglaTipo', ($event.target as HTMLSelectElement).value)"
+          class="w-full sm:w-auto sm:min-w-[180px] px-6 py-4 sm:py-3.5 rounded-full border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-black/20 text-sm"
+        >
+          <option value="">Todos os tipos</option>
+          <option v-for="tipo in tiposProjetoLegislativo" :key="tipo" :value="tipo">
+            {{ tipo }}
+          </option>
+        </select>
+
+        <!-- Ano -->
+        <select
+          :value="store.projetosLegislativosFilters.ano"
+          @change="store.setProjetosLegislativosFilter('ano', ($event.target as HTMLSelectElement).value)"
+          class="w-full sm:w-auto sm:min-w-[160px] px-6 py-4 sm:py-3.5 rounded-full border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-black/20 text-sm"
+        >
+          <option value="">Todos os anos</option>
+          <option v-for="ano in anosDisponiveis" :key="ano" :value="ano">
+            {{ ano }}
+          </option>
+        </select>
       </div>
 
-      <!-- Search by deputado -->
-      <div class="relative flex-1">
-        <input
-          type="text"
-          placeholder="Buscar por deputado que votou..."
-          :value="store.projetosLegislativosFilters.deputado"
-          @input="onDeputadoInput"
-          class="w-full px-6 py-4 rounded-full border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-black/20 hover:shadow-md transition-shadow text-base"
-        />
+      <!-- Linha 2: Deputados/Legislatura -->
+      <div class="flex flex-col sm:flex-row gap-4">
+        <!-- Search by deputado -->
+        <div class="relative flex-1">
+          <input
+            type="text"
+            placeholder="Buscar por deputado que votou..."
+            :value="store.projetosLegislativosFilters.deputado"
+            @input="onDeputadoInput"
+            class="w-full px-6 py-4 rounded-full border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-black/20 hover:shadow-md transition-shadow text-base"
+          />
+        </div>
+
+        <!-- Legislatura -->
+        <select
+          :value="store.legislatura"
+          @change="store.setLegislatura(Number(($event.target as HTMLSelectElement).value))"
+          class="w-full sm:w-auto sm:min-w-[220px] px-6 py-4 sm:py-3.5 rounded-full border border-foreground/20 bg-background font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-black/20 text-sm"
+        >
+          <option :value="0">Todas as legislaturas</option>
+          <option v-for="leg in store.legislaturasDisponiveis" :key="leg" :value="leg">{{ formatLegislatura(leg) }}</option>
+        </select>
       </div>
-
-      <!-- Tipo -->
-      <select
-        :value="store.projetosLegislativosFilters.siglaTipo"
-        @change="store.setProjetosLegislativosFilter('siglaTipo', ($event.target as HTMLSelectElement).value)"
-        class="w-full sm:w-auto px-6 py-4 sm:py-3.5 rounded-full border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-black/20 text-sm"
-      >
-        <option value="">Todos os tipos</option>
-        <option v-for="tipo in tiposProjetoLegislativo" :key="tipo" :value="tipo">
-          {{ tipo }}
-        </option>
-      </select>
-
-      <!-- Ano -->
-      <select
-        :value="store.projetosLegislativosFilters.ano"
-        @change="store.setProjetosLegislativosFilter('ano', ($event.target as HTMLSelectElement).value)"
-        class="w-full sm:w-auto px-6 py-4 sm:py-3.5 rounded-full border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-black/20 text-sm"
-      >
-        <option value="">Todos os anos</option>
-        <option v-for="ano in anosDisponiveis" :key="ano" :value="ano">
-          {{ ano }}
-        </option>
-      </select>
-
-      <!-- Legislatura -->
-      <select
-        :value="store.legislatura"
-        @change="store.setLegislatura(Number(($event.target as HTMLSelectElement).value))"
-        class="w-full sm:w-auto px-6 py-4 sm:py-3.5 rounded-full border border-foreground/20 bg-background font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-black/20 text-sm"
-      >
-        <option :value="0">Todas as legislaturas</option>
-        <option v-for="leg in store.legislaturasDisponiveis" :key="leg" :value="leg">{{ formatLegislatura(leg) }}</option>
-      </select>
     </div>
 
     <div v-if="hasActiveFilters" class="flex items-center gap-2">
