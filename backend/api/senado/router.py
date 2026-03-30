@@ -294,7 +294,7 @@ ORDER BY data_despesa DESC;
             db.release_db_connection(conn)
                 
 @router.get("/comissoes", summary="Lista todas as comissões do Senado com membros")
-def get_comissoes_senado():
+def get_comissoes_senado(legislatura: int = Query(None)):
     conn = None
     try:
         conn = db.get_db_connection()
@@ -311,17 +311,24 @@ def get_comissoes_senado():
                     COUNT(DISTINCT mc.codigo_parlamentar) AS total_membros
                 FROM senado.comissao c
                 LEFT JOIN senado.membro_comissao mc ON c.codigo = mc.codigo_comissao
-                GROUP BY c.codigo, c.sigla, c.nome
-                ORDER BY c.nome
             """
-            cursor.execute(query)
+            params = []
+            if legislatura:
+                query += """
+                    INNER JOIN senado.mandato m ON mc.codigo_parlamentar = m.codigo_parlamentar
+                    WHERE m.primeira_legislatura = %s OR m.segunda_legislatura = %s
+                """
+                params.extend([str(legislatura), str(legislatura)])
+            
+            query += " GROUP BY c.codigo, c.sigla, c.nome ORDER BY c.nome"
+            cursor.execute(query, tuple(params))
             comissoes_raw = cursor.fetchall()
             
             comissoes = []
             for row in comissoes_raw:
                 cod_comissao = row[0]
 
-                query_membros = """
+                query_membros = f"""
                     SELECT
                         p.nome_parlamentar,
                         p.sigla_partido,
@@ -331,22 +338,32 @@ def get_comissoes_senado():
                         p.url_foto
                     FROM senado.membro_comissao mc
                     JOIN senado.parlamentar p ON mc.codigo_parlamentar = p.codigo
+                    {"INNER" if legislatura else "LEFT"} JOIN senado.mandato m ON p.codigo = m.codigo_parlamentar
                     WHERE mc.codigo_comissao = %s
+                    {"AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)" if legislatura else ""}
                     ORDER BY mc.tipo_vaga NULLS LAST, p.nome_parlamentar
                 """
-                cursor.execute(query_membros, (cod_comissao,))
+                params_m = [cod_comissao]
+                if legislatura:
+                    params_m.extend([str(legislatura), str(legislatura)])
+                cursor.execute(query_membros, tuple(params_m))
                 membros_raw = cursor.fetchall()
 
-                query = """
+                query_partidos = f"""
                     SELECT p.sigla_partido, COUNT(*) AS qtd
                     FROM senado.membro_comissao mc
                     JOIN senado.parlamentar p ON mc.codigo_parlamentar = p.codigo
+                    {"INNER" if legislatura else "LEFT"} JOIN senado.mandato m ON p.codigo = m.codigo_parlamentar
                     WHERE mc.codigo_comissao = %s AND p.sigla_partido IS NOT NULL
+                    {"AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)" if legislatura else ""}
                     GROUP BY p.sigla_partido
                     ORDER BY qtd DESC
                     LIMIT 4
                 """
-                cursor.execute(query, (cod_comissao,))
+                params_p = [cod_comissao]
+                if legislatura:
+                    params_p.extend([str(legislatura), str(legislatura)])
+                cursor.execute(query_partidos, tuple(params_p))
                 partidos_raw = cursor.fetchall()
 
                 presidente = next((m[0] for m in membros_raw if m[3] and "presidente" in m[3].lower()), None)

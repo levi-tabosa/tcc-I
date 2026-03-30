@@ -615,7 +615,7 @@ def get_comparativo_deputados(id1: int, id2: int, ano: int = None, legislatura: 
 
 
 @router.get("/comissoes", summary="Lista todas as comissões da Câmara com membros")
-def get_comissoes_camara():
+def get_comissoes_camara(legislatura: int = Query(None)):
     conn = None
     try:
         conn = db.get_db_connection()
@@ -632,17 +632,21 @@ def get_comissoes_camara():
                     COUNT(DISTINCT od.deputado_id) AS total_membros
                 FROM camara.orgaos o
                 LEFT JOIN camara.orgaos_deputados od ON o.id = od.orgao_id
-                GROUP BY o.id, o.sigla, o.nome, o.tipo_orgao
-                ORDER BY o.tipo_orgao, o.nome
             """
-            cursor.execute(query)
+            params = []
+            if legislatura:
+                query += " INNER JOIN camara.deputados_mandatos m ON od.deputado_id = m.deputado_id WHERE m.legislatura_id = %s "
+                params.append(legislatura)
+            
+            query += " GROUP BY o.id, o.sigla, o.nome, o.tipo_orgao ORDER BY o.tipo_orgao, o.nome"
+            cursor.execute(query, tuple(params))
             orgaos_raw = cursor.fetchall()
             
             comissoes = []
             for row in orgaos_raw:
                 orgao_id = row[0]
 
-                query_membros = """
+                query_membros = f"""
                      SELECT
                             d.nome_civil,
                             m.sigla_partido,
@@ -651,25 +655,28 @@ def get_comissoes_camara():
                             d.id AS deputado_id
                     FROM camara.orgaos_deputados od
                     JOIN camara.deputados d ON od.deputado_id = d.id
-                    LEFT JOIN (
+                    {"INNER" if legislatura else "LEFT"} JOIN (
                         SELECT DISTINCT ON (deputado_id) deputado_id, sigla_partido, sigla_uf
                         FROM camara.deputados_mandatos
+                        {"WHERE legislatura_id = %s" if legislatura else ""}
                         ORDER BY deputado_id, id DESC
                     ) m ON d.id = m.deputado_id
                     WHERE od.orgao_id = %s
                     ORDER BY od.cargo NULLS LAST, d.nome_civil
             """
 
-                cursor.execute(query_membros, (orgao_id,))
+                params_m = [legislatura, orgao_id] if legislatura else [orgao_id]
+                cursor.execute(query_membros, tuple(params_m))
                 membros_raw = cursor.fetchall()
 
-                query = """
+                query_partidos = f"""
                  SELECT m.sigla_partido, COUNT(*) AS qtd
                     FROM camara.orgaos_deputados od
                     JOIN camara.deputados d ON od.deputado_id = d.id
-                    LEFT JOIN (
+                    {"INNER" if legislatura else "LEFT"} JOIN (
                         SELECT DISTINCT ON (deputado_id) deputado_id, sigla_partido
                         FROM camara.deputados_mandatos
+                        {"WHERE legislatura_id = %s" if legislatura else ""}
                         ORDER BY deputado_id, id DESC
                     ) m ON d.id = m.deputado_id
                     WHERE od.orgao_id = %s AND m.sigla_partido IS NOT NULL
@@ -678,7 +685,8 @@ def get_comissoes_camara():
                     LIMIT 4
                 """
 
-                cursor.execute(query, (orgao_id,))
+                params_p = [legislatura, orgao_id] if legislatura else [orgao_id]
+                cursor.execute(query_partidos, tuple(params_p))
                 partidos_raw = cursor.fetchall()
 
                 presidente = next((mb[0] for mb in membros_raw if mb[3] and "presidente" in mb[3].lower()), None)

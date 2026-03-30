@@ -17,16 +17,29 @@
                 Explore as comissões permanentes e temporárias da Câmara dos Deputados. Saiba quem são os membros, presidentes e relatores de cada uma.
               </p>
             </div>
-            <!-- Filtro de tipo -->
-            <div class="flex items-center gap-3 bg-white px-4 py-2.5 rounded-xl border border-border shadow-sm self-start sm:self-auto transition-all hover:border-foreground/20">
-              <span class="text-xs font-bold text-foreground/50 uppercase tracking-wider">Tipo:</span>
-              <select
-                v-model="filterTipo"
-                class="text-sm font-bold text-foreground bg-transparent border-none p-0 focus:ring-0 cursor-pointer"
-              >
-                <option value="">Todos</option>
-                <option v-for="tipo in tiposDisponiveis" :key="tipo" :value="tipo">{{ tipo }}</option>
-              </select>
+            <!-- Filtros -->
+            <div class="flex flex-wrap items-center gap-3">
+              <div class="flex items-center gap-3 bg-white px-4 py-2.5 rounded-xl border border-border shadow-sm transition-all hover:border-foreground/20">
+                <span class="text-xs font-bold text-foreground/50 uppercase tracking-wider">Legislatura:</span>
+                <select
+                  v-model="filterLegislatura"
+                  class="text-sm font-bold text-foreground bg-transparent border-none p-0 focus:ring-0 cursor-pointer"
+                >
+                  <option :value="0">Todas</option>
+                  <option v-for="leg in availableLegislaturas" :key="leg" :value="leg">{{ leg }}ª</option>
+                </select>
+              </div>
+
+              <div class="flex items-center gap-3 bg-white px-4 py-2.5 rounded-xl border border-border shadow-sm transition-all hover:border-foreground/20">
+                <span class="text-xs font-bold text-foreground/50 uppercase tracking-wider">Tipo:</span>
+                <select
+                  v-model="filterTipo"
+                  class="text-sm font-bold text-foreground bg-transparent border-none p-0 focus:ring-0 cursor-pointer"
+                >
+                  <option value="">Todos</option>
+                  <option v-for="tipo in tiposDisponiveis" :key="tipo" :value="tipo">{{ tipo }}</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
@@ -255,6 +268,8 @@ const router = useRouter()
 const searchQuery = ref('')
 const searchMemberQuery = ref('')
 const filterTipo = ref('')
+const filterLegislatura = ref(57) // Default to 57
+const availableLegislaturas = ref<number[]>([])
 const selectedComissao = ref<Comissao | null>(null)
 const comissoes = ref<Comissao[]>([])
 const loading = ref(true)
@@ -263,24 +278,46 @@ const error = ref<string | null>(null)
 const apiUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
 const loadingStore = useLoadingStore()
 
-onMounted(async () => {
+const fetchComissoes = async () => {
   loadingStore.startLoading('Carregando comissões...')
+  loading.value = true
   try {
-    const res = await fetch(`${apiUrl}/api/camara/comissoes`)
+    const params = new URLSearchParams()
+    if (filterLegislatura.value) params.append('legislatura', filterLegislatura.value.toString())
+    
+    const res = await fetch(`${apiUrl}/api/camara/comissoes?${params.toString()}`)
     if (!res.ok) throw new Error(`Erro ${res.status}: ${res.statusText}`)
     const data = await res.json()
     comissoes.value = data.comissoes ?? []
   } catch (err: any) {
     console.error('Erro ao buscar comissões:', err)
-    error.value = err.message || 'Não foi possível carregar as comissões. Verifique se o backend está rodando.'
+    error.value = err.message || 'Não foi possível carregar as comissões.'
   } finally {
     await nextTick()
-    // Pequeno atraso para garantir que a renderização foi concluída e evitar flicker
     setTimeout(() => {
       loading.value = false
       loadingStore.stopLoading()
     }, 500)
   }
+}
+
+onMounted(async () => {
+  // Fetch Legislaturas
+  try {
+    const resLeg = await fetch(`${apiUrl}/api/camara/legislaturas`)
+    if (resLeg.ok) {
+      availableLegislaturas.value = await resLeg.json()
+    }
+  } catch (e) {
+    console.error('Erro ao buscar legislaturas:', e)
+  }
+
+  await fetchComissoes()
+})
+
+import { watch } from 'vue'
+watch(filterLegislatura, () => {
+  fetchComissoes()
 })
 
 const tiposDisponiveis = computed(() => {

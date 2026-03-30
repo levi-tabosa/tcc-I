@@ -53,6 +53,7 @@
         @change="store.setLegislatura(Number(($event.target as HTMLSelectElement).value))"
         class="w-full sm:w-auto px-6 py-4 sm:py-3.5 rounded-full border border-foreground/20 bg-background font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-black/20 text-sm"
       >
+        <option :value="0">Todas as legislaturas</option>
         <option v-for="leg in store.legislaturasDisponiveis" :key="leg" :value="leg">{{ formatLegislatura(leg) }}</option>
       </select>
     </div>
