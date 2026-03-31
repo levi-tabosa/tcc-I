@@ -72,46 +72,55 @@
       <!-- Search + List -->
       <section class="py-8">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
-            <div class="relative">
-              <Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <input
-                v-model="searchQuery"
-                type="text"
-                placeholder="Buscar por comissão ou sigla..."
-                class="pl-10 pr-4 py-2.5 text-sm rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-black/20 w-full"
-              />
-            </div>
-            <div class="relative">
-              <Users class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <input
-                v-model="searchMemberQuery"
-                type="text"
-                placeholder="Buscar por membro (senador)..."
-                class="pl-10 pr-4 py-2.5 text-sm rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-black/20 w-full"
-              />
-            </div>
-            <!-- Filtros -->
-            <div class="flex items-center gap-3 bg-white px-4 py-2.5 rounded-xl border border-border shadow-sm transition-all hover:border-foreground/20">
-              <span class="text-xs font-bold text-foreground/50 uppercase tracking-wider">Legislatura:</span>
-              <select
-                v-model="filterLegislatura"
-                class="text-sm font-bold text-foreground bg-transparent border-none p-0 focus:ring-0 cursor-pointer w-full"
-              >
-                <option :value="0">Todas</option>
-                <option v-for="leg in availableLegislaturas" :key="leg" :value="leg">{{ leg }}ª</option>
-              </select>
+          <div class="mb-6 space-y-4">
+            <div class="flex flex-col sm:flex-row gap-4">
+              <!-- Search by comissão -->
+              <div class="relative flex-1">
+                <Search class="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
+                <input
+                  v-model="searchQuery"
+                  type="text"
+                  placeholder="Buscar por comissão ou sigla..."
+                  class="w-full pl-12 pr-6 py-4 rounded-full border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-black/20 hover:shadow-md transition-shadow text-base"
+                />
+              </div>
+              
+              <!-- Search by member -->
+              <div class="relative flex-1">
+                <Users class="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
+                <input
+                  v-model="searchMemberQuery"
+                  type="text"
+                  placeholder="Buscar por membro (senador)..."
+                  class="w-full pl-12 pr-6 py-4 rounded-full border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-black/20 hover:shadow-md transition-shadow text-base"
+                />
+              </div>
+
+              <!-- Legislatura -->
+              <div class="relative">
+                <select
+                  v-model="filterLegislatura"
+                  class="w-full sm:w-auto sm:min-w-[220px] px-6 py-3.5 pr-12 rounded-full appearance-none cursor-pointer border border-foreground/20 bg-background font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-black/20 hover:shadow-sm transition-shadow text-sm"
+                >
+                  <option :value="0">Todas as legislaturas</option>
+                  <option v-for="leg in availableLegislaturas" :key="leg" :value="leg">{{ leg }}ª</option>
+                </select>
+                <ChevronDown class="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/50 pointer-events-none" />
+              </div>
             </div>
 
-            <div class="flex items-center gap-3 bg-white px-4 py-2.5 rounded-xl border border-border shadow-sm transition-all hover:border-foreground/20">
-              <span class="text-xs font-bold text-foreground/50 uppercase tracking-wider flex-shrink-0">Tipo:</span>
-              <select
-                v-model="filterTipo"
-                class="text-sm font-bold text-foreground bg-transparent border-none p-0 focus:ring-0 cursor-pointer w-full"
-              >
-                <option value="">Todos</option>
-                <option v-for="tipo in tiposDisponiveis" :key="tipo" :value="tipo">{{ tipo }}</option>
-              </select>
+            <!-- Segunda linha: Tipo -->
+            <div class="flex flex-col sm:flex-row gap-4">
+              <div class="relative">
+                <select
+                  v-model="filterTipo"
+                  class="w-full sm:w-auto sm:min-w-[180px] px-6 py-3.5 pr-12 rounded-full appearance-none cursor-pointer border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-black/20 hover:shadow-sm transition-shadow text-sm"
+                >
+                  <option value="">Todos os tipos</option>
+                  <option v-for="tipo in tiposDisponiveis" :key="tipo" :value="tipo">{{ tipo }}</option>
+                </select>
+                <ChevronDown class="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              </div>
             </div>
           </div>
 

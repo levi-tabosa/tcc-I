@@ -5,62 +5,73 @@
       <div class="flex flex-col sm:flex-row gap-4">
         <!-- Search by ementa -->
         <div class="relative flex-1">
+          <Search class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
           <input
             type="text"
             placeholder="Buscar por ementa..."
             :value="store.projetosLegislativosFilters.search"
             @input="onSearchInput"
-            class="w-full px-6 py-4 rounded-full border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-black/20 hover:shadow-md transition-shadow text-base"
+            class="w-full pl-12 pr-6 py-4 rounded-full border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-black/20 hover:shadow-md transition-shadow text-base"
           />
         </div>
 
         <!-- Tipo -->
-        <select
-          :value="store.projetosLegislativosFilters.siglaTipo"
-          @change="store.setProjetosLegislativosFilter('siglaTipo', ($event.target as HTMLSelectElement).value)"
-          class="w-full sm:w-auto sm:min-w-[180px] px-6 py-4 sm:py-3.5 rounded-full border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-black/20 text-sm"
-        >
-          <option value="">Todos os tipos</option>
-          <option v-for="tipo in tiposProjetoLegislativo" :key="tipo" :value="tipo">
-            {{ tipo }}
-          </option>
-        </select>
+        <div class="relative">
+          <select
+            :value="store.projetosLegislativosFilters.siglaTipo"
+            @change="store.setProjetosLegislativosFilter('siglaTipo', ($event.target as HTMLSelectElement).value)"
+            class="w-full sm:w-auto sm:min-w-[180px] px-6 py-3.5 pr-12 rounded-full appearance-none cursor-pointer border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-black/20 hover:shadow-sm transition-shadow text-sm"
+          >
+            <option value="">Todos os tipos</option>
+            <option v-for="tipo in tiposProjetoLegislativo" :key="tipo" :value="tipo">
+              {{ tipo }}
+            </option>
+          </select>
+          <ChevronDown class="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+        </div>
 
         <!-- Ano -->
-        <select
-          :value="store.projetosLegislativosFilters.ano"
-          @change="store.setProjetosLegislativosFilter('ano', ($event.target as HTMLSelectElement).value)"
-          class="w-full sm:w-auto sm:min-w-[160px] px-6 py-4 sm:py-3.5 rounded-full border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-black/20 text-sm"
-        >
-          <option value="">Todos os anos</option>
-          <option v-for="ano in anosDisponiveis" :key="ano" :value="ano">
-            {{ ano }}
-          </option>
-        </select>
+        <div class="relative">
+          <select
+            :value="store.projetosLegislativosFilters.ano"
+            @change="store.setProjetosLegislativosFilter('ano', ($event.target as HTMLSelectElement).value)"
+            class="w-full sm:w-auto sm:min-w-[160px] px-6 py-3.5 pr-12 rounded-full appearance-none cursor-pointer border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-black/20 hover:shadow-sm transition-shadow text-sm"
+          >
+            <option value="">Todos os anos</option>
+            <option v-for="ano in anosDisponiveis" :key="ano" :value="ano">
+              {{ ano }}
+            </option>
+          </select>
+          <ChevronDown class="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+        </div>
       </div>
 
       <!-- Linha 2: Deputados/Legislatura -->
       <div class="flex flex-col sm:flex-row gap-4">
         <!-- Search by deputado -->
         <div class="relative flex-1">
+          <Search class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
           <input
             type="text"
             placeholder="Buscar por deputado que votou..."
             :value="store.projetosLegislativosFilters.deputado"
             @input="onDeputadoInput"
-            class="w-full px-6 py-4 rounded-full border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-black/20 hover:shadow-md transition-shadow text-base"
+            class="w-full pl-12 pr-6 py-4 rounded-full border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-black/20 hover:shadow-md transition-shadow text-base"
           />
         </div>
 
         <!-- Legislatura -->
-        <select
-          :value="store.legislatura"
-          @change="store.setLegislatura(Number(($event.target as HTMLSelectElement).value))"
-          class="w-full sm:w-auto sm:min-w-[220px] px-6 py-4 sm:py-3.5 rounded-full border border-foreground/20 bg-background font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-black/20 text-sm"
-        >
-          <option :value="0">Todas as legislaturas</option>
-          <option v-for="leg in store.legislaturasDisponiveis" :key="leg" :value="leg">{{ formatLegislatura(leg) }}</option>
-        </select>
+        <div class="relative">
+          <select
+            :value="store.legislatura"
+            @change="store.setLegislatura(Number(($event.target as HTMLSelectElement).value))"
+            class="w-full sm:w-auto sm:min-w-[220px] px-6 py-3.5 pr-12 rounded-full appearance-none cursor-pointer border border-foreground/20 bg-background font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-black/20 hover:shadow-sm transition-shadow text-sm"
+          >
+            <option :value="0">Todas as legislaturas</option>
+            <option v-for="leg in store.legislaturasDisponiveis" :key="leg" :value="leg">{{ formatLegislatura(leg) }}</option>
+          </select>
+          <ChevronDown class="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/50 pointer-events-none" />
+        </div>
       </div>
     </div>
 
@@ -78,6 +89,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { Search, ChevronDown } from 'lucide-vue-next'
 import { useCamaraStore } from '@/stores/camara'
 
 const store = useCamaraStore()
