@@ -17,6 +17,7 @@ export interface ProjetoLegislativo {
   ementa: string
   dataApresentacao: string | null
   autor_principal: string
+  url_inteiro_teor?: string | null
 }
 
 export interface DeputadoDetail {
