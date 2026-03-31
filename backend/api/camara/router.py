@@ -274,7 +274,8 @@ def get_lista_proposicoes(
                     p.numero, 
                     p.ano, 
                     p.ementa, 
-                    p.data_apresentacao as "dataApresentacao"
+                    p.data_apresentacao as "dataApresentacao",
+                    p.url_inteiro_teor as "urlInteiroTeor"
                 FROM camara.proposicoes p
             """
             params = []
@@ -321,6 +322,7 @@ def get_lista_proposicoes(
                         "ano": r[3],
                         "ementa": r[4],
                         "dataApresentacao": r[5].isoformat() if hasattr(r[5], 'isoformat') else str(r[5]) if r[5] else None,
+                        "url_inteiro_teor": r[6],
                         "autor_principal": "Desconhecido"
                     }
                     for r in res
@@ -629,7 +631,8 @@ def get_comissoes_camara(legislatura: int = Query(None)):
                     o.sigla,
                     o.nome,
                     o.tipo_orgao AS tipo,
-                    COUNT(DISTINCT od.deputado_id) AS total_membros
+                    COUNT(DISTINCT od.deputado_id) AS total_membros,
+                    o.url_website
                 FROM camara.orgaos o
                 LEFT JOIN camara.orgaos_deputados od ON o.id = od.orgao_id
             """
@@ -697,6 +700,7 @@ def get_comissoes_camara(legislatura: int = Query(None)):
                     "nome": row[2],
                     "tipo": row[3],
                     "total_membros": row[4],
+                    "url_website": row[5],
                     "presidente": presidente,
                     "partidos_destaque": [p[0] for p in partidos_raw],
                     "membros": [

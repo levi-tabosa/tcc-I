@@ -43,14 +43,15 @@
             </div>
             <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
               <a
-                :href="`https://www.camara.leg.br/proposicoesWeb/fichadetramitacao?idProposicao=${projeto.id}`"
+                v-if="projeto.url_inteiro_teor"
+                :href="projeto.url_inteiro_teor"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="inline-flex items-center gap-1 text-sm text-primary hover:underline group"
                 @click.stop
               >
-                <span class="hidden sm:inline">Ver na Câmara</span>
-                <ExternalLink class="h-4 w-4 sm:h-3 sm:w-3 transition-transform group-hover:translate-x-0.5" />
+                <span class="hidden sm:inline">Inteiro Teor</span>
+                <FileText class="h-4 w-4 sm:h-3 sm:w-3 transition-transform group-hover:translate-x-0.5" />
               </a>
               <ChevronDown
                 class="h-4 w-4 text-muted-foreground transition-transform duration-200"
@@ -174,7 +175,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
-import { FileText, User, ExternalLink, ChevronDown, Vote, ChevronRight } from 'lucide-vue-next'
+import { FileText, User, ChevronDown, Vote, ChevronRight } from 'lucide-vue-next'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import BaseLoading from '@/components/ui/BaseLoading.vue'

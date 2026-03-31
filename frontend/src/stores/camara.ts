@@ -16,6 +16,7 @@ export interface ProjetoLegislativo {
   ano: number
   ementa: string
   dataApresentacao: string | null
+  url_inteiro_teor?: string | null
   autor_principal: string
 }
 

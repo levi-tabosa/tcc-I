@@ -349,7 +349,7 @@
           <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <h2 class="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
               <FileText class="h-5 w-5 text-primary" />
-              Últimas Despesas
+              Últimas Despesas (12 meses)
             </h2>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <!-- Table A -->
