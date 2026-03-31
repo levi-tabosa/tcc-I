@@ -134,7 +134,7 @@
           <!-- List -->
           <div v-else class="space-y-3">
             <BaseCard
-              v-for="comissao in comissoesFiltradas"
+              v-for="comissao in displayedComissoes"
               :key="comissao.id"
               hover
               class="transition-all cursor-pointer"
@@ -229,7 +229,19 @@
                 </div>
               </transition>
             </BaseCard>
+
+            <!-- Load more -->
+            <div v-if="comissoesFiltradas.length > displayedCount" class="flex justify-center mt-8 pb-4">
+              <button
+                @click="loadMore"
+                class="px-6 py-3 rounded-xl border border-border bg-background text-foreground font-medium hover:bg-muted transition-all active:scale-95 inline-flex items-center gap-2 shadow-sm"
+              >
+                <span>Carregar mais</span>
+                <ChevronDown class="h-4 w-4" />
+              </button>
+            </div>
           </div>
+
         </div>
       </section>
     </main>
@@ -268,6 +280,9 @@ const searchMemberQuery = ref('')
 const filterTipo = ref('')
 const filterLegislatura = ref(57) // Default to 57
 const availableLegislaturas = ref<number[]>([])
+
+const displayedCount = ref(15)
+const loadMoreCount = 15
 const selectedComissao = ref<Comissao | null>(null)
 const comissoes = ref<Comissao[]>([])
 const loading = ref(true)
@@ -315,6 +330,8 @@ onMounted(async () => {
 
 import { watch } from 'vue'
 watch(filterLegislatura, () => {
+  displayedCount.value = 15
+  selectedComissao.value = null
   fetchComissoes()
 })
 
@@ -343,6 +360,19 @@ const comissoesFiltradas = computed(() => {
 
     return matchTipo && matchComissao && matchMembro
   })
+})
+
+const displayedComissoes = computed(() => {
+  return comissoesFiltradas.value.slice(0, displayedCount.value)
+})
+
+const loadMore = () => {
+  displayedCount.value += loadMoreCount
+}
+
+watch([searchQuery, searchMemberQuery, filterTipo], () => {
+  displayedCount.value = 15
+  selectedComissao.value = null
 })
 
 const goToMember = (id: number) => {
