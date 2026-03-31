@@ -26,6 +26,17 @@
           </option>
         </select>
 
+        <!-- Ano -->
+        <select
+          :value="store.projetosLegislativosFilters.ano"
+          @change="store.setProjetosLegislativosFilter('ano', ($event.target as HTMLSelectElement).value)"
+          class="w-full sm:w-auto sm:min-w-[160px] px-6 py-4 sm:py-3.5 rounded-full border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-black/20 text-sm"
+        >
+          <option value="">Todos os anos</option>
+          <option v-for="ano in store.anosUnicosProjetosLegislativos" :key="ano" :value="ano">
+            {{ ano }}
+          </option>
+        </select>
       </div>
 
       <!-- Linha 2: Senadores/Legislatura -->
@@ -91,7 +102,7 @@ const onSenadorInput = (event: Event) => {
 }
 
 const hasActiveFilters = computed(() => {
-  return store.projetosLegislativosFilters.search || store.projetosLegislativosFilters.siglaTipo || store.projetosLegislativosFilters.senador
+  return store.projetosLegislativosFilters.search || store.projetosLegislativosFilters.siglaTipo || store.projetosLegislativosFilters.ano || store.projetosLegislativosFilters.senador
 })
 
 const formatLegislatura = (legis: number) => {

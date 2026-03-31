@@ -274,8 +274,7 @@ def get_lista_proposicoes(
                     p.numero, 
                     p.ano, 
                     p.ementa, 
-                    p.data_apresentacao as "dataApresentacao",
-                    p.url_inteiro_teor as "urlInteiroTeor"
+                    p.data_apresentacao as "dataApresentacao"
                 FROM camara.proposicoes p
             """
             params = []
@@ -322,7 +321,6 @@ def get_lista_proposicoes(
                         "ano": r[3],
                         "ementa": r[4],
                         "dataApresentacao": r[5].isoformat() if hasattr(r[5], 'isoformat') else str(r[5]) if r[5] else None,
-                        "url_inteiro_teor": r[6],
                         "autor_principal": "Desconhecido"
                     }
                     for r in res
