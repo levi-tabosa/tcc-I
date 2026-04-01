@@ -146,6 +146,7 @@ def get_estatisticas_senado(legislatura: int = Query(None)):
             return {
                 "total_senadores": total_senadores,
                 "total_gastos": total_gastos,
+                "total_regioes": len(regioes),
                 "senadores_por_regiao": [
                     {"name": r[0], "value": int(r[1])}
                     for r in regioes
@@ -322,14 +323,17 @@ WHERE codigo = %s;"""
             if not resultado:
                 raise HTTPException(status_code=404, detail="Senador não encontrado")
             
-            # 2. Buscar Resumo de Emendas
+            # 2. Buscar Resumo de Emendas (Optimized with CTE)
             query_emendas = """
+                WITH senadores_nomes AS (
+                    SELECT codigo as id, lower(nome_completo) as nome FROM senado.parlamentar
+                    UNION
+                    SELECT codigo as id, lower(nome_parlamentar) as nome FROM senado.parlamentar
+                )
                 SELECT SUM(e.valor_pago) as total_emendas
                 FROM portal.emendas e
-                JOIN senado.parlamentar s 
-                  ON (lower(e.nome_autor) = lower(s.nome_completo) 
-                      OR lower(e.nome_autor) = lower(s.nome_parlamentar))
-                WHERE s.codigo = %s
+                JOIN senadores_nomes s ON lower(e.nome_autor) = s.nome
+                WHERE s.id = %s
             """
             cursor.execute(query_emendas, (senador_codigo,))
             emendas_res_row = cursor.fetchone()
@@ -351,6 +355,14 @@ WHERE codigo = %s;"""
                     legis_set.add(int(str(m[1]).strip()))
             legislaturas_ativas = sorted(list(legis_set), reverse=True)
 
+            # 4. Determinar Legislatura Exibida
+            leg_exibida = legislatura
+            if legislatura:
+                if legislatura not in legislaturas_ativas:
+                    leg_exibida = legislaturas_ativas[0] if legislaturas_ativas else 57
+            else:
+                leg_exibida = legislaturas_ativas[0] if legislaturas_ativas else 57
+
             return {
                 "senador": {
                     "codigo": resultado[0],
@@ -364,7 +376,8 @@ WHERE codigo = %s;"""
                     "urlPagina": resultado[8],
                     "dataNascimento": resultado[9],
                     "total_emendas": total_emendas,
-                    "legislaturas_ativas": legislaturas_ativas
+                    "legislaturas_ativas": legislaturas_ativas,
+                    "legislatura_exibida": leg_exibida
                 }
             }
     except Exception as e:
@@ -729,17 +742,23 @@ def get_lista_emendas(
         with conn.cursor() as cursor:
             # 1. Total para paginação
             query_count = """
+                WITH senadores_nomes AS (
+                    SELECT codigo as id, lower(nome_completo) as nome FROM senado.parlamentar
+                    UNION
+                    SELECT codigo as id, lower(nome_parlamentar) as nome FROM senado.parlamentar
+                )
                 SELECT COUNT(*)
                 FROM portal.emendas e
-                JOIN senado.parlamentar s 
-                   ON (lower(e.nome_autor) = lower(s.nome_completo) 
-                       OR lower(e.nome_autor) = lower(s.nome_parlamentar))
-                WHERE e.autor_tipo = 'SENADOR'
+                JOIN senadores_nomes s ON lower(e.nome_autor) = s.nome
+                WHERE 1=1
             """
             params_count = []
             if nome_senador:
-                query_count += " AND s.nome_parlamentar ILIKE %s"
-                params_count.append(f"%{nome_senador}%")
+                query_count += """ AND s.id IN (
+                    SELECT codigo FROM senado.parlamentar 
+                    WHERE nome_completo ILIKE %s OR nome_parlamentar ILIKE %s
+                )"""
+                params_count.extend([f"%{nome_senador}%", f"%{nome_senador}%"])
             if ano:
                 query_count += " AND e.ano = %s"
                 params_count.append(ano)
@@ -748,10 +767,15 @@ def get_lista_emendas(
             total_items = cursor.fetchone()[0]
             total_paginas = (total_items + itens_por_pagina - 1) // itens_por_pagina
 
-            # 2. Dados paginados (Seleção Seletiva)
+            # 2. Dados paginados
             query = """
+                WITH senadores_nomes AS (
+                    SELECT codigo as id, lower(nome_parlamentar) as nome, nome_parlamentar as nome_senador FROM senado.parlamentar
+                    UNION
+                    SELECT codigo as id, lower(nome_completo) as nome, nome_parlamentar as nome_senador FROM senado.parlamentar
+                )
                 SELECT 
-                    s.nome_parlamentar as senador,
+                    s.nome_senador as senador,
                     e.codigo_emenda as codigo,
                     e.ano,
                     e.tipo_emenda as tipo,
@@ -759,14 +783,12 @@ def get_lista_emendas(
                     e.funcao,
                     e.localidade_gasto as localidade
                 FROM portal.emendas e
-                JOIN senado.parlamentar s 
-                  ON (lower(e.nome_autor) = lower(s.nome_completo) 
-                      OR lower(e.nome_autor) = lower(s.nome_parlamentar))
-                WHERE e.autor_tipo = 'SENADOR'
+                JOIN senadores_nomes s ON lower(e.nome_autor) = s.nome
+                WHERE 1=1
             """
             params = []
             if nome_senador:
-                query += " AND s.nome_parlamentar ILIKE %s"
+                query += " AND s.nome_senador ILIKE %s"
                 params.append(f"%{nome_senador}%")
             if ano:
                 query += " AND e.ano = %s"
@@ -816,31 +838,39 @@ def get_resumo_emendas():
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
         with conn.cursor() as cursor:
-            # 1. Totais Gerais
+            # 1. Totais Gerais (Optimized with CTE)
             cursor.execute("""
+                WITH senadores_nomes AS (
+                    SELECT codigo as id, lower(nome_completo) as nome FROM senado.parlamentar
+                    UNION
+                    SELECT codigo as id, lower(nome_parlamentar) as nome FROM senado.parlamentar
+                )
                 SELECT 
-                    COUNT(DISTINCT e.nome_autor) as total_senadores,
+                    COUNT(DISTINCT s.id) as total_senadores,
                     COUNT(DISTINCT e.localidade_gasto) as total_municipios,
-                    COUNT(DISTINCT e.funcao) as total_areas
+                    COUNT(DISTINCT e.funcao) as total_areas,
+                    COALESCE(SUM(e.valor_pago), 0) as valor_total
                 FROM portal.emendas e
-                JOIN senado.parlamentar s 
-                  ON (lower(e.nome_autor) = lower(s.nome_completo) 
-                      OR lower(e.nome_autor) = lower(s.nome_parlamentar))
+                JOIN senadores_nomes s ON lower(e.nome_autor) = s.nome
             """)
-            totais = cursor.fetchone()
+            totais_row = cursor.fetchone()
+            valor_total_global_totais = float(totais_row[3]) if totais_row[3] else 1.0
             
-            # 2. Distribuição por Área
+            # 2. Distribuição por Área (Optimized with CTE)
             cursor.execute("""
+                WITH senadores_nomes AS (
+                    SELECT lower(nome_completo) as nome FROM senado.parlamentar
+                    UNION
+                    SELECT lower(nome_parlamentar) as nome FROM senado.parlamentar
+                )
                 SELECT e.funcao, SUM(e.valor_pago) as valor_total
                 FROM portal.emendas e
-                JOIN senado.parlamentar s 
-                  ON (lower(e.nome_autor) = lower(s.nome_completo) 
-                      OR lower(e.nome_autor) = lower(s.nome_parlamentar))
+                JOIN senadores_nomes s ON lower(e.nome_autor) = s.nome
                 GROUP BY e.funcao
                 ORDER BY valor_total DESC
             """)
             areas_raw = cursor.fetchall()
-            valor_total_global = sum(float(r[1]) for r in areas_raw) if areas_raw else 1
+            valor_total_global = sum(float(r[1]) for r in areas_raw) if areas_raw else 1.0
 
             areas_formatadas = [
                 {
@@ -851,16 +881,20 @@ def get_resumo_emendas():
                 for r in areas_raw
             ]
 
-            # 3. Top 10 Senadores
+            # 3. Top 10 Senadores (Optimized with CTE)
             cursor.execute("""
+                WITH senadores_nomes AS (
+                    SELECT codigo as id, lower(nome_completo) as nome FROM senado.parlamentar
+                    UNION
+                    SELECT codigo as id, lower(nome_parlamentar) as nome FROM senado.parlamentar
+                )
                 SELECT 
-                    s.codigo, s.nome_parlamentar, s.sigla_partido, s.uf, s.url_foto,
+                    p.codigo, p.nome_parlamentar, p.sigla_partido, p.uf, p.url_foto,
                     SUM(e.valor_pago) as total_valor
                 FROM portal.emendas e
-                JOIN senado.parlamentar s 
-                  ON (lower(e.nome_autor) = lower(s.nome_completo) 
-                      OR lower(e.nome_autor) = lower(s.nome_parlamentar))
-                GROUP BY s.codigo, s.nome_parlamentar, s.sigla_partido, s.uf, s.url_foto
+                JOIN senadores_nomes s ON lower(e.nome_autor) = s.nome
+                JOIN senado.parlamentar p ON s.id = p.codigo
+                GROUP BY p.codigo, p.nome_parlamentar, p.sigla_partido, p.uf, p.url_foto
                 ORDER BY total_valor DESC
                 LIMIT 10
             """)
@@ -868,9 +902,9 @@ def get_resumo_emendas():
 
             return {
                 "totais": {
-                    "senadores": totais[0],
-                    "municipios": totais[1],
-                    "areas": totais[2],
+                    "senadores": totais_row[0],
+                    "municipios": totais_row[1],
+                    "areas": totais_row[2],
                     "valor_total": valor_total_global
                 },
                 "areas": areas_formatadas,
@@ -881,7 +915,7 @@ def get_resumo_emendas():
                         "partido": r[2] if r[2] else "S/P",
                         "estado": r[3] if r[3] else "BR",
                         "emendasTotal": float(r[5]),
-                        "foto": r[4] if r[4] else f"https://ui-avatars.com/api/?name={r[1]}&background=random"
+                        "foto": r[4] if r[4] and str(r[4]).strip() else "/placeholder-user.svg"
                     }
                     for r in top_senadores
                 ]
@@ -938,89 +972,6 @@ def get_votacao_materia(codigo_materia: int):
     except Exception as e:
         logging.error(f"Erro ao buscar votação: {e}")
         raise HTTPException(status_code=500, detail="Erro ao processar votação")
-    finally:
-        if conn:
-            db.release_db_connection(conn)
-
-
-@router.get("/estatisticas", summary="Obtém estatísticas gerais dos senadores")
-@lru_cache(maxsize=4)
-def get_estatisticas_gerais(legislatura: int = Query(None)):
-    conn = None
-    try:
-        conn = db.get_db_connection()
-        if not conn:
-            raise HTTPException(status_code=503, detail="Banco de dados indisponível")
-        
-        with conn.cursor() as cursor:
-            query = """SELECT COUNT(DISTINCT p.codigo) AS total_senadores
-FROM senado.parlamentar p
-INNER JOIN senado.mandato m ON p.codigo = m.codigo_parlamentar
-WHERE 1=1"""
-            params = []
-            if legislatura:
-                query += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
-                params.extend([str(legislatura), str(legislatura)])
-
-            cursor.execute(query, tuple(params))
-            total_senadores = cursor.fetchone()[0]
-
-            query_regioes_count = """SELECT COUNT(DISTINCT
-    CASE
-        WHEN p.uf IN ('AC','AP','AM','PA','RO','RR','TO') THEN 'Norte'
-        WHEN p.uf IN ('AL','BA','CE','MA','PB','PE','PI','RN','SE') THEN 'Nordeste'
-        WHEN p.uf IN ('DF','GO','MT','MS') THEN 'Centro-Oeste'
-        WHEN p.uf IN ('ES','MG','RJ','SP') THEN 'Sudeste'
-        WHEN p.uf IN ('PR','RS','SC') THEN 'Sul'
-    END
-) AS total_regioes
-FROM senado.parlamentar p
-INNER JOIN senado.mandato m ON p.codigo = m.codigo_parlamentar
-WHERE p.uf IS NOT NULL"""
-            params = []
-            if legislatura:
-                query_regioes_count += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
-                params.extend([str(legislatura), str(legislatura)])
-            cursor.execute(query_regioes_count, tuple(params))
-            total_regioes = cursor.fetchone()[0]
-
-            query_regioes = """SELECT 
-    CASE
-        WHEN p.uf IN ('AC','AP','AM','PA','RO','RR','TO') THEN 'Norte'
-        WHEN p.uf IN ('AL','BA','CE','MA','PB','PE','PI','RN','SE') THEN 'Nordeste'
-        WHEN p.uf IN ('DF','GO','MT','MS') THEN 'Centro-Oeste'
-        WHEN p.uf IN ('ES','MG','RJ','SP') THEN 'Sudeste'
-        WHEN p.uf IN ('PR','RS','SC') THEN 'Sul'
-        ELSE 'Outros'
-    END AS regiao,
-    COUNT(DISTINCT p.codigo) AS quantidade
-FROM senado.parlamentar p
-INNER JOIN senado.mandato m ON p.codigo = m.codigo_parlamentar
-WHERE p.uf IS NOT NULL"""
-            params = []
-            if legislatura:
-                query_regioes += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
-                params.extend([str(legislatura), str(legislatura)])
-                
-            query_regioes += " GROUP BY regiao ORDER BY quantidade DESC;"
-            cursor.execute(query_regioes, tuple(params))
-            regioes = cursor.fetchall()
-            
-            return {
-                "total_senadores": total_senadores,
-                "total_regioes": total_regioes,
-                "senadores_por_regiao": [
-                    {
-                        "name": r[0],
-                        "value": r[1]
-                    }
-                    for r in regioes
-                ]
-            }
-            
-    except Exception as e:
-        logging.error(f"Erro ao buscar estatísticas gerais do senado: {e}")
-        raise HTTPException(status_code=500, detail="Erro ao processar estatísticas gerais")
     finally:
         if conn:
             db.release_db_connection(conn)

@@ -38,25 +38,28 @@
 
       <BaseLoading v-if="store.loadingStats" message="Carregando estatísticas da Câmara..." full-page />
 
-      <!-- Overview -->
-      <section class="py-8 bg-muted/30">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <BaseCard v-for="stat in overviewStats" :key="stat.label" hover>
-              <div class="flex items-center gap-4">
-                <div :class="`p-3 rounded-xl ${stat.bgColor}`">
-                  <component :is="stat.icon" :class="`h-6 w-6 ${stat.color}`" />
+      <template v-else-if="store.generalStats">
+        <!-- Overview -->
+        <section class="py-8 bg-muted/30">
+          <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <BaseCard v-for="stat in overviewStats" :key="stat.label" hover>
+                <div class="flex items-center gap-4">
+                  <div :class="`p-3 rounded-xl ${stat.bgColor}`">
+                    <component :is="stat.icon" :class="`h-6 w-6 ${stat.color}`" />
+                  </div>
+                  <div>
+                    <p class="text-sm text-muted-foreground">{{ stat.label }}</p>
+                    <p class="text-2xl font-bold text-foreground">{{ stat.value }}</p>
+                    <p v-if="stat.subvalue" class="text-[10px] text-muted-foreground mt-0.5">{{ stat.subvalue }}</p>
+                  </div>
                 </div>
-                <div>
-                  <p class="text-sm text-muted-foreground">{{ stat.label }}</p>
-                  <p class="text-2xl font-bold text-foreground">{{ stat.value }}</p>
-                  <p v-if="stat.subvalue" class="text-[10px] text-muted-foreground mt-0.5">{{ stat.subvalue }}</p>
-                </div>
-              </div>
-            </BaseCard>
+              </BaseCard>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+
+        <!-- Gráficos e Tabelas -->
 
       <!-- Gastos por Partido -->
       <section class="py-8">
@@ -182,7 +185,7 @@
 
                 <!-- Foto -->
                 <img
-                  :src="`https://www.camara.leg.br/internet/deputado/bandep/${dep.id}.jpg`"
+                  :src="`https://www.camara.leg.br/internet/deputado/bandep/${dep.id}.jpg` || '/placeholder-user.svg'"
                   :alt="dep.nome"
                   class="h-10 w-10 rounded-full object-cover flex-shrink-0 border-2 border-border"
                   @error="onImgError"
@@ -223,13 +226,14 @@
           </div>
         </div>
       </section>
+      </template>
     </main>
   </div>
 </template>
 
 <script setup lang="ts">
 import { Banknote, Users, Building2, ChevronRight } from 'lucide-vue-next'
-import { onMounted, computed, ref } from 'vue'
+import { onMounted, computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseLoading from '@/components/ui/BaseLoading.vue'
@@ -249,6 +253,13 @@ const formatLegislatura = (legis: number) => {
   if (legis === 53) return '53ª (2007-2011)'
   return `${legis}ª`
 }
+
+watch(() => store.legislatura, async () => {
+  await Promise.all([
+    store.fetchEstatisticasGerais(),
+    store.fetchEstatisticasDeputados()
+  ])
+})
 
 onMounted(() => {
   store.fetchEstatisticasGerais()

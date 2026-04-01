@@ -42,7 +42,7 @@
       <!-- Loading state -->
       <BaseLoading v-if="loading" message="Carregando dados do Senado..." full-page />
 
-      <template v-else>
+      <template v-else-if="store.generalStats">
         <!-- Overview Cards -->
         <section class="py-8 bg-muted/30">
           <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -189,7 +189,7 @@
 
                   <!-- Foto -->
                   <img
-                    :src="senador.foto"
+                    :src="senador.foto || '/placeholder-user.svg'"
                     :alt="senador.nome"
                     class="h-10 w-10 rounded-full object-cover flex-shrink-0 border-2 border-border"
                     @error="onImgError"

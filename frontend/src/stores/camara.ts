@@ -225,6 +225,12 @@ export const useCamaraStore = defineStore("camara", () => {
 
       const data = await response.json()
       currentDeputado.value = data
+      
+      // Sincronizar legislatura exibida com o seletor
+      if (data.legislatura_exibida && data.legislatura_exibida !== legislatura.value) {
+        legislatura.value = data.legislatura_exibida
+      }
+
       currentDespesas.value = data.despesas || []
       currentCategorias.value = data.categorias || []
       totalDespesas.value = data.total_despesas || 0

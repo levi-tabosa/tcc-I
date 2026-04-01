@@ -96,7 +96,7 @@
                   <span class="text-lg sm:text-xl font-black text-muted-foreground/30 w-6 sm:w-8 group-hover:text-primary/50 transition-colors">{{ index + 1 }}º</span>
                 <div class="h-10 w-10 sm:h-14 sm:w-14 rounded-xl sm:rounded-2xl bg-muted overflow-hidden border-2 border-primary/20 group-hover:border-primary/50 group-hover:scale-110 transition-all duration-300 shadow-sm flex-shrink-0">
                   <img 
-                    :src="deputado.foto" 
+                    :src="deputado.foto || '/placeholder-user.svg'" 
                     :alt="deputado.nome"
                     class="h-full w-full object-cover object-top"
                     @error="($event.target as HTMLImageElement).src = '/placeholder-user.svg'"

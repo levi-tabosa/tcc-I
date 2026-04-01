@@ -48,7 +48,7 @@
                 <div class="text-center">
                   <div class="h-32 w-32 mx-auto rounded-full border-4 border-primary/20 overflow-hidden bg-primary/10 flex items-center justify-center">
                     <img
-                      :src="store.currentDeputado.foto"
+                      :src="store.currentDeputado.foto || '/placeholder-user.svg'"
                       :alt="store.currentDeputado.nome_civil"
                       class="w-full h-full object-cover"
                       @error="($event.target as HTMLImageElement).src = '/placeholder-user.svg'"

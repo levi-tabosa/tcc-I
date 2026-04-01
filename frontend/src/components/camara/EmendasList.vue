@@ -59,6 +59,11 @@ import { ref, onMounted } from 'vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import BaseLoading from '@/components/ui/BaseLoading.vue'
+import { useCamaraStore } from '@/stores/camara'
+import { storeToRefs } from 'pinia'
+
+const store = useCamaraStore()
+const { legislatura, filters } = storeToRefs(store)
 
 // Teria que ser tipado com uma interface correta, mas any resolve por hora
 const emendas = ref<any[]>([])
@@ -78,18 +83,20 @@ async function carregarEmendas(pagina = 1) {
   }
 
   try {
-    const response = await fetch(`${apiUrl}/api/camara/emendas?legislatura=${legislatura.value}&pagina=${pagina}&busca=${busca.value}`)
+    const busca = filters.value.search || ''
+    const response = await fetch(`${API_URL}/api/camara/emendas?legislatura=${legislatura.value}&pagina=${pagina}&busca=${busca}`)
     
     if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const dados = await response.json()
+    const listaEmendas = dados.emendas || []
     
     if (pagina === 1) {
-      emendas.value = dados
+      emendas.value = listaEmendas
     } else {
-      emendas.value.push(...dados)
+      emendas.value.push(...listaEmendas)
     }
     
   } catch (erro) {

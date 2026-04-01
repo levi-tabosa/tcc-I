@@ -54,8 +54,7 @@
                     class="flex items-center gap-3 w-full px-4 py-2.5 text-left hover:bg-muted transition-colors"
                     @mousedown.prevent="selectSenador('A', sen)"
                   >
-                    <img
-                      :src="sen.foto"
+                      :src="sen.foto || '/placeholder-user.svg'"
                       :alt="sen.nome"
                       class="h-8 w-8 rounded-full object-cover border border-border"
                       @error="($event.target as HTMLImageElement).src = '/placeholder-user.svg'"
@@ -70,7 +69,7 @@
               <!-- Selected preview A -->
               <div v-if="selectedA" class="mt-3 flex items-center gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
                 <img
-                  :src="selectedA.foto"
+                  :src="selectedA.foto || '/placeholder-user.svg'"
                   :alt="selectedA.nome"
                   class="h-10 w-10 rounded-full object-cover border-2 border-primary/30"
                   @error="($event.target as HTMLImageElement).src = '/placeholder-user.svg'"
@@ -119,10 +118,10 @@
                     @mousedown.prevent="selectSenador('B', sen)"
                   >
                     <img
-                      :src="sen.foto"
+                      :src="sen.foto || '/placeholder-user.svg'"
                       :alt="sen.nome"
                       class="h-8 w-8 rounded-full object-cover border border-border"
-                      @error="($event.target as HTMLImageElement).src = '/placeholder-user.jpg'"
+                      @error="($event.target as HTMLImageElement).src = '/placeholder-user.svg'"
                     />
                     <div>
                       <p class="text-sm font-medium text-foreground">{{ sen.nome }}</p>
@@ -134,7 +133,7 @@
               <!-- Selected preview B -->
               <div v-if="selectedB" class="mt-3 flex items-center gap-3 p-3 rounded-lg bg-accent/5 border border-accent/20">
                 <img
-                  :src="selectedB.foto"
+                  :src="selectedB.foto || '/placeholder-user.svg'"
                   :alt="selectedB.nome"
                   class="h-10 w-10 rounded-full object-cover border-2 border-accent/30"
                   @error="($event.target as HTMLImageElement).src = '/placeholder-user.svg'"
@@ -177,7 +176,7 @@
                 <div class="text-center">
                   <div class="h-24 w-24 mx-auto rounded-full border-4 border-primary/20 overflow-hidden bg-primary/10">
                     <img
-                      :src="senadorA.foto"
+                      :src="senadorA.foto || '/placeholder-user.svg'"
                       :alt="senadorA.nome_civil"
                       class="w-full h-full object-cover"
                       @error="($event.target as HTMLImageElement).src = '/placeholder-user.svg'"
@@ -206,7 +205,7 @@
                 <div class="text-center">
                   <div class="h-24 w-24 mx-auto rounded-full border-4 border-accent/20 overflow-hidden bg-accent/10">
                     <img
-                      :src="senadorB.foto"
+                      :src="senadorB.foto || '/placeholder-user.svg'"
                       :alt="senadorB.nome_civil"
                       class="w-full h-full object-cover"
                       @error="($event.target as HTMLImageElement).src = '/placeholder-user.svg'"
@@ -341,7 +340,7 @@
           <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <h2 class="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
               <FileText class="h-5 w-5 text-primary" />
-              Últimas Despesas (12 meses)
+              Últimas Despesas
             </h2>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <!-- Table A -->

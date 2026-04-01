@@ -24,7 +24,7 @@
         <div class="flex items-start gap-4">
           <div class="h-16 w-16 rounded-full border-2 border-purple-200 overflow-hidden bg-purple-50 flex items-center justify-center shrink-0">
             <img
-              :src="senador.foto"
+              :src="senador.foto || '/placeholder-user.svg'"
               :alt="senador.nome"
               class="w-full h-full object-cover"
               @error="($event.target as HTMLImageElement).src = '/placeholder-user.svg'"
