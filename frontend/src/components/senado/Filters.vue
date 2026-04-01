@@ -50,6 +50,7 @@
           @change="store.setLegislatura(Number(($event.target as HTMLSelectElement).value))"
           class="input-base px-4 py-2.5 pr-10 rounded-full appearance-none cursor-pointer w-full sm:w-auto sm:min-w-[140px] border-purple-600/30 bg-purple-50 font-semibold text-purple-700"
         >
+          <option :value="0">Todas as legislaturas</option>
           <option v-for="leg in store.legislaturasDisponiveis" :key="leg" :value="leg">{{ formatLegislatura(leg) }}</option>
         </select>
         <ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-purple-700 pointer-events-none" />
@@ -80,6 +81,7 @@ const hasActiveFilters = computed(() => {
 })
 
 const formatLegislatura = (legis: number) => {
+  if (legis === 0) return 'Todas as legislaturas'
   if (legis === 57) return '57ª (2023-2027)'
   if (legis === 56) return '56ª (2019-2023)'
   if (legis === 55) return '55ª (2015-2019)'

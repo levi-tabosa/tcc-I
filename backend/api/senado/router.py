@@ -361,7 +361,8 @@ WHERE codigo = %s;"""
                 if legislatura not in legislaturas_ativas:
                     leg_exibida = legislaturas_ativas[0] if legislaturas_ativas else 57
             else:
-                leg_exibida = legislaturas_ativas[0] if legislaturas_ativas else 57
+                # Se legislatura for 0 ou None, passamos 0 para indicar 'Todas'
+                leg_exibida = 0
 
             return {
                 "senador": {
@@ -1049,7 +1050,7 @@ def get_emendas_lista_senador(senador_codigo: int, pagina: int = 1):
 
 @router.get("/empresas/estatisticas", summary="Obtém estatísticas gerais das empresas")
 @lru_cache(maxsize=4)
-def get_estatisticas_empresas():
+def get_estatisticas_empresas(legislatura: int = Query(None)):
     conn = None
     try:
         conn = db.get_db_connection()
@@ -1059,37 +1060,68 @@ def get_estatisticas_empresas():
         with conn.cursor() as cursor:
             query_gerais = """
                SELECT
-                    COUNT(DISTINCT cpf_cnpj) as total_empresas,
-                    SUM(valor_reembolsado) as total_pago,
+                    COUNT(DISTINCT d.cpf_cnpj) as total_empresas,
+                    SUM(d.valor_reembolsado) as total_pago,
                     COUNT(*) as total_contratos
-                FROM senado.despesa_ceaps;
+                FROM senado.despesa_ceaps d
+                LEFT JOIN senado.parlamentar p ON d.cod_senador = p.codigo
+                JOIN senado.mandato m ON p.codigo = m.codigo_parlamentar
+                WHERE 1=1
             """
-            cursor.execute(query_gerais)
+            params_gerais = []
+            if legislatura:
+                query_gerais += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
+                params_gerais.extend([str(legislatura), str(legislatura)])
+            
+            cursor.execute(query_gerais, tuple(params_gerais))
             row_gerais = cursor.fetchone()
 
             query_top_10 = """
                 SELECT
-                    fornecedor as empresa,
-                    SUM(valor_reembolsado) as valor_total
-                FROM senado.despesa_ceaps
-                GROUP BY fornecedor
-                ORDER BY valor_total DESC
-                LIMIT 10;
+                    d.fornecedor as empresa,
+                    SUM(d.valor_reembolsado) as valor_total
+                FROM senado.despesa_ceaps d
+                LEFT JOIN senado.parlamentar p ON d.cod_senador = p.codigo
+                JOIN senado.mandato m ON p.codigo = m.codigo_parlamentar
+                WHERE 1=1
             """
-            cursor.execute(query_top_10)
+            params_top10 = []
+            if legislatura:
+                query_top_10 += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
+                params_top10.extend([str(legislatura), str(legislatura)])
+            
+            query_top_10 += " GROUP BY d.fornecedor ORDER BY valor_total DESC LIMIT 10"
+            cursor.execute(query_top_10, tuple(params_top10))
             res_top_10 = cursor.fetchall()
             
-            query_top_20 = """WITH EmpresaStats AS (
+            query_top_20 = """
+WITH EmpresaStats AS (
     SELECT
-        fornecedor,
-        cpf_cnpj,
-        SUM(valor_reembolsado) as valor_total,
+        d.fornecedor,
+        d.cpf_cnpj,
+        SUM(d.valor_reembolsado) as valor_total,
         COUNT(*) as contratos
-    FROM senado.despesa_ceaps
-    GROUP BY fornecedor, cpf_cnpj
+    FROM senado.despesa_ceaps d
+    LEFT JOIN senado.parlamentar p ON d.cod_senador = p.codigo
+    JOIN senado.mandato m ON p.codigo = m.codigo_parlamentar
+    WHERE 1=1
+"""
+            if legislatura:
+                query_top_20 += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
+            
+            query_top_20 += """
+    GROUP BY d.fornecedor, d.cpf_cnpj
 ),
 TotalGeral AS (
-    SELECT SUM(valor_reembolsado) as soma_total FROM senado.despesa_ceaps
+    SELECT SUM(d.valor_reembolsado) as soma_total FROM senado.despesa_ceaps d
+    LEFT JOIN senado.parlamentar p ON d.cod_senador = p.codigo
+    JOIN senado.mandato m ON p.codigo = m.codigo_parlamentar
+    WHERE 1=1
+"""
+            if legislatura:
+                query_top_20 += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
+                
+            query_top_20 += """
 ),
 EmpresaPartidos AS (
     SELECT
@@ -1098,6 +1130,13 @@ EmpresaPartidos AS (
         STRING_AGG(DISTINCT p.sigla_partido, ', ') as partidos
     FROM senado.despesa_ceaps d
     LEFT JOIN senado.parlamentar p ON d.cod_senador = p.codigo
+    JOIN senado.mandato m ON p.codigo = m.codigo_parlamentar
+    WHERE 1=1
+"""
+            if legislatura:
+                query_top_20 += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
+
+            query_top_20 += """
     GROUP BY d.fornecedor, d.cpf_cnpj
 )
 SELECT
@@ -1107,14 +1146,18 @@ SELECT
     es.cpf_cnpj as cnpj,
     es.valor_total,
     es.contratos,
-    ROUND((es.valor_total / tg.soma_total) * 100, 2) as percentual
+    ROUND((es.valor_total / NULLIF(tg.soma_total, 0)) * 100, 2) as percentual
 FROM EmpresaStats es
 JOIN EmpresaPartidos ep ON es.fornecedor = ep.fornecedor AND es.cpf_cnpj = ep.cpf_cnpj
 CROSS JOIN TotalGeral tg
 ORDER BY es.valor_total DESC
 LIMIT 20;
-            """
-            cursor.execute(query_top_20)
+"""
+            params_top20 = []
+            if legislatura:
+                params_top20.extend([str(legislatura), str(legislatura), str(legislatura), str(legislatura), str(legislatura), str(legislatura)])
+            
+            cursor.execute(query_top_20, tuple(params_top20))
             res_top_20 = cursor.fetchall()
             
             return {

@@ -2,12 +2,40 @@
   <div class="min-h-screen flex flex-col">
     <main class="flex-1">
       <!-- Hero -->
-      <section class="bg-gradient-to-br from-chart-2/10 via-background to-primary/10 py-12">
+      <section class="bg-gradient-to-br from-chart-2/10 via-background to-primary/10 py-12 border-b border-border/50">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h1 class="text-3xl font-bold text-foreground sm:text-4xl">Ranking de Fornecedores da Câmara</h1>
-          <p class="mt-2 text-muted-foreground max-w-2xl">
-            Conheça as empresas que mais recebem recursos da Cota para o Exercício da Atividade Parlamentar (CEAP) dos deputados federais. Transparência detalhada em gastos e pagamentos.
-          </p>
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div class="flex items-start gap-4">
+              <div class="p-3 rounded-2xl bg-primary/10 border border-primary/20 hidden sm:block">
+                <Building2 class="h-8 w-8 text-primary" />
+              </div>
+              <div>
+                <h1 class="text-3xl font-bold text-foreground sm:text-4xl tracking-tight leading-tight">
+                  Ranking de Fornecedores da Câmara
+                </h1>
+                <p class="mt-2 text-muted-foreground max-w-2xl text-lg leading-relaxed">
+                  Quem são os maiores fornecedores da Câmara dos Deputados? Monitore quais empresas recebem recursos da Cota Parlamentar (CEAP) e fiscalize detalhadamente o destino dessas verbas.
+                </p>
+              </div>
+            </div>
+
+            <!-- Legislatura Selector -->
+            <div class="flex items-center gap-3 bg-white/50 backdrop-blur-sm px-5 py-2.5 rounded-2xl border border-primary/20 shadow-sm self-start md:self-center">
+              <div class="flex flex-col">
+                <span class="text-[10px] font-bold text-primary uppercase tracking-widest opacity-70">Filtrar por</span>
+                <div class="flex items-center gap-2">
+                  <select
+                    :value="store.legislatura"
+                    @change="store.setLegislatura(Number(($event.target as HTMLSelectElement).value))"
+                    class="text-sm font-bold text-primary bg-transparent border-none p-0 focus:ring-0 cursor-pointer min-w-[140px]"
+                  >
+                    <option :value="0">Histórico Completo</option>
+                    <option v-for="leg in store.legislaturasDisponiveis" :key="leg" :value="leg">{{ formatLegislatura(leg) }}</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -133,9 +161,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { Building2, Banknote, TrendingUp } from 'lucide-vue-next'
 import BaseCard from '@/components/ui/BaseCard.vue'
+import { useCamaraStore } from '@/stores/camara'
 
 interface Empresa {
   rank: number
@@ -153,14 +182,15 @@ interface Stats {
   total_contratos: number
 }
 
+const store = useCamaraStore()
+const loading = ref(true)
+const error = ref<string | null>(null)
+const topEmpresas = ref<Empresa[]>([])
 const stats = ref<Stats>({
   total_empresas: 0,
   total_pago: 0,
   total_contratos: 0
 })
-
-const topEmpresas = ref<Empresa[]>([])
-const loading = ref(true)
 
 const formatCurrency = (value: number) => {
   if (value >= 1000000) {
@@ -173,12 +203,24 @@ const formatNumber = (value: number) => {
   return value.toLocaleString('pt-BR')
 }
 
-const apiUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
-const error = ref<string | null>(null)
+const formatLegislatura = (legis: number) => {
+  if (legis === 0) return 'Todas as legislaturas'
+  if (legis === 57) return '57ª (2023-2027)'
+  if (legis === 56) return '56ª (2019-2023)'
+  if (legis === 55) return '55ª (2015-2019)'
+  if (legis === 54) return '54ª (2011-2015)'
+  if (legis === 53) return '53ª (2007-2011)'
+  return `${legis}ª`
+}
 
-onMounted(async () => {
+const apiUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+
+const fetchStats = async () => {
+  loading.value = true
+  error.value = null
   try {
-    const response = await fetch(`${apiUrl}/api/camara/empresas/estatisticas?limit=20`)
+    const legParam = store.legislatura ? `&legislatura=${store.legislatura}` : ''
+    const response = await fetch(`${apiUrl}/api/camara/empresas/estatisticas?limit=20${legParam}`)
     
     if (!response.ok) throw new Error(`Erro na API: ${response.status}`)
     
@@ -197,5 +239,14 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
+}
+
+onMounted(() => {
+  fetchStats()
+})
+
+watch(() => store.legislatura, () => {
+  fetchStats()
 })
 </script>
+

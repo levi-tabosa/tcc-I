@@ -698,7 +698,8 @@ def get_perfil_deputado(deputado_id: int, legislatura: int = Query(None)):
                     raise HTTPException(status_code=404, detail=f"Deputado com ID {deputado_id} não possui mandatos registrados")
 
             # A legislatura efetivamente encontrada (pode ser diferente da pedida)
-            leg_efetiva = row[11]
+            # Se legislatura for 0, tratamos como 'Todas', então leg_efetiva fica None para não filtrar despesas
+            leg_efetiva = row[11] if legislatura else None
             
             res = {
                 "id": row[0],
@@ -1028,7 +1029,7 @@ def get_estatisticas_despesas(legislatura: int = Query(None)):
 
 @router.get("/empresas/estatisticas", summary="Obtém as estatísticas e ranking das empresas contratadas")
 @lru_cache(maxsize=4)
-def get_estatisticas_empresas(limit: int = 20):
+def get_estatisticas_empresas(limit: int = 20, legislatura: int = Query(None)):
     conn = None
     try:
         conn = db.get_db_connection()
@@ -1037,30 +1038,42 @@ def get_estatisticas_empresas(limit: int = 20):
         
         with conn.cursor() as cursor:
             # 1. Estatísticas Gerais
-            cursor.execute("""
+            # 1. Estatísticas Gerais
+            query_gerais = """
                 SELECT 
-                    COUNT(DISTINCT cnpj_cpf_fornecedor) as total_empresas,
-                    SUM(valor_documento) as total_pago,
+                    COUNT(DISTINCT d.cnpj_cpf_fornecedor) as total_empresas,
+                    SUM(d.valor_documento) as total_pago,
                     COUNT(*) as total_contratos
-                FROM camara.deputados_despesas
-                WHERE LENGTH(cnpj_cpf_fornecedor) > 11
-            """)
+                FROM camara.deputados_despesas d
+                JOIN camara.deputados_mandatos m ON d.mandato_id = m.id
+                WHERE LENGTH(d.cnpj_cpf_fornecedor) > 11
+            """
+            params_geral = []
+            if legislatura:
+                query_gerais += " AND m.legislatura_id = %s"
+                params_geral.append(legislatura)
+            
+            cursor.execute(query_gerais, tuple(params_geral))
             res_stats = cursor.fetchone()
             total_geral_empresas = float(res_stats[1]) if res_stats[1] else 1.0
 
             # 2. Ranking de Empresas
-            cursor.execute("""
+            query_top = """
             WITH top_fornecedores AS (
                 SELECT 
-                    cnpj_cpf_fornecedor,
-                    MAX(nome_fornecedor) as nome,
-                    SUM(valor_documento) as total_valor,
+                    d.cnpj_cpf_fornecedor,
+                    MAX(d.nome_fornecedor) as nome,
+                    SUM(d.valor_documento) as total_valor,
                     COUNT(*) as qtd_contratos
-                FROM camara.deputados_despesas
-                WHERE LENGTH(cnpj_cpf_fornecedor) > 11
-                GROUP BY cnpj_cpf_fornecedor
-                ORDER BY total_valor DESC
-                LIMIT %s
+                FROM camara.deputados_despesas d
+                JOIN camara.deputados_mandatos m ON d.mandato_id = m.id
+                WHERE LENGTH(d.cnpj_cpf_fornecedor) > 11
+            """
+            if legislatura:
+                query_top += " AND m.legislatura_id = %s"
+            
+            query_top += """
+                GROUP BY d.cnpj_cpf_fornecedor
             ),
             partidos_pagadores AS (
                 SELECT 
@@ -1089,7 +1102,15 @@ def get_estatisticas_empresas(limit: int = 20):
                 ) as principais_partidos
             FROM top_fornecedores tf
             ORDER BY tf.total_valor DESC
-            """, (limit,))
+            LIMIT %s
+            """
+            
+            params_ranking = []
+            if legislatura:
+                params_ranking.append(legislatura)
+            params_ranking.append(limit)
+            
+            cursor.execute(query_top, tuple(params_ranking))
             res_ranking = cursor.fetchall()
             
             ranking_formatado = []

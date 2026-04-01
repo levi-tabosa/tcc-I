@@ -18,6 +18,7 @@
               class="text-sm font-bold text-purple-700 bg-transparent border-none p-0 focus:ring-0 cursor-pointer"
             >
               <template v-if="store.currentSenador?.legislaturas_ativas?.length">
+                <option :value="0">Todas as legislaturas (Histórico)</option>
                 <option v-for="legis in store.currentSenador.legislaturas_ativas" :key="legis" :value="legis">
                   {{ formatLegislatura(legis) }}
                 </option>
@@ -297,6 +298,7 @@ const formatDate = (dateString: string) => {
 }
 
 const formatLegislatura = (legis: number) => {
+  if (legis === 0) return 'Todas as legislaturas (Histórico)'
   if (legis === 57) return '57ª Legislatura (2023-2027)'
   if (legis === 56) return '56ª Legislatura (2019-2023)'
   if (legis === 55) return '55ª Legislatura (2015-2019)'

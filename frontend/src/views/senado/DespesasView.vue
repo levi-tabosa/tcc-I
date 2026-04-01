@@ -26,6 +26,7 @@
                 @change="store.setLegislatura(Number(($event.target as HTMLSelectElement).value))"
                 class="text-sm font-bold text-purple-700 bg-transparent border-none p-0 focus:ring-0 cursor-pointer"
               >
+                <option :value="0">Todas as legislaturas</option>
                 <option v-for="leg in store.legislaturasDisponiveis" :key="leg" :value="leg">{{ formatLegislatura(leg) }}</option>
               </select>
             </div>
@@ -251,6 +252,7 @@ const filterPartido = ref('')
 const loading = ref(true)
 
 const formatLegislatura = (legis: number) => {
+  if (legis === 0) return 'Todas as legislaturas'
   if (legis === 57) return '57ª (2023-2027)'
   if (legis === 56) return '56ª (2019-2023)'
   if (legis === 55) return '55ª (2015-2019)'
