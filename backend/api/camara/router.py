@@ -55,14 +55,21 @@ def get_lista_emendas(
         with conn.cursor() as cursor:
             # 1. Total para paginação
             query_count = """
+                WITH parlamentares_nomes AS (
+                    SELECT id, lower(nome_civil) as nome FROM camara.deputados
+                    UNION
+                    SELECT deputado_id as id, lower(nome_eleitoral) as nome FROM camara.deputados_mandatos
+                )
                 SELECT COUNT(*)
                 FROM portal.emendas e
-                JOIN camara.deputados d ON lower(e.nome_autor) = lower(d.nome_civil)
+                JOIN parlamentares_nomes p ON lower(e.autor) = p.nome
                 WHERE 1=1
             """
             params_count = []
             if nome_deputado:
-                query_count += " AND d.nome_civil ILIKE %s"
+                query_count += """ AND p.id IN (
+                    SELECT id FROM camara.deputados WHERE nome_civil ILIKE %s
+                )"""
                 params_count.append(f"%{nome_deputado}%")
             if ano:
                 query_count += " AND e.ano = %s"
@@ -72,24 +79,29 @@ def get_lista_emendas(
             total_items = cursor.fetchone()[0]
             total_paginas = (total_items + itens_por_pagina - 1) // itens_por_pagina
 
-            # 2. Dados paginados (Seleção Seletiva)
+            # 2. Dados paginados
             query = """
+                WITH parlamentares_nomes AS (
+                    SELECT id, lower(nome_civil) as nome, nome_civil FROM camara.deputados
+                    UNION
+                    SELECT deputado_id as id, lower(nome_eleitoral) as nome, nome_eleitoral as nome_civil FROM camara.deputados_mandatos
+                )
                 SELECT 
-                    d.nome_civil as deputado,
+                    p.nome_civil as deputado,
                     e.codigo_emenda as codigo,
                     e.ano,
                     e.tipo_emenda as tipo,
                     e.valor_pago,
                     e.funcao,
                     e.localidade_gasto as localidade,
-                    d.id as deputado_id
+                    p.id as deputado_id
                 FROM portal.emendas e
-                JOIN camara.deputados d ON lower(e.nome_autor) = lower(d.nome_civil)
+                JOIN parlamentares_nomes p ON lower(e.autor) = p.nome
                 WHERE 1=1
             """
             params = []
             if nome_deputado:
-                query += " AND d.nome_civil ILIKE %s"
+                query += " AND p.nome_civil ILIKE %s"
                 params.append(f"%{nome_deputado}%")
             if ano:
                 query += " AND e.ano = %s"
@@ -141,40 +153,73 @@ def get_resumo_emendas():
         with conn.cursor() as cursor:
             # 1. Totais Gerais
             cursor.execute("""
+                WITH parlamentares_nomes AS (
+                    SELECT id FROM camara.deputados
+                    UNION
+                    SELECT deputado_id as id FROM camara.deputados_mandatos
+                ),
+                deputados_emendas AS (
+                    SELECT e.id, e.valor_pago, e.localidade_gasto, e.funcao, p.id as deputado_id
+                    FROM portal.emendas e
+                    JOIN (
+                        SELECT id, lower(nome_civil) as nome FROM camara.deputados
+                        UNION
+                        SELECT deputado_id as id, lower(nome_eleitoral) as nome FROM camara.deputados_mandatos
+                    ) p ON lower(e.autor) = p.nome
+                )
                 SELECT 
-                    COUNT(DISTINCT nome_autor) as total_deputados,
+                    COUNT(DISTINCT deputado_id) as total_deputados,
                     COUNT(DISTINCT localidade_gasto) as total_municipios,
-                    COUNT(DISTINCT funcao) as total_areas
-                FROM portal.emendas
+                    COUNT(DISTINCT funcao) as total_areas,
+                    COALESCE(SUM(valor_pago), 0) as valor_total
+                FROM deputados_emendas
             """)
             totais_row = cursor.fetchone()
+            valor_total_global = float(totais_row[3]) if totais_row[3] else 1.0
             
             # 2. Distribuição por Área
             cursor.execute("""
+                WITH deputados_emendas AS (
+                    SELECT e.valor_pago, e.funcao
+                    FROM portal.emendas e
+                    JOIN (
+                        SELECT lower(nome_civil) as nome FROM camara.deputados
+                        UNION
+                        SELECT lower(nome_eleitoral) as nome FROM camara.deputados_mandatos
+                    ) p ON lower(e.autor) = p.nome
+                )
                 SELECT funcao, SUM(valor_pago) as valor_total
-                FROM portal.emendas
+                FROM deputados_emendas
                 GROUP BY funcao
                 ORDER BY valor_total DESC
             """)
             areas_raw = cursor.fetchall()
-            valor_total_global = sum(float(r[1]) for r in areas_raw) if areas_raw else 1
             
             areas_formatadas = [
                 {
                     "nome": r[0] if r[0] else "Outros",
                     "valor": float(r[1]),
-                    "percentual": round((float(r[1]) / valor_total_global) * 100, 1)
+                    "percentual": round((float(r[1]) / (valor_total_global or 1)) * 100, 1)
                 }
                 for r in areas_raw
             ]
             
             # 3. Top 10 Deputados
             cursor.execute("""
+                WITH deputados_emendas AS (
+                    SELECT e.valor_pago, p.id as deputado_id
+                    FROM portal.emendas e
+                    JOIN (
+                        SELECT id, lower(nome_civil) as nome FROM camara.deputados
+                        UNION
+                        SELECT deputado_id as id, lower(nome_eleitoral) as nome FROM camara.deputados_mandatos
+                    ) p ON lower(e.autor) = p.nome
+                )
                 SELECT 
                     d.id, d.nome_civil, m.sigla_partido, m.sigla_uf,
-                    SUM(e.valor_pago) as total_valor
-                FROM portal.emendas e
-                JOIN camara.deputados d ON lower(e.nome_autor) = lower(d.nome_civil)
+                    SUM(de.valor_pago) as total_valor
+                FROM deputados_emendas de
+                JOIN camara.deputados d ON de.deputado_id = d.id
                 LEFT JOIN (
                     SELECT DISTINCT ON (deputado_id) deputado_id, sigla_partido, sigla_uf
                     FROM camara.deputados_mandatos
@@ -736,25 +781,39 @@ def get_perfil_deputado(deputado_id: int, legislatura: int = Query(None)):
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
         with conn.cursor() as cursor:
-            # 1. Buscar Perfil
+            # 1. Buscar Perfil (Resiliente a legislatura inexistente)
             query_perfil = """
                 SELECT d.id, d.nome_civil, d.cpf, d.sexo, d.email, d.data_nascimento, 
                        d.escolaridade, d.uf_nascimento, d.municipio_nascimento, 
-                       m.sigla_partido, m.sigla_uf
+                       m.sigla_partido, m.sigla_uf, m.legislatura_id
                 FROM camara.deputados d
                 LEFT JOIN camara.deputados_mandatos m ON d.id = m.deputado_id
                 WHERE d.id = %s
             """
             params_perfil = [deputado_id]
-            if legislatura:
-                query_perfil += " AND m.legislatura_id = %s"
-                params_perfil.append(legislatura)
             
-            query_perfil += " ORDER BY m.id DESC LIMIT 1"
+            if legislatura:
+                # Ordena para colocar a legislatura pedida no topo (se existir), senão a mais recente
+                query_perfil += " ORDER BY (m.legislatura_id = %s) DESC NULLS LAST, m.id DESC LIMIT 1"
+                params_perfil.append(legislatura)
+            else:
+                query_perfil += " ORDER BY m.id DESC LIMIT 1"
+            
             cursor.execute(query_perfil, tuple(params_perfil))
             row = cursor.fetchone()
+            
             if not row:
-                raise HTTPException(status_code=404, detail=f"Deputado com ID {deputado_id} não encontrado na legislatura {legislatura}")
+                # Verifica se o ID pelo menos existe na tabela base
+                cursor.execute("SELECT id FROM camara.deputados WHERE id = %s", (deputado_id,))
+                if not cursor.fetchone():
+                    raise HTTPException(status_code=404, detail=f"Deputado com ID {deputado_id} não encontrado")
+                else:
+                    # Existe mas sem mandatos registrados? (Raro)
+                    raise HTTPException(status_code=404, detail=f"Deputado com ID {deputado_id} não possui mandatos registrados")
+
+            # A legislatura efetivamente encontrada (pode ser diferente da pedida)
+            # Se legislatura for 0, tratamos como 'Todas', então leg_efetiva fica None para não filtrar despesas
+            leg_efetiva = row[11] if legislatura else None
             
             res = {
                 "id": row[0],
@@ -768,10 +827,11 @@ def get_perfil_deputado(deputado_id: int, legislatura: int = Query(None)):
                 "municipio_nascimento": row[8],
                 "sigla_partido": row[9] if row[9] else "S/P",
                 "sigla_uf": row[10],
-                "foto": f"https://www.camara.leg.br/internet/deputado/bandep/{row[0]}.jpg"
+                "foto": f"https://www.camara.leg.br/internet/deputado/bandep/{row[0]}.jpg",
+                "legislatura_exibida": leg_efetiva
             }
 
-            # 2. Buscar as 50 despesas mais recentes
+            # 2. Buscar as 50 despesas mais recentes (Usando a legislatura efetiva)
             query_recente = """
                 SELECT 
                     desp.ano, desp.mes, desp.tipo_despesa, 
@@ -781,9 +841,9 @@ def get_perfil_deputado(deputado_id: int, legislatura: int = Query(None)):
                 WHERE mand.deputado_id = %s
             """
             params_recente = [deputado_id]
-            if legislatura:
+            if leg_efetiva:
                 query_recente += " AND mand.legislatura_id = %s"
-                params_recente.append(legislatura)
+                params_recente.append(leg_efetiva)
             
             query_recente += " ORDER BY desp.ano DESC, desp.mes DESC LIMIT 50"
             cursor.execute(query_recente, tuple(params_recente))
@@ -799,7 +859,7 @@ def get_perfil_deputado(deputado_id: int, legislatura: int = Query(None)):
                 for r in despesas_raw
             ]
 
-            # 3. Resumo por categoria
+            # 3. Resumo por categoria (Usando a legislatura efetiva)
             query_categorias = """
                 SELECT desp.tipo_despesa as categoria, SUM(desp.valor_documento) as valor
                 FROM camara.deputados_despesas AS desp
@@ -807,9 +867,9 @@ def get_perfil_deputado(deputado_id: int, legislatura: int = Query(None)):
                 WHERE mand.deputado_id = %s
             """
             params_cat = [deputado_id]
-            if legislatura:
+            if leg_efetiva:
                 query_categorias += " AND mand.legislatura_id = %s"
-                params_cat.append(legislatura)
+                params_cat.append(leg_efetiva)
             
             query_categorias += " GROUP BY desp.tipo_despesa ORDER BY valor DESC"
             cursor.execute(query_categorias, tuple(params_cat))
@@ -817,12 +877,17 @@ def get_perfil_deputado(deputado_id: int, legislatura: int = Query(None)):
             categorias = [{"categoria": r[0], "valor": float(r[1])} for r in categorias_raw]
             total_despesas = sum(c["valor"] for c in categorias)
 
-            # 4. Buscar Resumo de Emendas
+            # 4. Buscar Resumo de Emendas (Não depende de legislatura do mandato)
             query_emendas_resumo = """
+                WITH parlamentares_nomes AS (
+                    SELECT id, lower(nome_civil) as nome FROM camara.deputados
+                    UNION
+                    SELECT deputado_id as id, lower(nome_eleitoral) as nome FROM camara.deputados_mandatos
+                )
                 SELECT SUM(e.valor_pago) as total_emendas
                 FROM portal.emendas e
-                JOIN camara.deputados d ON lower(e.nome_autor) = lower(d.nome_civil)
-                WHERE d.id = %s
+                JOIN parlamentares_nomes p ON lower(e.autor) = p.nome
+                WHERE p.id = %s
             """
             cursor.execute(query_emendas_resumo, (deputado_id,))
             row_emendas = cursor.fetchone()
@@ -851,70 +916,6 @@ def get_perfil_deputado(deputado_id: int, legislatura: int = Query(None)):
     except Exception as e:
         logging.error(f"Erro ao buscar perfil do deputado: {e}")
         raise HTTPException(status_code=500, detail="Erro ao processar perfil")
-    finally:
-        if conn:
-            db.release_db_connection(conn)
-
-@router.get("/{deputado_id}/despesas", summary="Obtém the lista of despesas of a deputado")
-def get_despesas_deputado(deputado_id: int, legislatura: int = Query(None)):
-    conn = None
-    try:
-        conn = db.get_db_connection()
-        if not conn:
-            raise HTTPException(status_code=503, detail="Banco de dados indisponível")
-        
-        with conn.cursor() as cursor:
-            # 1. Buscar as 50 despesas mais recentes
-            query_recente = """
-                SELECT 
-                    desp.ano, desp.mes, desp.tipo_despesa, 
-                    desp.valor_documento as valor, desp.url_documento
-                FROM camara.deputados_despesas AS desp
-                JOIN camara.deputados_mandatos AS mand ON desp.mandato_id = mand.id
-                WHERE mand.deputado_id = %s
-            """
-            params_recente = [deputado_id]
-            if legislatura:
-                query_recente += " AND mand.legislatura_id = %s"
-                params_recente.append(legislatura)
-                
-            query_recente += " ORDER BY desp.ano DESC, desp.mes DESC LIMIT 50"
-            cursor.execute(query_recente, tuple(params_recente))
-            desp_raw = cursor.fetchall()
-            despesas = [
-                {
-                    "ano": r[0], "mes": r[1], "tipo_despesa": r[2],
-                    "valor": float(r[3]), "url_documento": r[4]
-                }
-                for r in desp_raw
-            ]
-
-            # 2. Resumo por categoria
-            query_categorias = """
-                SELECT desp.tipo_despesa as categoria, SUM(desp.valor_documento) as valor
-                FROM camara.deputados_despesas AS desp
-                JOIN camara.deputados_mandatos AS mand ON desp.mandato_id = mand.id
-                WHERE mand.deputado_id = %s
-            """
-            params_cat = [deputado_id]
-            if legislatura:
-                query_categorias += " AND mand.legislatura_id = %s"
-                params_cat.append(legislatura)
-                
-            query_categorias += " GROUP BY desp.tipo_despesa ORDER BY valor DESC"
-            cursor.execute(query_categorias, tuple(params_cat))
-            cat_raw = cursor.fetchall()
-            categorias = [{"categoria": r[0], "valor": float(r[1])} for r in cat_raw]
-            total_despesas = sum(c["valor"] for c in categorias)
-
-            return {
-                "despesas": despesas,
-                "total_despesas": total_despesas,
-                "categorias": categorias
-            }
-    except Exception as e:
-        logging.error(f"Erro ao buscar despesas do deputado: {e}")
-        raise HTTPException(status_code=500, detail="Erro ao processar despesas")
     finally:
         if conn:
             db.release_db_connection(conn)
@@ -1075,20 +1076,7 @@ def get_estatisticas_despesas(legislatura: int = Query(None)):
             cursor.execute(query_total_geral, tuple(params_total))
             total_geral = cursor.fetchone()[0] or 0
             
-            # ── EMPRESAS (desativado) ────────────────────────────────────
-            # query_total_fornecedores = "SELECT COUNT(DISTINCT cnpj_cpf_fornecedor) FROM camara.deputados_despesas desp"
-            # params_forn = []
-            # if legislatura:
-            #     query_total_fornecedores = """
-            #         SELECT COUNT(DISTINCT desp.cnpj_cpf_fornecedor)
-            #         FROM camara.deputados_despesas desp
-            #         JOIN camara.deputados_mandatos m ON desp.mandato_id = m.id
-            #         WHERE m.legislatura_id = %s
-            #     """
-            #     params_forn.append(legislatura)
-            # cursor.execute(query_total_fornecedores, tuple(params_forn))
-            # total_empresas = cursor.fetchone()[0] or 0
-            total_empresas = 0  # desativado
+            # total_empresas = 0  # retirado por solicitação do usuário
 
             query_gastos_dep = """
             SELECT 
@@ -1127,7 +1115,7 @@ def get_estatisticas_despesas(legislatura: int = Query(None)):
                 "total_gastos_12_meses": float(total_12_meses),
                 "total_12_meses": float(total_12_meses),
                 "total_gastos": float(total_geral),
-                # "total_empresas_contratadas": int(total_empresas),
+                # "total_empresas_contratadas": int(total_empresas), # retirado
                 "gastos_por_categoria": gastos_categoria,
                 "gastos_por_mes": gastos_mensais,
                 "gastos_por_estado": gastos_estado,
@@ -1142,35 +1130,5 @@ def get_estatisticas_despesas(legislatura: int = Query(None)):
             db.release_db_connection(conn)
 
 
-
-# ── ENDPOINT EMPRESAS (desativado - substituído por Comissões) ────────────────
-# @router.get("/empresas/estatisticas", summary="Obtém as estatísticas e ranking das empresas contratadas")
-# @lru_cache(maxsize=4)
-# def get_estatisticas_empresas(limit: int = 20):
-#     conn = None
-#     try:
-#         conn = db.get_db_connection()
-#         if not conn:
-#             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
-#
-#         with conn.cursor() as cursor:
-#             # 1. Estatísticas Gerais
-#             cursor.execute("""
-#                 SELECT
-#                     COUNT(DISTINCT cnpj_cpf_fornecedor) as total_empresas,
-#                     SUM(valor_documento) as total_pago,
-#                     COUNT(*) as total_contratos
-#                 FROM camara.deputados_despesas
-#                 WHERE LENGTH(cnpj_cpf_fornecedor) > 11
-#             """)
-#             res_stats = cursor.fetchone()
-#             total_geral_empresas = float(res_stats[1]) if res_stats[1] else 1.0
-#             # ... (ranking omitido)
-#     except Exception as e:
-#         logging.error(f"Erro ao buscar estatísticas de empresas: {e}")
-#         raise HTTPException(status_code=500, detail="Erro ao processar estatísticas de empresas")
-#     finally:
-#         if conn:
-#             db.release_db_connection(conn)
 
 

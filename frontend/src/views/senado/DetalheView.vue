@@ -18,6 +18,7 @@
               class="text-sm font-bold text-foreground bg-transparent border-none p-0 focus:ring-0 cursor-pointer"
             >
               <template v-if="store.currentSenador?.legislaturas_ativas?.length">
+                <option :value="0">Todas as legislaturas (Histórico)</option>
                 <option v-for="legis in store.currentSenador.legislaturas_ativas" :key="legis" :value="legis">
                   {{ formatLegislatura(legis) }}
                 </option>
@@ -48,7 +49,7 @@
                 <div class="text-center">
                   <div class="h-32 w-32 mx-auto rounded-full border-4 border-purple-200 overflow-hidden bg-purple-50 flex items-center justify-center">
                     <img
-                      :src="store.currentSenador.foto"
+                      :src="store.currentSenador.foto || '/placeholder-user.svg'"
                       :alt="store.currentSenador.nome_civil"
                       class="w-full h-full object-cover"
                       @error="($event.target as HTMLImageElement).src = '/placeholder-user.svg'"
@@ -304,6 +305,7 @@ const formatDate = (dateString: string) => {
 }
 
 const formatLegislatura = (legis: number) => {
+  if (legis === 0) return 'Todas as legislaturas (Histórico)'
   if (legis === 57) return '57ª Legislatura (2023-2027)'
   if (legis === 56) return '56ª Legislatura (2019-2023)'
   if (legis === 55) return '55ª Legislatura (2015-2019)'

@@ -43,6 +43,17 @@
             </div>
             <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
               <a
+                v-if="projeto.url_inteiro_teor"
+                :href="projeto.url_inteiro_teor"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-1 text-sm text-primary hover:underline group bg-primary/10 px-2 py-1 rounded-md transition-colors"
+                @click.stop
+              >
+                <FileText class="h-4 w-4 sm:h-3 sm:w-3 transition-transform group-hover:scale-110" />
+                <span class="hidden sm:inline font-medium">Inteiro Teor</span>
+              </a>
+              <a
                 :href="`https://www.camara.leg.br/proposicoesWeb/fichadetramitacao?idProposicao=${projeto.id}`"
                 target="_blank"
                 rel="noopener noreferrer"

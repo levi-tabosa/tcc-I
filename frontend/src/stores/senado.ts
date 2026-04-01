@@ -209,6 +209,12 @@ export const useSenadoStore = defineStore("senado", () => {
             if (!response.ok) throw new Error("Falha ao buscar detalhes do senador")
             const data = await response.json()
             const s = data.senador
+
+            // Sincronizar legislatura exibida com o seletor (global na CamaraStore)
+            if (s.legislatura_exibida && s.legislatura_exibida !== legislatura.value) {
+                camaraStore.legislatura = s.legislatura_exibida
+            }
+
             currentSenador.value = {
                 id: s.codigo,
                 nome_civil: s.nomeCompleto || s.nomeParlamentar,

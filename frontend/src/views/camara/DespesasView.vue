@@ -22,13 +22,14 @@
             </div>
 
             <!-- Legislatura Selector -->
-            <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-border shadow-sm">
-              <span class="text-[10px] font-bold text-foreground/50 uppercase tracking-wider">Legislatura:</span>
+            <div class="flex items-center gap-3 bg-primary/10 px-4 py-2 rounded-xl border border-primary/20">
+              <span class="text-xs font-bold text-primary uppercase tracking-wider">Legislatura:</span>
               <select
                 :value="store.legislatura"
                 @change="store.setLegislatura(Number(($event.target as HTMLSelectElement).value))"
-                class="text-xs font-bold text-foreground bg-transparent border-none p-0 focus:ring-0 cursor-pointer"
+                class="text-sm font-bold text-primary bg-transparent border-none p-0 focus:ring-0 cursor-pointer"
               >
+                <option :value="0">Todas as legislaturas</option>
                 <option v-for="leg in store.legislaturasDisponiveis" :key="leg" :value="leg">{{ formatLegislatura(leg) }}</option>
               </select>
             </div>
@@ -38,25 +39,28 @@
 
       <BaseLoading v-if="store.loadingStats" message="Carregando estatísticas da Câmara..." full-page />
 
-      <!-- Overview -->
-      <section class="py-8 bg-muted/30">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <BaseCard v-for="stat in overviewStats" :key="stat.label" hover>
-              <div class="flex items-center gap-4">
-                <div :class="`p-3 rounded-xl ${stat.bgColor}`">
-                  <component :is="stat.icon" :class="`h-6 w-6 ${stat.color}`" />
+      <template v-else-if="store.generalStats">
+        <!-- Overview -->
+        <section class="py-8 bg-muted/30">
+          <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <BaseCard v-for="stat in overviewStats" :key="stat.label" hover>
+                <div class="flex items-center gap-4">
+                  <div :class="`p-3 rounded-xl ${stat.bgColor}`">
+                    <component :is="stat.icon" :class="`h-6 w-6 ${stat.color}`" />
+                  </div>
+                  <div>
+                    <p class="text-sm text-muted-foreground">{{ stat.label }}</p>
+                    <p class="text-2xl font-bold text-foreground">{{ stat.value }}</p>
+                    <p v-if="stat.subvalue" class="text-[10px] text-muted-foreground mt-0.5">{{ stat.subvalue }}</p>
+                  </div>
                 </div>
-                <div>
-                  <p class="text-sm text-muted-foreground">{{ stat.label }}</p>
-                  <p class="text-2xl font-bold text-foreground">{{ stat.value }}</p>
-                  <p v-if="stat.subvalue" class="text-[10px] text-muted-foreground mt-0.5">{{ stat.subvalue }}</p>
-                </div>
-              </div>
-            </BaseCard>
+              </BaseCard>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+
+        <!-- Gráficos e Tabelas -->
 
       <!-- Gastos por Partido -->
       <section class="py-8">
@@ -151,11 +155,11 @@
                 v-model="searchQuery"
                 type="text"
                 placeholder="Buscar deputado..."
-                class="px-3 py-1.5 text-xs rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-black/20"
+                class="px-3 py-1.5 text-sm rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
               />
               <select
                 v-model="filterPartido"
-                class="px-3 py-1.5 text-xs rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-black/20"
+                class="px-3 py-1.5 text-sm rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
               >
                 <option value="">Todos os partidos</option>
                 <option v-for="p in partidosUnicosRanking" :key="p" :value="p">{{ p }}</option>
@@ -182,7 +186,7 @@
 
                 <!-- Foto -->
                 <img
-                  :src="`https://www.camara.leg.br/internet/deputado/bandep/${dep.id}.jpg`"
+                  :src="`https://www.camara.leg.br/internet/deputado/bandep/${dep.id}.jpg` || '/placeholder-user.svg'"
                   :alt="dep.nome"
                   class="h-10 w-10 rounded-full object-cover flex-shrink-0 border-2 border-border"
                   @error="onImgError"
@@ -223,27 +227,27 @@
           </div>
         </div>
       </section>
+      </template>
     </main>
   </div>
 </template>
 
 <script setup lang="ts">
 import { Banknote, Users, Building2, ChevronRight } from 'lucide-vue-next'
-import { onMounted, computed, ref } from 'vue'
+import { onMounted, computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseLoading from '@/components/ui/BaseLoading.vue'
-import { useLoadingStore } from '@/stores/loading'
 import { useCamaraStore } from "@/stores/camara"
 
 const store = useCamaraStore()
-const loadingStore = useLoadingStore()
 const router = useRouter()
 
 const searchQuery = ref('')
 const filterPartido = ref('')
 
 const formatLegislatura = (legis: number) => {
+  if (legis === 0) return 'Todas as legislaturas'
   if (legis === 57) return '57ª (2023-2027)'
   if (legis === 56) return '56ª (2019-2023)'
   if (legis === 55) return '55ª (2015-2019)'
@@ -252,18 +256,18 @@ const formatLegislatura = (legis: number) => {
   return `${legis}ª`
 }
 
-onMounted(async () => {
-  loadingStore.startLoading('Carregando dados financeiros da Câmara...')
-  try {
-    await Promise.all([
-      store.fetchEstatisticasGerais(),
-      store.fetchEstatisticasDeputados()
-    ])
-    if (store.deputadosList.length === 0) {
-      await store.fetchDeputados()
-    }
-  } finally {
-    loadingStore.stopLoading()
+watch(() => store.legislatura, async () => {
+  await Promise.all([
+    store.fetchEstatisticasGerais(),
+    store.fetchEstatisticasDeputados()
+  ])
+})
+
+onMounted(() => {
+  store.fetchEstatisticasGerais()
+  store.fetchEstatisticasDeputados()
+  if (store.deputadosList.length === 0) {
+    store.fetchDeputados()
   }
 })
 
