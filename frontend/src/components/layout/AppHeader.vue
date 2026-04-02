@@ -179,10 +179,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
 import { Menu, X, ChevronDown } from 'lucide-vue-next'
-
-const route = useRoute()
 
 const camaraItems = [
   { name: 'Deputados', href: '/camara/deputados' },
