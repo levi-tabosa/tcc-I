@@ -35,39 +35,33 @@
 
       <section class="py-8">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div class="mb-6 space-y-4 rounded-xl border border-border bg-background p-4 sm:p-6">
+          <div class="mb-6 space-y-4">
             <div class="flex flex-col sm:flex-row gap-4">
               <div class="relative flex-1">
-                <Search class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <input
                   v-model="searchQuery"
                   type="text"
                   placeholder="Buscar por nome ou sigla..."
-                  class="w-full rounded-full border border-gray-300 bg-background px-4 py-3 pl-11 text-foreground placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  class="w-full px-4 py-3 rounded-full border border-gray-300 bg-background text-foreground placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:shadow-md transition-shadow"
                 />
               </div>
 
               <div class="relative flex-1">
-                <UserSearch class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <input
                   v-model="searchMemberQuery"
                   type="text"
                   placeholder="Buscar por senador..."
-                  class="w-full rounded-full border border-gray-300 bg-background px-4 py-3 pl-11 text-foreground placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  class="w-full px-4 py-3 rounded-full border border-gray-300 bg-background text-foreground placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:shadow-md transition-shadow"
                 />
               </div>
 
-              <div class="relative">
-                <CalendarRange class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <select
-                  v-model="filterLegislatura"
-                  class="w-full sm:w-auto appearance-none rounded-lg border border-purple-600/30 bg-purple-50 px-4 py-3 sm:py-2 pl-11 pr-10 font-semibold text-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                >
-                  <option :value="0">Todas as Legislaturas</option>
-                  <option v-for="leg in availableLegislaturas" :key="leg" :value="leg">{{ leg }}ª Legislatura</option>
-                </select>
-                <ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-              </div>
+              <select
+                v-model="filterLegislatura"
+                class="w-full sm:w-auto px-4 py-3 sm:py-2 rounded-lg border border-purple-600/30 bg-purple-50 font-semibold text-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              >
+                <option :value="0">Todas as legislaturas</option>
+                <option v-for="leg in availableLegislaturas" :key="leg" :value="leg">{{ formatLegislatura(leg) }}</option>
+              </select>
             </div>
           </div>
 
@@ -86,8 +80,8 @@
             </button>
           </div>
 
-          <div v-else-if="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div v-for="i in 9" :key="i" class="h-56 rounded-lg border border-border bg-muted animate-pulse" />
+          <div v-else-if="loading" class="space-y-4">
+            <div v-for="i in 6" :key="i" class="h-36 rounded-lg border border-border bg-muted animate-pulse" />
           </div>
 
           <div v-else-if="comissoesFiltradas.length === 0" class="rounded-lg border border-border bg-muted/20 py-12 text-center">
@@ -95,85 +89,85 @@
             <p class="text-muted-foreground">Nenhuma comissão encontrada com os filtros atuais.</p>
           </div>
 
-          <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div v-else class="space-y-4">
             <div
               v-for="comissao in displayedComissoes"
               :key="comissao.id"
               class="rounded-xl border border-border bg-background overflow-hidden"
             >
               <div class="p-5">
-                <div class="flex items-start justify-between gap-3">
-                  <div class="min-w-0">
-                    <div class="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
-                      {{ comissao.sigla }}
-                    </div>
-                    <h3 class="mt-2 text-base font-semibold text-foreground line-clamp-2">{{ comissao.nome }}</h3>
+                <div class="flex items-start gap-4">
+                  <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-lg bg-primary/10">
+                    <LayoutGrid class="h-6 w-6 text-primary" />
                   </div>
-                  <a
-                    :href="`https://www25.senado.leg.br/web/comissoes/comissao/-/comissao/${comissao.id}`"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="inline-flex items-center justify-center rounded-md border border-border p-2 text-muted-foreground hover:text-foreground"
-                    title="Ver no site oficial"
-                  >
-                    <ExternalLink class="h-4 w-4" />
-                  </a>
-                </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 mb-2 flex-wrap">
+                      <span class="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+                        {{ comissao.sigla }}
+                      </span>
+                      <span
+                        v-if="comissao.tipo"
+                        class="inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+                        :class="[
+                          comissao.tipo.toLowerCase().includes('permanente')
+                            ? 'bg-primary/10 text-primary border-primary/20'
+                            : comissao.tipo.toLowerCase().includes('cpi') || comissao.tipo.toLowerCase().includes('inquérito')
+                              ? 'bg-red-500/10 text-red-600 border-red-500/20'
+                              : 'bg-muted text-muted-foreground border-border'
+                        ]"
+                      >
+                        {{ comissao.tipo }}
+                      </span>
+                    </div>
 
-                <div class="mt-3">
-                  <span
-                    v-if="comissao.tipo"
-                    class="inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
-                    :class="[
-                      comissao.tipo.toLowerCase().includes('permanente')
-                        ? 'bg-primary/10 text-primary border-primary/20'
-                        : comissao.tipo.toLowerCase().includes('cpi') || comissao.tipo.toLowerCase().includes('inquérito')
-                          ? 'bg-red-500/10 text-red-600 border-red-500/20'
-                          : 'bg-muted text-muted-foreground border-border'
-                    ]"
-                  >
-                    {{ comissao.tipo }}
-                  </span>
-                </div>
-              </div>
+                    <h3 class="text-base font-semibold text-foreground line-clamp-2">{{ comissao.nome }}</h3>
 
-              <div class="border-y border-border bg-muted/20 px-5 py-3 grid grid-cols-2 gap-3">
-                <div>
-                  <p class="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Membros</p>
-                  <p class="mt-1 flex items-center gap-1 text-sm font-semibold text-foreground">
-                    <Users class="h-4 w-4 text-primary" />
-                    {{ comissao.total_membros || 0 }}
-                  </p>
-                </div>
-                <div>
-                  <p class="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Presidente</p>
-                  <p class="mt-1 flex items-center gap-1 text-sm font-semibold text-foreground truncate">
-                    <Crown class="h-4 w-4 text-accent" />
-                    {{ comissao.presidente || 'Vago' }}
-                  </p>
-                </div>
-              </div>
+                    <div class="mt-3 grid gap-2 sm:grid-cols-2">
+                      <p class="flex items-center gap-2 text-sm text-foreground">
+                        <Users class="h-4 w-4 text-primary" />
+                        <span class="font-semibold">{{ comissao.total_membros || 0 }}</span>
+                        <span class="text-muted-foreground">membros</span>
+                      </p>
+                      <p class="flex items-center gap-2 text-sm text-foreground min-w-0">
+                        <Crown class="h-4 w-4 text-accent flex-shrink-0" />
+                        <span class="text-muted-foreground">Presidente:</span>
+                        <span class="font-semibold truncate">{{ comissao.presidente || 'Vago' }}</span>
+                      </p>
+                    </div>
 
-              <div class="p-5">
-                <p class="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">Destaques partidários</p>
-                <div class="flex flex-wrap gap-2 mb-4">
-                  <span
-                    v-for="partido in comissao.partidos_destaque"
-                    :key="partido"
-                    class="rounded-full border border-border px-2.5 py-1 text-xs text-foreground"
-                  >
-                    {{ partido }}
-                  </span>
-                  <span v-if="!comissao.partidos_destaque?.length" class="text-xs text-muted-foreground italic">Informação indisponível</span>
-                </div>
+                    <div class="mt-3 flex flex-wrap gap-2">
+                      <span
+                        v-for="partido in comissao.partidos_destaque"
+                        :key="partido"
+                        class="rounded-full border border-border px-2.5 py-1 text-xs text-foreground"
+                      >
+                        {{ partido }}
+                      </span>
+                      <span v-if="!comissao.partidos_destaque?.length" class="text-xs text-muted-foreground italic">Informação indisponível</span>
+                    </div>
+                  </div>
 
-                <button
-                  @click="selectedComissao = selectedComissao?.id === comissao.id ? null : comissao"
-                  class="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-foreground px-4 py-2 text-sm font-semibold text-background"
-                >
-                  {{ selectedComissao?.id === comissao.id ? 'Fechar composição' : 'Ver composição' }}
-                  <ChevronDown class="h-4 w-4 transition-transform" :class="{ 'rotate-180': selectedComissao?.id === comissao.id }" />
-                </button>
+                  <div class="flex items-center gap-3 flex-shrink-0">
+                    <a
+                      :href="`https://www25.senado.leg.br/web/comissoes/comissao/-/comissao/${comissao.id}`"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="inline-flex items-center gap-1 text-sm text-primary hover:underline group"
+                      title="Ver no site oficial"
+                    >
+                      <span class="hidden sm:inline">Ver no Senado</span>
+                      <ExternalLink class="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                    </a>
+
+                    <button
+                      @click="selectedComissao = selectedComissao?.id === comissao.id ? null : comissao"
+                      class="inline-flex items-center justify-center rounded-md border border-border p-2 text-muted-foreground hover:text-foreground"
+                      :title="selectedComissao?.id === comissao.id ? 'Fechar composição' : 'Ver composição'"
+                    >
+                      <ChevronDown class="h-4 w-4 transition-transform" :class="{ 'rotate-180': selectedComissao?.id === comissao.id }" />
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <div v-if="selectedComissao?.id === comissao.id" class="border-t border-border px-5 py-4 max-h-80 overflow-y-auto">
@@ -233,17 +227,14 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { 
-  Users, 
-  LayoutGrid, 
-  ShieldCheck, 
-  Crown, 
-  ChevronDown, 
-  AlertCircle, 
-  Search, 
+import {
+  Users,
+  LayoutGrid,
+  ShieldCheck,
+  Crown,
+  ChevronDown,
+  AlertCircle,
   ExternalLink,
-  UserSearch,
-  CalendarRange,
   ArrowDown
 } from 'lucide-vue-next'
 import { useLoadingStore } from '@/stores/loading'
@@ -284,7 +275,6 @@ const error = ref<string | null>(null)
 const apiUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
 const loadingStore = useLoadingStore()
 
-// Fancy Stats Data for the Hero Stats Cards
 const statsData = computed(() => [
   {
     label: 'Comissões Ativas',
@@ -316,7 +306,7 @@ const fetchComissoes = async () => {
   try {
     const params = new URLSearchParams()
     if (filterLegislatura.value) params.append('legislatura', filterLegislatura.value.toString())
-    
+
     const res = await fetch(`${apiUrl}/api/senado/comissoes?${params.toString()}`)
     if (!res.ok) throw new Error(`Erro ${res.status}: Não foi possível carregar os dados`)
     const data = await res.json()
@@ -364,8 +354,8 @@ const comissoesFiltradas = computed(() => {
       (c.sigla ?? '').toLowerCase().includes(q)
 
     const mq = searchMemberQuery.value.toLowerCase()
-    const matchMembro = !mq || c.membros.some(m => 
-      m.nome.toLowerCase().includes(mq) || 
+    const matchMembro = !mq || c.membros.some(m =>
+      m.nome.toLowerCase().includes(mq) ||
       m.partido.toLowerCase().includes(mq)
     )
     return matchComissao && matchMembro
@@ -382,5 +372,14 @@ const loadMore = () => {
 
 const goToMember = (id: number) => {
   router.push(`/senado/senadores/${id}`)
+}
+
+const formatLegislatura = (legis: number) => {
+  if (legis === 57) return '57ª (2023-2027)'
+  if (legis === 56) return '56ª (2019-2023)'
+  if (legis === 55) return '55ª (2015-2019)'
+  if (legis === 54) return '54ª (2011-2015)'
+  if (legis === 53) return '53ª (2007-2011)'
+  return `${legis}ª Legislatura`
 }
 </script>
