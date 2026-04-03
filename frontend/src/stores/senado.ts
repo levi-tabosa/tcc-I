@@ -276,7 +276,6 @@ export const useSenadoStore = defineStore("senado", () => {
     }
 
     const fetchEstatisticasGerais = async () => {
-        loadingStats.value = true
         error.value = null
         try {
             const response = await fetch(`${apiUrl}/api/senado/despesas/estatisticas?legislatura=${legislatura.value}`)
@@ -285,8 +284,6 @@ export const useSenadoStore = defineStore("senado", () => {
         } catch (e: any) {
             console.error('Erro ao buscar estatísticas do senado:', e)
             error.value = "Não foi possível carregar as estatísticas do Senado."
-        } finally {
-            loadingStats.value = false
         }
     }
 

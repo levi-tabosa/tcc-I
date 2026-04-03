@@ -41,7 +41,7 @@
       </section>
 
       <!-- Loading state -->
-      <BaseLoading v-if="loading" message="Carregando dados do Senado..." full-page />
+      <BaseLoading v-if="loadingStore.isLoading" :message="loadingStore.message" full-page />
 
       <template v-else-if="store.generalStats">
         <!-- Overview Cards -->
@@ -243,13 +243,14 @@ import { Banknote, Users, Receipt, ChevronRight } from 'lucide-vue-next'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseLoading from '@/components/ui/BaseLoading.vue'
 import { useSenadoStore } from '@/stores/senado'
+import { useLoadingStore } from '@/stores/loading'
 
 const store = useSenadoStore()
+const loadingStore = useLoadingStore()
 const router = useRouter()
 
 const searchQuery = ref('')
 const filterPartido = ref('')
-const loading = ref(true)
 
 const formatLegislatura = (legis: number) => {
   if (legis === 0) return 'Todas as legislaturas'
@@ -262,15 +263,15 @@ const formatLegislatura = (legis: number) => {
 }
 
 onMounted(async () => {
-  loading.value = true
+  loadingStore.startLoading('Carregando dados do Senado...')
   await store.fetchEstatisticasGerais()
-  loading.value = false
+  loadingStore.stopLoading()
 })
 
 watch(() => store.legislatura, async () => {
-  loading.value = true
+  loadingStore.startLoading('Carregando dados do Senado...')
   await store.fetchEstatisticasGerais()
-  loading.value = false
+  loadingStore.stopLoading()
 })
 
 // ── Gastos por Partido ──────────────────────────────────────────────────────

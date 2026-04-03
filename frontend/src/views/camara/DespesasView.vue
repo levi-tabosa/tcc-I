@@ -37,7 +37,7 @@
         </div>
       </section>
 
-      <BaseLoading v-if="store.loadingStats" message="Carregando estatísticas da Câmara..." full-page />
+      <BaseLoading v-if="loadingStore.isLoading" :message="loadingStore.message" full-page />
 
       <template v-else-if="store.generalStats">
         <!-- Overview -->
@@ -239,8 +239,10 @@ import { useRouter } from 'vue-router'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseLoading from '@/components/ui/BaseLoading.vue'
 import { useCamaraStore } from "@/stores/camara"
+import { useLoadingStore } from "@/stores/loading"
 
 const store = useCamaraStore()
+const loadingStore = useLoadingStore()
 const router = useRouter()
 
 const searchQuery = ref('')
@@ -257,15 +259,22 @@ const formatLegislatura = (legis: number) => {
 }
 
 watch(() => store.legislatura, async () => {
+  loadingStore.startLoading('Carregando estatísticas da Câmara...')
   await Promise.all([
     store.fetchEstatisticasGerais(),
     store.fetchEstatisticasDeputados()
   ])
+  loadingStore.stopLoading()
 })
 
-onMounted(() => {
-  store.fetchEstatisticasGerais()
-  store.fetchEstatisticasDeputados()
+onMounted(async () => {
+  loadingStore.startLoading('Carregando estatísticas da Câmara...')
+  await Promise.all([
+    store.fetchEstatisticasGerais(),
+    store.fetchEstatisticasDeputados()
+  ])
+  loadingStore.stopLoading()
+  
   if (store.deputadosList.length === 0) {
     store.fetchDeputados()
   }

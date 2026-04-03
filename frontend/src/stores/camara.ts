@@ -248,28 +248,22 @@ export const useCamaraStore = defineStore("camara", () => {
 
 
   const fetchEstatisticasGerais = async () => {
-    loadingStats.value = true
     try {
       const response = await fetch(`${apiUrl}/api/camara/despesas/estatisticas?legislatura=${legislatura.value}`)
       if (!response.ok) throw new Error("Falha ao buscar estatísticas de despesas")
       generalStats.value = await response.json()
     } catch (e: any) {
       console.error("Erro ao buscar estatísticas gerais de despesas:", e)
-    } finally {
-      loadingStats.value = false
     }
   }
 
   const fetchEstatisticasDeputados = async () => {
-    loadingStats.value = true
     try {
       const response = await fetch(`${apiUrl}/api/camara/estatisticas?legislatura=${legislatura.value}`)
       if (!response.ok) throw new Error("Falha ao buscar estatísticas de deputados")
       deputadoStats.value = await response.json()
     } catch (e: any) {
       console.error("Erro ao buscar estatísticas gerais de deputados:", e)
-    } finally {
-      loadingStats.value = false
     }
   }
 
