@@ -46,17 +46,9 @@
           {{ ano }}
         </option>
       </select>
-
-      <!-- Legislatura -->
-      <select
-        :value="store.legislatura"
-        @change="store.setLegislatura(Number(($event.target as HTMLSelectElement).value))"
-        class="w-full sm:w-auto px-4 py-3 sm:py-2 rounded-lg border border-neutral-300 bg-neutral-50 font-semibold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-purple-500"
-      >
-        <option :value="0">Todas as legislaturas</option>
-        <option v-for="leg in store.legislaturasDisponiveis" :key="leg" :value="leg">{{ formatLegislatura(leg) }}</option>
-      </select>
     </div>
+
+
 
     <div v-if="hasActiveFilters" class="flex items-center gap-2">
       <span class="text-sm text-muted-foreground">Filtros ativos:</span>
@@ -116,10 +108,5 @@ const anosDisponiveis = computed(() => {
   return anos
 })
 
-const formatLegislatura = (legis: number) => {
-  if (legis === 0) return 'Todas as legislaturas'
-  const startYear = 2023 - (57 - legis) * 4
-  const endYear = startYear + 4
-  return `${legis}ª (${startYear}-${endYear})`
-}
+
 </script>

@@ -22,17 +22,7 @@
             </div>
 
             <!-- Legislatura Selector -->
-            <div class="flex items-center gap-3 bg-primary/10 px-4 py-2 rounded-xl border border-primary/20">
-              <span class="text-xs font-bold text-primary uppercase tracking-wider">Legislatura:</span>
-              <select
-                :value="store.legislatura"
-                @change="store.setLegislatura(Number(($event.target as HTMLSelectElement).value))"
-                class="text-sm font-bold text-neutral-800 bg-transparent border-none p-0 focus:ring-0 cursor-pointer"
-              >
-                <option :value="0">Todas as legislaturas</option>
-                <option v-for="leg in store.legislaturasDisponiveis" :key="leg" :value="leg">{{ formatLegislatura(leg) }}</option>
-              </select>
-            </div>
+            <HeroLegislaturaSelect :store="store" />
           </div>
         </div>
       </section>
@@ -238,6 +228,7 @@ import { onMounted, computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseLoading from '@/components/ui/BaseLoading.vue'
+import HeroLegislaturaSelect from '@/components/ui/HeroLegislaturaSelect.vue'
 import { useCamaraStore } from "@/stores/camara"
 import { useLoadingStore } from "@/stores/loading"
 
@@ -248,25 +239,10 @@ const router = useRouter()
 const searchQuery = ref('')
 const filterPartido = ref('')
 
-const formatLegislatura = (legis: number) => {
-  if (legis === 0) return 'Todas as legislaturas'
-  const startYear = 2023 - (57 - legis) * 4
-  const endYear = startYear + 4
-  return `${legis}ª (${startYear}-${endYear})`
-}
-
-watch(() => store.legislatura, async () => {
-  loadingStore.startLoading('Carregando estatísticas da Câmara...')
-  await Promise.all([
-    store.fetchEstatisticasGerais(),
-    store.fetchEstatisticasDeputados()
-  ])
-  loadingStore.stopLoading()
-})
 
 onMounted(async () => {
   loadingStore.startLoading('Carregando estatísticas da Câmara...')
-  await Promise.all([
+  await Promise.allSettled([
     store.fetchEstatisticasGerais(),
     store.fetchEstatisticasDeputados()
   ])

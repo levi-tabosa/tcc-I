@@ -418,13 +418,15 @@ export const useCamaraStore = defineStore("camara", () => {
     currentPage.value = page
   }
 
-  const setLegislatura = (val: number) => {
+  const setLegislatura = async (val: number) => {
     legislatura.value = val
     // Invalidate/Refetch data
-    fetchDeputados()
-    fetchEstatisticasGerais()
-    fetchEstatisticasDeputados()
-    fetchProjetosLegislativos()
+    await Promise.allSettled([
+      fetchDeputados(),
+      fetchEstatisticasGerais(),
+      fetchEstatisticasDeputados(),
+      fetchProjetosLegislativos()
+    ])
   }
 
   const resetFilters = () => {

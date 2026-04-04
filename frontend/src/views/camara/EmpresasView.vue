@@ -20,21 +20,7 @@
             </div>
 
             <!-- Legislatura Selector -->
-            <div class="flex items-center gap-3 bg-white/50 backdrop-blur-sm px-5 py-2.5 rounded-2xl border border-primary/20 shadow-sm self-start md:self-center">
-              <div class="flex flex-col">
-                <span class="text-[10px] font-bold text-primary uppercase tracking-widest opacity-70">Filtrar por</span>
-                <div class="flex items-center gap-2">
-                  <select
-                    :value="store.legislatura"
-                    @change="store.setLegislatura(Number(($event.target as HTMLSelectElement).value))"
-                    class="text-sm font-bold text-neutral-800 bg-transparent border-none p-0 focus:ring-0 cursor-pointer min-w-[140px]"
-                  >
-                    <option :value="0">Histórico Completo</option>
-                    <option v-for="leg in store.legislaturasDisponiveis" :key="leg" :value="leg">{{ formatLegislatura(leg) }}</option>
-                  </select>
-                </div>
-              </div>
-            </div>
+            <HeroLegislaturaSelect :store="store" />
           </div>
         </div>
       </section>
@@ -164,6 +150,7 @@
 import { ref, onMounted, watch } from 'vue'
 import { Building2, Banknote, TrendingUp } from 'lucide-vue-next'
 import BaseCard from '@/components/ui/BaseCard.vue'
+import HeroLegislaturaSelect from '@/components/ui/HeroLegislaturaSelect.vue'
 import { useCamaraStore } from '@/stores/camara'
 
 interface Empresa {
@@ -203,12 +190,6 @@ const formatNumber = (value: number) => {
   return value.toLocaleString('pt-BR')
 }
 
-const formatLegislatura = (legis: number) => {
-  if (legis === 0) return 'Todas as legislaturas'
-  const startYear = 2023 - (57 - legis) * 4
-  const endYear = startYear + 4
-  return `${legis}ª (${startYear}-${endYear})`
-}
 
 const apiUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
 

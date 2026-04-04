@@ -96,12 +96,14 @@ import { useCamaraStore } from "./camara"
 export const useSenadoStore = defineStore("senado", () => {
     const camaraStore = useCamaraStore()
     const legislatura = computed(() => camaraStore.legislatura)
-    const setLegislatura = (val: number) => {
-    camaraStore.setLegislatura(val)
+    const setLegislatura = async (val: number) => {
+    await camaraStore.setLegislatura(val)
     // Refetch senator-specific data
-    fetchSenadores()
-    fetchEstatisticasGerais()
-    fetchProjetosLegislativos()
+    await Promise.allSettled([
+        fetchSenadores(),
+        fetchEstatisticasGerais(),
+        fetchProjetosLegislativos()
+    ])
   }
     const apiUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000"
 
