@@ -42,7 +42,7 @@
         class="w-full sm:w-auto px-4 py-3 sm:py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
       >
         <option value="">Todos os anos</option>
-        <option v-for="ano in store.anosUnicosProjetosLegislativos" :key="ano" :value="ano">
+        <option v-for="ano in anosDisponiveis" :key="ano" :value="ano">
           {{ ano }}
         </option>
       </select>
@@ -97,6 +97,23 @@ const onSenadorInput = (event: Event) => {
 
 const hasActiveFilters = computed(() => {
   return store.projetosLegislativosFilters.search || store.projetosLegislativosFilters.siglaTipo || store.projetosLegislativosFilters.ano || store.projetosLegislativosFilters.senador
+})
+
+const anosDisponiveis = computed(() => {
+  const currentYear = new Date().getFullYear()
+  
+  let minYear = 2019
+  if (store.legislaturasDisponiveis && store.legislaturasDisponiveis.length > 0) {
+    const minLegis = Math.min(...store.legislaturasDisponiveis)
+    // 57ª Legislatura iniciou em 2023
+    minYear = 2023 - (57 - minLegis) * 4
+  }
+
+  const anos = []
+  for (let i = currentYear; i >= minYear; i--) {
+    anos.push(i)
+  }
+  return anos
 })
 
 const formatLegislatura = (legis: number) => {

@@ -99,8 +99,16 @@ const tiposProjetoLegislativo = computed(() => store.tiposUnicosProjetosLegislat
 
 const anosDisponiveis = computed(() => {
   const currentYear = new Date().getFullYear()
+  
+  let minYear = 2019
+  if (store.legislaturasDisponiveis && store.legislaturasDisponiveis.length > 0) {
+    const minLegis = Math.min(...store.legislaturasDisponiveis)
+    // 57ª Legislatura iniciou em 2023
+    minYear = 2023 - (57 - minLegis) * 4
+  }
+
   const anos = []
-  for (let i = currentYear; i >= 2019; i--) {
+  for (let i = currentYear; i >= minYear; i--) {
     anos.push(i)
   }
   return anos
