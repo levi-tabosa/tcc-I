@@ -27,7 +27,7 @@
                   <select
                     :value="store.legislatura"
                     @change="store.setLegislatura(Number(($event.target as HTMLSelectElement).value))"
-                    class="text-sm font-bold text-primary bg-transparent border-none p-0 focus:ring-0 cursor-pointer min-w-[140px]"
+                    class="text-sm font-bold text-neutral-800 bg-transparent border-none p-0 focus:ring-0 cursor-pointer min-w-[140px]"
                   >
                     <option :value="0">Histórico Completo</option>
                     <option v-for="leg in store.legislaturasDisponiveis" :key="leg" :value="leg">{{ formatLegislatura(leg) }}</option>
@@ -205,12 +205,9 @@ const formatNumber = (value: number) => {
 
 const formatLegislatura = (legis: number) => {
   if (legis === 0) return 'Todas as legislaturas'
-  if (legis === 57) return '57ª (2023-2027)'
-  if (legis === 56) return '56ª (2019-2023)'
-  if (legis === 55) return '55ª (2015-2019)'
-  if (legis === 54) return '54ª (2011-2015)'
-  if (legis === 53) return '53ª (2007-2011)'
-  return `${legis}ª`
+  const startYear = 2023 - (57 - legis) * 4
+  const endYear = startYear + 4
+  return `${legis}ª (${startYear}-${endYear})`
 }
 
 const apiUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
