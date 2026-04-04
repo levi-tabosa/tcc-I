@@ -384,6 +384,7 @@ def get_lista_proposicoes(
         if conn:
             db.release_db_connection(conn)
 
+
 @router.get("/proposicoes/{proposicao_id}/votos", summary="Obtém o histórico de votos de um projeto legislativo")
 def get_votos_proposicao(proposicao_id: int):
     conn = None
@@ -681,8 +682,11 @@ def get_comissoes_camara(legislatura: int = Query(None)):
             """
             params = []
             if legislatura:
-                query += " INNER JOIN camara.deputados_mandatos m ON od.deputado_id = m.deputado_id WHERE m.legislatura_id = %s "
-                params.append(legislatura)
+                query += " INNER JOIN camara.deputados_mandatos m ON od.deputado_id = m.deputado_id WHERE m.legislatura_id = %s AND o.tipo_orgao ILIKE %s "
+                params.extend([legislatura, 'Comiss%'])
+            else:
+                query += " WHERE o.tipo_orgao ILIKE %s "
+                params.append('Comiss%')
             
             query += " GROUP BY o.id, o.sigla, o.nome, o.tipo_orgao ORDER BY o.tipo_orgao, o.nome"
             cursor.execute(query, tuple(params))
@@ -728,7 +732,7 @@ def get_comissoes_camara(legislatura: int = Query(None)):
                     WHERE od.orgao_id = %s AND m.sigla_partido IS NOT NULL
                     GROUP BY m.sigla_partido
                     ORDER BY qtd DESC
-                    LIMIT 4
+               
                 """
 
                 params_p = [legislatura, orgao_id] if legislatura else [orgao_id]

@@ -57,7 +57,7 @@
 
               <select
                 v-model="filterLegislatura"
-                class="w-full sm:w-auto px-4 py-3 sm:py-2 rounded-lg border border-purple-600/30 bg-purple-50 font-semibold text-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                class="w-full sm:w-auto px-4 py-3 sm:py-2 rounded-lg border border-gray-300 bg-background font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-gray-500 hover:shadow-md transition-shadow"
               >
                 <option :value="0">Todas as legislaturas</option>
                 <option v-for="leg in availableLegislaturas" :key="leg" :value="leg">{{ formatLegislatura(leg) }}</option>
@@ -202,7 +202,7 @@
             </div>
           </div>
 
-          <div v-if="comissoesFiltradas.length > displayedCount" class="flex justify-center mt-8">
+          <div v-if="!isSearching && comissoesFiltradas.length > displayedCount" class="flex justify-center mt-8">
             <button
               @click="loadMore"
               class="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-6 py-3 text-sm font-medium text-foreground hover:bg-muted"
@@ -356,7 +356,12 @@ const comissoesFiltradas = computed(() => {
   })
 })
 
+const isSearching = computed(() => searchQuery.value.trim() !== '' || searchMemberQuery.value.trim() !== '')
+
 const displayedComissoes = computed(() => {
+  if (isSearching.value) {
+    return comissoesFiltradas.value
+  }
   return comissoesFiltradas.value.slice(0, displayedCount.value)
 })
 
