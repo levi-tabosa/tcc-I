@@ -4,10 +4,15 @@
       <!-- Hero -->
       <section class="bg-gradient-to-br from-primary/10 via-background to-accent/10 py-12">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h1 class="text-3xl font-bold text-foreground sm:text-4xl">Projetos Legislativos da Câmara</h1>
-          <p class="mt-2 text-muted-foreground max-w-2xl">
-            Acompanhe os projetos de lei, PECs, medidas provisórias e outros projetos legislativos apresentados na Câmara dos Deputados.
-          </p>
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 class="text-3xl font-bold text-foreground sm:text-4xl">Projetos Legislativos da Câmara</h1>
+              <p class="mt-2 text-muted-foreground max-w-2xl">
+                Acompanhe os projetos de lei, PECs, medidas provisórias e outros projetos legislativos apresentados na Câmara dos Deputados.
+              </p>
+            </div>
+            <HeroLegislaturaSelect :store="store" />
+          </div>
         </div>
       </section>
       <BaseLoading v-if="store.loadingProjetosLegislativos && store.projetosLegislativosList.length === 0" message="Carregando projetos legislativos..." full-page />
@@ -31,6 +36,7 @@ import BaseLoading from '@/components/ui/BaseLoading.vue'
 import ProjetosLegislativosFilters from '@/components/camara/ProjetosLegislativosFilters.vue'
 import ProjetosLegislativosList from '@/components/camara/ProjetosLegislativosList.vue'
 import ProjetosLegislativosStats from '@/components/camara/ProjetosLegislativosStats.vue'
+import HeroLegislaturaSelect from '@/components/ui/HeroLegislaturaSelect.vue'
 import { useCamaraStore } from '@/stores/camara'
 
 const store = useCamaraStore()

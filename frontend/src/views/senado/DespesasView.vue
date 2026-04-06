@@ -19,17 +19,7 @@
             </div>
 
             <!-- Legislatura Selector -->
-            <div class="flex items-center gap-3 bg-purple-500/10 px-4 py-2 rounded-xl border border-purple-500/20">
-              <span class="text-xs font-bold text-purple-600 uppercase tracking-wider">Legislatura:</span>
-              <select
-                :value="store.legislatura"
-                @change="store.setLegislatura(Number(($event.target as HTMLSelectElement).value))"
-                class="text-sm font-bold text-neutral-800 bg-transparent border-none p-0 focus:ring-0 cursor-pointer"
-              >
-                <option :value="0">Todas as legislaturas</option>
-                <option v-for="leg in store.legislaturasDisponiveis" :key="leg" :value="leg">{{ formatLegislatura(leg) }}</option>
-              </select>
-            </div>
+            <HeroLegislaturaSelect :store="store" />
           </div>
         </div>
       </section>
@@ -242,6 +232,7 @@ import { useRouter } from 'vue-router'
 import { Banknote, Users, Receipt, ChevronRight } from 'lucide-vue-next'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseLoading from '@/components/ui/BaseLoading.vue'
+import HeroLegislaturaSelect from '@/components/ui/HeroLegislaturaSelect.vue'
 import { useSenadoStore } from '@/stores/senado'
 import { useLoadingStore } from '@/stores/loading'
 
@@ -252,23 +243,9 @@ const router = useRouter()
 const searchQuery = ref('')
 const filterPartido = ref('')
 
-const formatLegislatura = (legis: number) => {
-  if (legis === 0) return 'Todas as legislaturas'
-  const startYear = 2023 - (57 - legis) * 4
-  const endYear = startYear + 4
-  return `${legis}ª (${startYear}-${endYear})`
-}
 
 onMounted(async () => {
-  loadingStore.startLoading('Carregando dados do Senado...')
-  await store.fetchEstatisticasGerais()
-  loadingStore.stopLoading()
-})
-
-watch(() => store.legislatura, async () => {
-  loadingStore.startLoading('Carregando dados do Senado...')
-  await store.fetchEstatisticasGerais()
-  loadingStore.stopLoading()
+  store.fetchEstatisticasGerais()
 })
 
 // ── Gastos por Partido ──────────────────────────────────────────────────────

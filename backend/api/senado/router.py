@@ -730,6 +730,7 @@ def get_materia_listar(
 def get_lista_emendas(
     nome_senador: str = Query(None),
     ano: int = Query(None),
+    legislatura: int = Query(None),
     pagina: int = 1
 ):
     itens_por_pagina = 15
@@ -751,18 +752,32 @@ def get_lista_emendas(
                 SELECT COUNT(*)
                 FROM portal.emendas e
                 JOIN senadores_nomes s ON lower(e.nome_autor) = s.nome
-                WHERE 1=1
             """
+            
+            # Adicionar filtro de legislatura se especificado
+            where_conditions = []
             params_count = []
+            
+            if legislatura:
+                query_count += """
+                    JOIN senado.mandato m ON s.id = m.codigo_parlamentar
+                """
+                where_conditions.append("(m.primeira_legislatura = %s OR m.segunda_legislatura = %s)")
+                params_count.extend([str(legislatura), str(legislatura)])
+            
             if nome_senador:
-                query_count += """ AND s.id IN (
+                where_conditions.append("""s.id IN (
                     SELECT codigo FROM senado.parlamentar 
                     WHERE nome_completo ILIKE %s OR nome_parlamentar ILIKE %s
-                )"""
+                )""")
                 params_count.extend([f"%{nome_senador}%", f"%{nome_senador}%"])
+            
             if ano:
-                query_count += " AND e.ano = %s"
+                where_conditions.append("e.ano = %s")
                 params_count.append(ano)
+            
+            if where_conditions:
+                query_count += " WHERE " + " AND ".join(where_conditions)
             
             cursor.execute(query_count, tuple(params_count))
             total_items = cursor.fetchone()[0]
@@ -785,15 +800,29 @@ def get_lista_emendas(
                     e.localidade_gasto as localidade
                 FROM portal.emendas e
                 JOIN senadores_nomes s ON lower(e.nome_autor) = s.nome
-                WHERE 1=1
             """
+            
+            # Adicionar JOIN e filtros
+            where_conditions_data = []
             params = []
+            
+            if legislatura:
+                query += """
+                    JOIN senado.mandato m ON s.id = m.codigo_parlamentar
+                """
+                where_conditions_data.append("(m.primeira_legislatura = %s OR m.segunda_legislatura = %s)")
+                params.extend([str(legislatura), str(legislatura)])
+            
             if nome_senador:
-                query += " AND s.nome_senador ILIKE %s"
+                where_conditions_data.append("s.nome_senador ILIKE %s")
                 params.append(f"%{nome_senador}%")
+            
             if ano:
-                query += " AND e.ano = %s"
+                where_conditions_data.append("e.ano = %s")
                 params.append(ano)
+            
+            if where_conditions_data:
+                query += " WHERE " + " AND ".join(where_conditions_data)
                 
             query += " ORDER BY e.ano DESC, e.valor_pago DESC LIMIT %s OFFSET %s"
             params.extend([itens_por_pagina, offset])
@@ -830,8 +859,8 @@ def get_lista_emendas(
 
 
 @router.get("/emendas/resumo", summary="Obtém resumo das emendas do Senado")
-@lru_cache(maxsize=8)
-def get_resumo_emendas():
+@lru_cache(maxsize=32)
+def get_resumo_emendas(legislatura: int = Query(None)):
     conn = None
     try:
         conn = db.get_db_connection()
@@ -840,36 +869,76 @@ def get_resumo_emendas():
         
         with conn.cursor() as cursor:
             # 1. Totais Gerais (Optimized with CTE)
-            cursor.execute("""
-                WITH senadores_nomes AS (
-                    SELECT codigo as id, lower(nome_completo) as nome FROM senado.parlamentar
-                    UNION
-                    SELECT codigo as id, lower(nome_parlamentar) as nome FROM senado.parlamentar
-                )
-                SELECT 
-                    COUNT(DISTINCT s.id) as total_senadores,
-                    COUNT(DISTINCT e.localidade_gasto) as total_municipios,
-                    COUNT(DISTINCT e.funcao) as total_areas,
-                    COALESCE(SUM(e.valor_pago), 0) as valor_total
-                FROM portal.emendas e
-                JOIN senadores_nomes s ON lower(e.nome_autor) = s.nome
-            """)
+            if legislatura:
+                query_totais = """
+                    WITH senadores_nomes AS (
+                        SELECT codigo as id, lower(nome_completo) as nome FROM senado.parlamentar
+                        UNION
+                        SELECT codigo as id, lower(nome_parlamentar) as nome FROM senado.parlamentar
+                    )
+                    SELECT 
+                        COUNT(DISTINCT s.id) as total_senadores,
+                        COUNT(DISTINCT e.localidade_gasto) as total_municipios,
+                        COUNT(DISTINCT e.funcao) as total_areas,
+                        COALESCE(SUM(e.valor_pago), 0) as valor_total
+                    FROM portal.emendas e
+                    JOIN senadores_nomes s ON lower(e.nome_autor) = s.nome
+                    JOIN senado.mandato m ON s.id = m.codigo_parlamentar
+                    WHERE (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)
+                """
+                cursor.execute(query_totais, (str(legislatura), str(legislatura)))
+            else:
+                query_totais = """
+                    WITH senadores_nomes AS (
+                        SELECT codigo as id, lower(nome_completo) as nome FROM senado.parlamentar
+                        UNION
+                        SELECT codigo as id, lower(nome_parlamentar) as nome FROM senado.parlamentar
+                    )
+                    SELECT 
+                        COUNT(DISTINCT s.id) as total_senadores,
+                        COUNT(DISTINCT e.localidade_gasto) as total_municipios,
+                        COUNT(DISTINCT e.funcao) as total_areas,
+                        COALESCE(SUM(e.valor_pago), 0) as valor_total
+                    FROM portal.emendas e
+                    JOIN senadores_nomes s ON lower(e.nome_autor) = s.nome
+                """
+                cursor.execute(query_totais)
+            
             totais_row = cursor.fetchone()
             valor_total_global_totais = float(totais_row[3]) if totais_row[3] else 1.0
             
             # 2. Distribuição por Área (Optimized with CTE)
-            cursor.execute("""
-                WITH senadores_nomes AS (
-                    SELECT lower(nome_completo) as nome FROM senado.parlamentar
-                    UNION
-                    SELECT lower(nome_parlamentar) as nome FROM senado.parlamentar
-                )
-                SELECT e.funcao, SUM(e.valor_pago) as valor_total
-                FROM portal.emendas e
-                JOIN senadores_nomes s ON lower(e.nome_autor) = s.nome
-                GROUP BY e.funcao
-                ORDER BY valor_total DESC
-            """)
+            if legislatura:
+                query_areas = """
+                    WITH senadores_nomes AS (
+                        SELECT codigo as id, lower(nome_completo) as nome FROM senado.parlamentar
+                        UNION
+                        SELECT codigo as id, lower(nome_parlamentar) as nome FROM senado.parlamentar
+                    )
+                    SELECT e.funcao, SUM(e.valor_pago) as valor_total
+                    FROM portal.emendas e
+                    JOIN senadores_nomes s ON lower(e.nome_autor) = s.nome
+                    JOIN senado.mandato m ON s.id = m.codigo_parlamentar
+                    WHERE (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)
+                    GROUP BY e.funcao
+                    ORDER BY valor_total DESC
+                """
+                cursor.execute(query_areas, (str(legislatura), str(legislatura)))
+            else:
+                query_areas = """
+                    WITH senadores_nomes AS (
+                        SELECT lower(nome_completo) as nome FROM senado.parlamentar
+                        UNION
+                        SELECT lower(nome_parlamentar) as nome FROM senado.parlamentar
+                    )
+                    SELECT e.funcao, SUM(e.valor_pago) as valor_total
+                    FROM portal.emendas e
+                    JOIN senadores_nomes s ON lower(e.nome_autor) = s.nome
+                    GROUP BY e.funcao
+                    ORDER BY valor_total DESC
+                """
+                cursor.execute(query_areas)
+            
             areas_raw = cursor.fetchall()
             valor_total_global = sum(float(r[1]) for r in areas_raw) if areas_raw else 1.0
 
@@ -883,22 +952,45 @@ def get_resumo_emendas():
             ]
 
             # 3. Top 10 Senadores (Optimized with CTE)
-            cursor.execute("""
-                WITH senadores_nomes AS (
-                    SELECT codigo as id, lower(nome_completo) as nome FROM senado.parlamentar
-                    UNION
-                    SELECT codigo as id, lower(nome_parlamentar) as nome FROM senado.parlamentar
-                )
-                SELECT 
-                    p.codigo, p.nome_parlamentar, p.sigla_partido, p.uf, p.url_foto,
-                    SUM(e.valor_pago) as total_valor
-                FROM portal.emendas e
-                JOIN senadores_nomes s ON lower(e.nome_autor) = s.nome
-                JOIN senado.parlamentar p ON s.id = p.codigo
-                GROUP BY p.codigo, p.nome_parlamentar, p.sigla_partido, p.uf, p.url_foto
-                ORDER BY total_valor DESC
-                LIMIT 10
-            """)
+            if legislatura:
+                query_top = """
+                    WITH senadores_nomes AS (
+                        SELECT codigo as id, lower(nome_completo) as nome FROM senado.parlamentar
+                        UNION
+                        SELECT codigo as id, lower(nome_parlamentar) as nome FROM senado.parlamentar
+                    )
+                    SELECT 
+                        p.codigo, p.nome_parlamentar, p.sigla_partido, p.uf, p.url_foto,
+                        SUM(e.valor_pago) as total_valor
+                    FROM portal.emendas e
+                    JOIN senadores_nomes s ON lower(e.nome_autor) = s.nome
+                    JOIN senado.parlamentar p ON s.id = p.codigo
+                    JOIN senado.mandato m ON p.codigo = m.codigo_parlamentar
+                    WHERE (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)
+                    GROUP BY p.codigo, p.nome_parlamentar, p.sigla_partido, p.uf, p.url_foto
+                    ORDER BY total_valor DESC
+                    LIMIT 10
+                """
+                cursor.execute(query_top, (str(legislatura), str(legislatura)))
+            else:
+                query_top = """
+                    WITH senadores_nomes AS (
+                        SELECT codigo as id, lower(nome_completo) as nome FROM senado.parlamentar
+                        UNION
+                        SELECT codigo as id, lower(nome_parlamentar) as nome FROM senado.parlamentar
+                    )
+                    SELECT 
+                        p.codigo, p.nome_parlamentar, p.sigla_partido, p.uf, p.url_foto,
+                        SUM(e.valor_pago) as total_valor
+                    FROM portal.emendas e
+                    JOIN senadores_nomes s ON lower(e.nome_autor) = s.nome
+                    JOIN senado.parlamentar p ON s.id = p.codigo
+                    GROUP BY p.codigo, p.nome_parlamentar, p.sigla_partido, p.uf, p.url_foto
+                    ORDER BY total_valor DESC
+                    LIMIT 10
+                """
+                cursor.execute(query_top)
+            
             top_senadores = cursor.fetchall()
 
             return {

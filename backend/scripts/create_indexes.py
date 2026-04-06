@@ -31,6 +31,10 @@ def create_indexes():
             "CREATE INDEX IF NOT EXISTS idx_sen_despesa_data ON senado.despesa_ceaps(data_despesa DESC);",
             "CREATE INDEX IF NOT EXISTS idx_sen_despesa_tipo ON senado.despesa_ceaps(tipo_despesa);",
             "CREATE INDEX IF NOT EXISTS idx_sen_materia_busca ON senado.materia(ano DESC, sigla, numero);",
+            "CREATE INDEX IF NOT EXISTS idx_sen_parlamentar_nome ON senado.parlamentar(nome_parlamentar);",
+            "CREATE INDEX IF NOT EXISTS idx_sen_parlamentar_uf ON senado.parlamentar(uf);",
+            "CREATE INDEX IF NOT EXISTS idx_sen_mandato_legislatura ON senado.mandato(codigo_legislatura);",
+            "CREATE INDEX IF NOT EXISTS idx_sen_despesa_ano_mes ON senado.despesa_ceaps(ano, mes);",
             
             # ----- Câmara -----
             "CREATE INDEX IF NOT EXISTS idx_cam_mandatos_deputado ON camara.deputados_mandatos(deputado_id);",
@@ -43,10 +47,25 @@ def create_indexes():
             "CREATE INDEX IF NOT EXISTS idx_cam_votacoes_votos_votacao ON camara.votacoes_votos(votacao_id);",
             "CREATE INDEX IF NOT EXISTS idx_cam_votacoes_votos_deputado ON camara.votacoes_votos(deputado_id);",
             
-            # ----- Portal (Emendas) -----
+            # ----- Índices para busca textual (ILIKE) -----
+            "CREATE INDEX IF NOT EXISTS idx_cam_deputados_nome_lower ON camara.deputados(LOWER(nome_civil));",
+            "CREATE INDEX IF NOT EXISTS idx_cam_mandatos_nome_lower ON camara.deputados_mandatos(LOWER(nome_eleitoral));",
+            "CREATE INDEX IF NOT EXISTS idx_sen_parlamentar_nome_lower ON senado.parlamentar(LOWER(nome_parlamentar));",
+            "CREATE INDEX IF NOT EXISTS idx_sen_parlamentar_completo_lower ON senado.parlamentar(LOWER(nome_completo));",
+            
+            # ----- Portal (Emendas) - Otimizado para joins com parlamentares -----
+            "CREATE INDEX IF NOT EXISTS idx_portal_emendas_autor_lower ON portal.emendas(LOWER(autor));",
             "CREATE INDEX IF NOT EXISTS idx_portal_emendas_autor ON portal.emendas(autor);",
             "CREATE INDEX IF NOT EXISTS idx_portal_emendas_nome_autor ON portal.emendas(nome_autor);",
-            "CREATE INDEX IF NOT EXISTS idx_portal_emendas_ano_valor ON portal.emendas(ano DESC, valor_pago DESC);"
+            "CREATE INDEX IF NOT EXISTS idx_portal_emendas_ano_valor ON portal.emendas(ano DESC, valor_pago DESC);",
+            "CREATE INDEX IF NOT EXISTS idx_portal_emendas_funcao ON portal.emendas(funcao);",
+            "CREATE INDEX IF NOT EXISTS idx_portal_emendas_localidade ON portal.emendas(localidade_gasto);",
+            
+            # ----- Índices compostos para queries complexas -----
+            "CREATE INDEX IF NOT EXISTS idx_cam_mandatos_dep_leg ON camara.deputados_mandatos(deputado_id, legislatura_id);",
+            "CREATE INDEX IF NOT EXISTS idx_sen_despesa_senador_data ON senado.despesa_ceaps(cod_senador, data_despesa DESC);",
+            "CREATE INDEX IF NOT EXISTS idx_portal_emendas_autor_ano ON portal.emendas(LOWER(autor), ano DESC, valor_pago DESC);",
+            "CREATE INDEX IF NOT EXISTS idx_sen_mandato_codigo_legs ON senado.mandato(codigo_parlamentar, primeira_legislatura, segunda_legislatura);"
         ]
 
         for query in indexes:
