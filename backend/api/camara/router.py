@@ -1034,14 +1034,14 @@ def get_estatisticas_despesas(legislatura: int):
             cursor.execute(query_total_geral, tuple(params_total))
             total_geral = cursor.fetchone()[0] or 0
             
-            query_total_fornecedores = "SELECT COUNT(DISTINCT cnpj_cpf_fornecedor) FROM camara.deputados_despesas desp"
+            query_total_fornecedores = "SELECT COUNT(DISTINCT LEFT(REGEXP_REPLACE(desp.cnpj_cpf_fornecedor, '[^0-9]', '', 'g'), 8)) FROM camara.deputados_despesas desp WHERE LENGTH(REGEXP_REPLACE(desp.cnpj_cpf_fornecedor, '[^0-9]', '', 'g')) > 11"
             params_forn = []
             if legislatura:
                 query_total_fornecedores = """
-                    SELECT COUNT(DISTINCT desp.cnpj_cpf_fornecedor)
+                    SELECT COUNT(DISTINCT LEFT(REGEXP_REPLACE(desp.cnpj_cpf_fornecedor, '[^0-9]', '', 'g'), 8))
                     FROM camara.deputados_despesas desp
                     JOIN camara.deputados_mandatos m ON desp.mandato_id = m.id
-                    WHERE m.legislatura_id = %s
+                    WHERE m.legislatura_id = %s AND LENGTH(REGEXP_REPLACE(desp.cnpj_cpf_fornecedor, '[^0-9]', '', 'g')) > 11
                 """
                 params_forn.append(legislatura)
                 
@@ -1112,12 +1112,12 @@ def get_estatisticas_empresas(legislatura: int, limit: int = 20):
             # 1. Estatísticas Gerais
             query_gerais = """
                 SELECT 
-                    COUNT(DISTINCT d.cnpj_cpf_fornecedor) as total_empresas,
+                    COUNT(DISTINCT LEFT(REGEXP_REPLACE(d.cnpj_cpf_fornecedor, '[^0-9]', '', 'g'), 8)) as total_empresas,
                     SUM(d.valor_documento) as total_pago,
                     COUNT(*) as total_contratos
                 FROM camara.deputados_despesas d
                 JOIN camara.deputados_mandatos m ON d.mandato_id = m.id
-                WHERE LENGTH(d.cnpj_cpf_fornecedor) > 11
+                WHERE LENGTH(REGEXP_REPLACE(d.cnpj_cpf_fornecedor, '[^0-9]', '', 'g')) > 11
             """
             params_geral = []
             if legislatura:
@@ -1132,32 +1132,32 @@ def get_estatisticas_empresas(legislatura: int, limit: int = 20):
             query_top = """
             WITH top_fornecedores AS (
                 SELECT 
-                    d.cnpj_cpf_fornecedor,
+                    LEFT(REGEXP_REPLACE(d.cnpj_cpf_fornecedor, '[^0-9]', '', 'g'), 8) as cnpj_raiz,
                     MAX(d.nome_fornecedor) as nome,
                     SUM(d.valor_documento) as total_valor,
                     COUNT(*) as qtd_contratos
                 FROM camara.deputados_despesas d
                 JOIN camara.deputados_mandatos m ON d.mandato_id = m.id
-                WHERE LENGTH(d.cnpj_cpf_fornecedor) > 11
+                WHERE LENGTH(REGEXP_REPLACE(d.cnpj_cpf_fornecedor, '[^0-9]', '', 'g')) > 11
             """
             if legislatura:
                 query_top += " AND m.legislatura_id = %s"
             
             query_top += """
-                GROUP BY d.cnpj_cpf_fornecedor
+                GROUP BY LEFT(REGEXP_REPLACE(d.cnpj_cpf_fornecedor, '[^0-9]', '', 'g'), 8)
             ),
             partidos_pagadores AS (
                 SELECT 
-                    d.cnpj_cpf_fornecedor,
+                    LEFT(REGEXP_REPLACE(d.cnpj_cpf_fornecedor, '[^0-9]', '', 'g'), 8) as cnpj_raiz,
                     m.sigla_partido,
                     SUM(d.valor_documento) as valor
                 FROM camara.deputados_despesas d
                 JOIN camara.deputados_mandatos m ON d.mandato_id = m.id
-                JOIN top_fornecedores tf ON d.cnpj_cpf_fornecedor = tf.cnpj_cpf_fornecedor
-                GROUP BY d.cnpj_cpf_fornecedor, m.sigla_partido
+                JOIN top_fornecedores tf ON LEFT(REGEXP_REPLACE(d.cnpj_cpf_fornecedor, '[^0-9]', '', 'g'), 8) = tf.cnpj_raiz
+                GROUP BY LEFT(REGEXP_REPLACE(d.cnpj_cpf_fornecedor, '[^0-9]', '', 'g'), 8), m.sigla_partido
             )
             SELECT 
-                tf.cnpj_cpf_fornecedor,
+                tf.cnpj_raiz,
                 tf.nome,
                 tf.total_valor,
                 tf.qtd_contratos,
@@ -1166,7 +1166,7 @@ def get_estatisticas_empresas(legislatura: int, limit: int = 20):
                     FROM (
                         SELECT pp.sigla_partido
                         FROM partidos_pagadores pp
-                        WHERE pp.cnpj_cpf_fornecedor = tf.cnpj_cpf_fornecedor
+                        WHERE pp.cnpj_raiz = tf.cnpj_raiz
                         ORDER BY pp.valor DESC
                         LIMIT 3
                     ) sub

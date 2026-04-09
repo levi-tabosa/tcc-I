@@ -1182,13 +1182,13 @@ def get_estatisticas_empresas(legislatura: int):
         with conn.cursor() as cursor:
             query_gerais = """
                SELECT
-                    COUNT(DISTINCT d.cpf_cnpj) as total_empresas,
+                    COUNT(DISTINCT LEFT(REGEXP_REPLACE(d.cpf_cnpj, '[^0-9]', '', 'g'), 8)) as total_empresas,
                     SUM(d.valor_reembolsado) as total_pago,
                     COUNT(*) as total_contratos
                 FROM senado.despesa_ceaps d
                 LEFT JOIN senado.parlamentar p ON d.cod_senador = p.codigo
                 JOIN senado.mandato m ON p.codigo = m.codigo_parlamentar
-                WHERE 1=1
+                WHERE LENGTH(REGEXP_REPLACE(d.cpf_cnpj, '[^0-9]', '', 'g')) > 11
             """
             params_gerais = []
             if legislatura:
@@ -1200,45 +1200,45 @@ def get_estatisticas_empresas(legislatura: int):
 
             query_top_10 = """
                 SELECT
-                    d.fornecedor as empresa,
+                    MAX(d.fornecedor) as empresa,
                     SUM(d.valor_reembolsado) as valor_total
                 FROM senado.despesa_ceaps d
                 LEFT JOIN senado.parlamentar p ON d.cod_senador = p.codigo
                 JOIN senado.mandato m ON p.codigo = m.codigo_parlamentar
-                WHERE 1=1
+                WHERE LENGTH(REGEXP_REPLACE(d.cpf_cnpj, '[^0-9]', '', 'g')) > 11
             """
             params_top10 = []
             if legislatura:
                 query_top_10 += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
                 params_top10.extend([str(legislatura), str(legislatura)])
             
-            query_top_10 += " GROUP BY d.fornecedor ORDER BY valor_total DESC LIMIT 10"
+            query_top_10 += " GROUP BY LEFT(REGEXP_REPLACE(d.cpf_cnpj, '[^0-9]', '', 'g'), 8) ORDER BY valor_total DESC LIMIT 10"
             cursor.execute(query_top_10, tuple(params_top10))
             res_top_10 = cursor.fetchall()
             
             query_top_20 = """
 WITH EmpresaStats AS (
     SELECT
-        d.fornecedor,
-        d.cpf_cnpj,
+        MAX(d.fornecedor) as fornecedor,
+        LEFT(REGEXP_REPLACE(d.cpf_cnpj, '[^0-9]', '', 'g'), 8) as cpf_cnpj,
         SUM(d.valor_reembolsado) as valor_total,
         COUNT(*) as contratos
     FROM senado.despesa_ceaps d
     LEFT JOIN senado.parlamentar p ON d.cod_senador = p.codigo
     JOIN senado.mandato m ON p.codigo = m.codigo_parlamentar
-    WHERE 1=1
+    WHERE LENGTH(REGEXP_REPLACE(d.cpf_cnpj, '[^0-9]', '', 'g')) > 11
 """
             if legislatura:
                 query_top_20 += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
             
             query_top_20 += """
-    GROUP BY d.fornecedor, d.cpf_cnpj
+    GROUP BY LEFT(REGEXP_REPLACE(d.cpf_cnpj, '[^0-9]', '', 'g'), 8)
 ),
 TotalGeral AS (
     SELECT SUM(d.valor_reembolsado) as soma_total FROM senado.despesa_ceaps d
     LEFT JOIN senado.parlamentar p ON d.cod_senador = p.codigo
     JOIN senado.mandato m ON p.codigo = m.codigo_parlamentar
-    WHERE 1=1
+    WHERE LENGTH(REGEXP_REPLACE(d.cpf_cnpj, '[^0-9]', '', 'g')) > 11
 """
             if legislatura:
                 query_top_20 += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
@@ -1247,19 +1247,18 @@ TotalGeral AS (
 ),
 EmpresaPartidos AS (
     SELECT
-        d.fornecedor,
-        d.cpf_cnpj,
+        LEFT(REGEXP_REPLACE(d.cpf_cnpj, '[^0-9]', '', 'g'), 8) as cpf_cnpj,
         STRING_AGG(DISTINCT p.sigla_partido, ', ') as partidos
     FROM senado.despesa_ceaps d
     LEFT JOIN senado.parlamentar p ON d.cod_senador = p.codigo
     JOIN senado.mandato m ON p.codigo = m.codigo_parlamentar
-    WHERE 1=1
+    WHERE LENGTH(REGEXP_REPLACE(d.cpf_cnpj, '[^0-9]', '', 'g')) > 11
 """
             if legislatura:
                 query_top_20 += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
 
             query_top_20 += """
-    GROUP BY d.fornecedor, d.cpf_cnpj
+    GROUP BY LEFT(REGEXP_REPLACE(d.cpf_cnpj, '[^0-9]', '', 'g'), 8)
 )
 SELECT
     ROW_NUMBER() OVER (ORDER BY es.valor_total DESC) as rank,
@@ -1270,7 +1269,7 @@ SELECT
     es.contratos,
     ROUND((es.valor_total / NULLIF(tg.soma_total, 0)) * 100, 2) as percentual
 FROM EmpresaStats es
-JOIN EmpresaPartidos ep ON es.fornecedor = ep.fornecedor AND es.cpf_cnpj = ep.cpf_cnpj
+JOIN EmpresaPartidos ep ON es.cpf_cnpj = ep.cpf_cnpj
 CROSS JOIN TotalGeral tg
 ORDER BY es.valor_total DESC
 LIMIT 20;
