@@ -1090,7 +1090,6 @@ def get_estatisticas_empresas(limit: int = 20, legislatura: int = Query(None)):
         
         with conn.cursor() as cursor:
             # 1. Estatísticas Gerais
-            # 1. Estatísticas Gerais
             query_gerais = """
                 SELECT 
                     COUNT(DISTINCT d.cnpj_cpf_fornecedor) as total_empresas,
