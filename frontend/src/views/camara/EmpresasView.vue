@@ -14,7 +14,7 @@
                   Ranking de Fornecedores da Câmara
                 </h1>
                 <p class="mt-2 text-muted-foreground max-w-2xl text-lg leading-relaxed">
-                  Quem são os maiores fornecedores da Câmara dos Deputados? Monitore quais empresas recebem recursos da Cota Parlamentar (CEAP) e fiscalize detalhadamente o destino dessas verbas.
+                  Monitore quais empresas recebem recursos da Cota Parlamentar (CEAP) e fiscalize detalhadamente o destino dessas verbas.
                 </p>
               </div>
             </div>
