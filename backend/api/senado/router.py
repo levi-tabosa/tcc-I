@@ -933,7 +933,7 @@ def get_resumo_emendas(legislatura: int):
                 cursor.execute(query_totais)
             
             totais_row = cursor.fetchone()
-            valor_total_global_totais = float(totais_row[3]) if totais_row[3] else 1.0
+            valor_total_global = float(totais_row[3]) if totais_row[3] and float(totais_row[3]) > 0 else 1.0
             
             # 2. Distribuição por Área (Optimized with CTE)
             if legislatura:
@@ -969,7 +969,6 @@ def get_resumo_emendas(legislatura: int):
                 cursor.execute(query_areas)
             
             areas_raw = cursor.fetchall()
-            valor_total_global = sum(float(r[1]) for r in areas_raw) if areas_raw else 1.0
 
             areas_formatadas = [
                 {
