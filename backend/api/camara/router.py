@@ -875,6 +875,13 @@ def get_emendas_deputado(legislatura: int, deputado_id: int):
         
         with conn.cursor() as cursor:
             query = """
+                SELECT 
+                    e.codigo_emenda as codigo,
+                    e.ano,
+                    e.tipo_emenda as tipo,
+                    e.valor_pago,
+                    e.funcao,
+                    e.localidade_gasto as localidade
                 FROM portal.emendas e
                 JOIN (
                     SELECT id, lower(nome_civil) as nome FROM camara.deputados

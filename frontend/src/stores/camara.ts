@@ -249,7 +249,7 @@ export const useCamaraStore = defineStore("camara", () => {
 
   const fetchEstatisticasGerais = async () => {
     try {
-      const response = await fetch(`${apiUrl}/api/camara/${legislatura.value}/estatisticas`)
+      const response = await fetch(`${apiUrl}/api/camara/${legislatura.value}/despesas/estatisticas`)
       if (!response.ok) throw new Error("Falha ao buscar estatísticas")
       generalStats.value = await response.json()
     } catch (e: any) {

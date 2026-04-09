@@ -140,21 +140,7 @@
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
             <h2 class="text-2xl font-bold text-foreground">Ranking de Deputados</h2>
-            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-              <input
-                v-model="searchQuery"
-                type="text"
-                placeholder="Buscar deputado..."
-                class="px-3 py-1.5 text-sm rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-              />
-              <select
-                v-model="filterPartido"
-                class="px-3 py-1.5 text-sm rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-              >
-                <option value="">Todos os partidos</option>
-                <option v-for="p in partidosUnicosRanking" :key="p" :value="p">{{ p }}</option>
-              </select>
-            </div>
+              <!-- Filtros removidos -->
           </div>
 
           <div class="space-y-3">
@@ -235,10 +221,6 @@ import { useLoadingStore } from "@/stores/loading"
 const store = useCamaraStore()
 const loadingStore = useLoadingStore()
 const router = useRouter()
-
-const searchQuery = ref('')
-const filterPartido = ref('')
-
 
 onMounted(async () => {
   loadingStore.startLoading('Carregando estatísticas da Câmara...')
@@ -337,23 +319,9 @@ const deputadosComGasto = computed(() => {
   }))
 })
 
-const partidosUnicosRanking = computed(() => {
-  const set = new Set(deputadosComGasto.value.map(d => d.partido).filter(Boolean))
-  return Array.from(set).sort()
-})
-
-const normalizeString = (str: string) => {
-  return str ? str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() : ''
-}
-
 const deputadosFiltrados = computed(() => {
   const maxGasto = deputadosComGasto.value[0]?.totalGasto || 1
   return deputadosComGasto.value
-    .filter(d => {
-      if (searchQuery.value && !normalizeString(d.nome).includes(normalizeString(searchQuery.value))) return false
-      if (filterPartido.value && d.partido !== filterPartido.value) return false
-      return true
-    })
     .map(d => ({
       ...d,
       valorFormatado: d.totalGasto >= 1000000
