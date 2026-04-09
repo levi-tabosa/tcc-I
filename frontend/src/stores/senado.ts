@@ -102,6 +102,7 @@ export const useSenadoStore = defineStore("senado", () => {
     await Promise.allSettled([
         fetchSenadores(),
         fetchEstatisticasGerais(),
+        fetchEstatisticasSenadores(),
         fetchProjetosLegislativos()
     ])
   }

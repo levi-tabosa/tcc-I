@@ -115,8 +115,18 @@ def get_estatisticas_senado(legislatura: int = Query(None)):
             row = cursor.fetchone()
             total_senadores = row[0] if row else 0
 
-            query_gastos = "SELECT COALESCE(SUM(valor_reembolsado), 0) FROM senado.despesa_ceaps"
-            cursor.execute(query_gastos)
+            query_gastos = """
+                SELECT COALESCE(SUM(d.valor_reembolsado), 0) 
+                FROM senado.despesa_ceaps d
+                INNER JOIN senado.mandato m ON d.cod_senador = m.codigo_parlamentar
+                WHERE 1=1
+            """
+            params_gastos = []
+            if legislatura:
+                query_gastos += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
+                params_gastos.extend([str(legislatura), str(legislatura)])
+            
+            cursor.execute(query_gastos, tuple(params_gastos))
             total_gastos = cursor.fetchone()[0] or 0
 
             # Distribuição por Região
@@ -133,10 +143,11 @@ def get_estatisticas_senado(legislatura: int = Query(None)):
                     COUNT(DISTINCT p.codigo) AS quantidade
                 FROM senado.parlamentar p
                 INNER JOIN senado.mandato m ON p.codigo = m.codigo_parlamentar
+                WHERE 1=1
             """
             params_reg = []
             if legislatura:
-                query_regiao += " WHERE m.primeira_legislatura = %s OR m.segunda_legislatura = %s"
+                query_regiao += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
                 params_reg.extend([str(legislatura), str(legislatura)])
                 
             query_regiao += " GROUP BY regiao ORDER BY quantidade DESC"
