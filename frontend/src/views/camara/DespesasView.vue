@@ -224,7 +224,7 @@
 
 <script setup lang="ts">
 import { Banknote, Users, Building2, ChevronRight } from 'lucide-vue-next'
-import { onMounted, computed, ref, watch } from 'vue'
+import { onMounted, computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseLoading from '@/components/ui/BaseLoading.vue'

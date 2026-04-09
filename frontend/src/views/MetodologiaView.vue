@@ -186,7 +186,7 @@ import { ref } from 'vue'
 import {
   BookOpen, Building2, Landmark, Database, Receipt, FileText,
   Vote, ChevronRight, ChevronDown, Check, ArrowRight,
-  Lightbulb, RefreshCw, Scale, Users
+  Lightbulb,  Scale, Users
 } from 'lucide-vue-next'
 import BaseButton from '@/components/ui/BaseButton.vue'
 

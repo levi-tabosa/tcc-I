@@ -75,7 +75,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { onMounted } from 'vue'
 import { 
   Users, 
   Receipt, 
@@ -93,7 +93,6 @@ onMounted(() => {
   senadoresStore.fetchEstatisticasGerais()
   senadoresStore.fetchEstatisticasSenadores()
 })
-const senadoresCount = computed(() => senadoresStore.senadorStats?.total_senadores ?? '--')
 
 const camaraItems = [
   {
