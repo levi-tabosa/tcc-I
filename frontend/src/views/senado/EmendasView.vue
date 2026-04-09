@@ -143,7 +143,7 @@ const senadoStore = useSenadoStore()
 
 async function carregarEstatisticas() {
   try {
-    const resposta = await fetch(`${API_URL}/api/senado/emendas/resumo?legislatura=${senadoStore.legislatura}`)
+    const resposta = await fetch(`${API_URL}/api/senado/${senadoStore.legislatura}/emendas/resumo`)
     if (!resposta.ok) throw new Error('Erro ao buscar estatísticas')
     estatisticas.value = await resposta.json()
   } catch (erro) {

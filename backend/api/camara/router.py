@@ -38,11 +38,11 @@ def get_legislaturas_camara():
         if conn:
             db.release_db_connection(conn)
 
-@router.get("/emendas", summary="Busca uma lista de emendas parlamentares")
+@router.get("/{legislatura}/emendas", summary="Busca uma lista de emendas parlamentares")
 def get_lista_emendas(
+    legislatura: int,
     nome_deputado: str = Query(None),
     ano: int = Query(None),
-    legislatura: int = Query(None),
     pagina: int = 1
 ):
     itens_por_pagina = 15
@@ -174,9 +174,9 @@ def get_lista_emendas(
         if conn:
             db.release_db_connection(conn)
 
-@router.get("/emendas/resumo", summary="Obtém resumo das emendas")
+@router.get("/{legislatura}/emendas/resumo", summary="Obtém resumo das emendas")
 @lru_cache(maxsize=32)
-def get_resumo_emendas(legislatura: int = Query(None)):
+def get_resumo_emendas(legislatura: int):
     conn = None
     try:
         conn = db.get_db_connection()
@@ -190,9 +190,11 @@ def get_resumo_emendas(legislatura: int = Query(None)):
             leg_params = []
             
             if legislatura:
-                leg_join = "JOIN camara.deputados_mandatos m ON p.id = m.deputado_id"
-                leg_where = "WHERE m.legislatura_id = %s"
-                leg_params = [legislatura]
+                leg_join = ""
+                start_year = 2023 - (57 - legislatura) * 4
+                end_year = start_year + 3
+                leg_where = "WHERE CAST(e.ano AS INTEGER) BETWEEN %s AND %s"
+                leg_params = [start_year, end_year]
             
             # 1. Totais Gerais
             query_totais = f"""
@@ -310,13 +312,13 @@ def get_resumo_emendas(legislatura: int = Query(None)):
         if conn:
             db.release_db_connection(conn)
 
-@router.get("/proposicoes", summary="Busca uma lista de projetos legislativos")
+@router.get("/{legislatura}/proposicoes", summary="Busca uma lista de projetos legislativos")
 def get_lista_proposicoes(
+    legislatura: int,
     siglaTipo: str = Query(None), 
     ano: int = Query(None), 
     ementa: str = Query(None), 
     deputado: str = Query(None),
-    legislatura: int = Query(None),
     limite: int = Query(15),
     pagina: int = 1
 ):
@@ -436,8 +438,8 @@ def get_lista_proposicoes(
         if conn:
             db.release_db_connection(conn)
 
-@router.get("/proposicoes/{proposicao_id}/votos", summary="Obtém o histórico de votos de um projeto legislativo")
-def get_votos_proposicao(proposicao_id: int):
+@router.get("/{legislatura}/proposicoes/{proposicao_id}/votos", summary="Obtém o histórico de votos de um projeto legislativo")
+def get_votos_proposicao(legislatura: int, proposicao_id: int):
     conn = None
     try:
         conn = db.get_db_connection()
@@ -458,9 +460,16 @@ def get_votos_proposicao(proposicao_id: int):
                 INNER JOIN camara.votacoes_votos vv ON v.id = vv.votacao_id
                 INNER JOIN camara.deputados d ON vv.deputado_id = d.id
                 WHERE vp.proposicao_id = %s AND vv.tipo_voto != 'Artigo 17'
-                ORDER BY v.data DESC, d.nome_civil ASC
             """
-            cursor.execute(query, (proposicao_id,))
+            params = [proposicao_id]
+            if legislatura:
+                start_year = 2023 - (57 - legislatura) * 4
+                end_year = start_year + 3
+                query += " AND EXTRACT(YEAR FROM v.data) BETWEEN %s AND %s"
+                params.extend([start_year, end_year])
+            
+            query += " ORDER BY v.data DESC, d.nome_civil ASC"
+            cursor.execute(query, tuple(params))
             resultados = cursor.fetchall()
             
             votacoes_dict = {}
@@ -493,9 +502,9 @@ def get_votos_proposicao(proposicao_id: int):
         if conn:
             db.release_db_connection(conn)
 
-@router.get("/lista", summary="Lista todos os deputados ativos")
+@router.get("/{legislatura}/lista", summary="Lista todos os deputados ativos")
 @lru_cache(maxsize=16)
-def get_todos_deputados(legislatura: int = Query(None)):
+def get_todos_deputados(legislatura: int):
     conn = None
     try:
         conn = db.get_db_connection()
@@ -538,9 +547,9 @@ def get_todos_deputados(legislatura: int = Query(None)):
         if conn:
             db.release_db_connection(conn)
 
-@router.get("/estatisticas", summary="Obtém estatísticas gerais dos deputados")
+@router.get("/{legislatura}/estatisticas", summary="Obtém estatísticas gerais dos deputados")
 @lru_cache(maxsize=8)
-def get_estatisticas_gerais(legislatura: int = Query(None)):
+def get_estatisticas_gerais(legislatura: int):
     conn = None
     try:
         conn = db.get_db_connection()
@@ -594,8 +603,8 @@ def get_estatisticas_gerais(legislatura: int = Query(None)):
 
 
 
-@router.get("/comparar", summary="Compara perfil e gastos entre dois deputados")
-def get_comparativo_deputados(id1: int, id2: int, ano: int = None, legislatura: int = Query(None)):
+@router.get("/{legislatura}/comparar", summary="Compara perfil e gastos entre dois deputados")
+def get_comparativo_deputados(legislatura: int, id1: int, id2: int, ano: int = None):
     if id1 == id2:
         raise HTTPException(status_code=400, detail="Escolha dois deputados diferentes para comparar.")
 
@@ -710,8 +719,8 @@ def get_comparativo_deputados(id1: int, id2: int, ano: int = None, legislatura: 
         if conn:
             db.release_db_connection(conn)
 
-@router.get("/{deputado_id}", summary="Obtém os detalhes do perfil e despesas do deputado pelo ID")
-def get_perfil_deputado(deputado_id: int, legislatura: int = Query(None)):
+@router.get("/{legislatura}/{deputado_id}", summary="Obtém os detalhes do perfil e despesas do deputado pelo ID (via path)")
+def get_perfil_deputado(legislatura: int, deputado_id: int):
     conn = None
     try:
         conn = db.get_db_connection()
@@ -749,9 +758,9 @@ def get_perfil_deputado(deputado_id: int, legislatura: int = Query(None)):
                     # Existe mas sem mandatos registrados? (Raro)
                     raise HTTPException(status_code=404, detail=f"Deputado com ID {deputado_id} não possui mandatos registrados")
 
-            # A legislatura efetivamente encontrada (pode ser diferente da pedida)
-            # Se legislatura for 0, tratamos como 'Todas', então leg_efetiva fica None para não filtrar despesas
-            leg_efetiva = row[11] if legislatura else None
+            # A legislatura efetivamente encontrada
+            # Sempre usamos a legislatura do mandato encontrado, nunca deixamos como None/0
+            leg_efetiva = row[11]
             
             res = {
                 "id": row[0],
@@ -858,8 +867,8 @@ def get_perfil_deputado(deputado_id: int, legislatura: int = Query(None)):
         if conn:
             db.release_db_connection(conn)
 
-@router.get("/{deputado_id}/emendas", summary="Obtém a lista de emendas parlamentares de um deputado")
-def get_emendas_deputado(deputado_id: int):
+@router.get("/{legislatura}/{deputado_id}/emendas", summary="Obtém a lista de emendas parlamentares de um deputado")
+def get_emendas_deputado(legislatura: int, deputado_id: int):
     conn = None
     try:
         conn = db.get_db_connection()
@@ -876,11 +885,22 @@ def get_emendas_deputado(deputado_id: int):
                     e.funcao,
                     e.localidade_gasto as localidade
                 FROM portal.emendas e
-                JOIN camara.deputados d ON lower(e.nome_autor) = lower(d.nome_civil)
+                JOIN (
+                    SELECT id, lower(nome_civil) as nome FROM camara.deputados
+                    UNION
+                    SELECT deputado_id as id, lower(nome_eleitoral) as nome FROM camara.deputados_mandatos
+                ) d ON lower(e.autor) = d.nome
                 WHERE d.id = %s
-                ORDER BY e.ano DESC, e.valor_pago DESC
             """
-            cursor.execute(query, (deputado_id,))
+            params = [deputado_id]
+            if legislatura:
+                start_year = 2023 - (57 - legislatura) * 4
+                end_year = start_year + 3
+                query += " AND e.ano BETWEEN %s AND %s"
+                params.extend([start_year, end_year])
+            
+            query += " ORDER BY e.ano DESC, e.valor_pago DESC"
+            cursor.execute(query, tuple(params))
             res = cursor.fetchall()
             
             return [
@@ -901,9 +921,9 @@ def get_emendas_deputado(deputado_id: int):
         if conn:
             db.release_db_connection(conn)
 
-@router.get("/despesas/estatisticas", summary="Obtém o panorama geral de gastos da Câmara")
+@router.get("/{legislatura}/despesas/estatisticas", summary="Obtém o panorama geral de gastos da Câmara")
 @lru_cache(maxsize=4)
-def get_estatisticas_despesas(legislatura: int = Query(None)):
+def get_estatisticas_despesas(legislatura: int):
     conn = None
     try:
         conn = db.get_db_connection()
@@ -1079,9 +1099,9 @@ def get_estatisticas_despesas(legislatura: int = Query(None)):
         if conn:
             db.release_db_connection(conn)
 
-@router.get("/empresas/estatisticas", summary="Obtém as estatísticas e ranking das empresas contratadas")
+@router.get("/{legislatura}/empresas/estatisticas", summary="Obtém as estatísticas e ranking das empresas contratadas")
 @lru_cache(maxsize=4)
-def get_estatisticas_empresas(limit: int = 20, legislatura: int = Query(None)):
+def get_estatisticas_empresas(legislatura: int, limit: int = 20):
     conn = None
     try:
         conn = db.get_db_connection()

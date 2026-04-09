@@ -43,8 +43,8 @@ def get_legislaturas_senado():
         if conn:
             db.release_db_connection(conn)
 
-@router.get("/lista", summary="Lista todos os senadores ativos")
-def get_lista_senadores(legislatura: int = Query(None)):
+@router.get("/{legislatura}/lista", summary="Lista todos os senadores ativos")
+def get_lista_senadores(legislatura: int):
     conn = None
     try:
         conn = db.get_db_connection()
@@ -95,9 +95,9 @@ def get_lista_senadores(legislatura: int = Query(None)):
 
 
 
-@router.get("/estatisticas")
+@router.get("/{legislatura}/estatisticas")
 @lru_cache(maxsize=16)
-def get_estatisticas_senado(legislatura: int = Query(None)):
+def get_estatisticas_senado(legislatura: int):
     conn = None
     try:
         conn = db.get_db_connection()
@@ -171,8 +171,8 @@ def get_estatisticas_senado(legislatura: int = Query(None)):
             db.release_db_connection(conn)
 
 
-@router.get("/comparar")
-def get_comparativo_senadores(id1: int, id2: int, ano: int = None, legislatura: int = Query(None)):
+@router.get("/{legislatura}/comparar")
+def get_comparativo_senadores(legislatura: int, id1: int, id2: int):
     conn = None
     try:
         conn = db.get_db_connection()
@@ -215,8 +215,8 @@ WHERE d.cod_senador IN (%s, %s)
             """
             params_stat = [id1, id2]
             if legislatura:
-                query_despesas += " AND m.codigo_legislatura = %s"
-                params_stat.append(legislatura)
+                query_despesas += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
+                params_stat.extend([str(legislatura), str(legislatura)])
                 
             query_despesas += " GROUP BY d.cod_senador, d.tipo_despesa"
             cursor.execute(query_despesas, tuple(params_stat))
@@ -306,8 +306,8 @@ ORDER BY data_despesa DESC;
             db.release_db_connection(conn)
                 
 
-@router.get("/{senador_codigo}", summary="Obtém o perfil detalhado de um senador")
-def get_perfil_senador(senador_codigo: int, legislatura: int = Query(None)):    
+@router.get("/{legislatura}/{senador_codigo}", summary="Obtém o perfil detalhado de um senador")
+def get_perfil_senador(legislatura: int, senador_codigo: int):    
     conn = None
     try:
         conn = db.get_db_connection()
@@ -366,14 +366,13 @@ WHERE codigo = %s;"""
                     legis_set.add(int(str(m[1]).strip()))
             legislaturas_ativas = sorted(list(legis_set), reverse=True)
 
-            # 4. Determinar Legislatura Exibida
-            leg_exibida = legislatura
-            if legislatura:
-                if legislatura not in legislaturas_ativas:
-                    leg_exibida = legislaturas_ativas[0] if legislaturas_ativas else 57
+            # Determinar Legislatura Exibida (Sempre forçamos uma real)
+            if legislatura and legislatura in legislaturas_ativas:
+                leg_exibida = legislatura
+            elif legislaturas_ativas:
+                leg_exibida = legislaturas_ativas[0]
             else:
-                # Se legislatura for 0 ou None, passamos 0 para indicar 'Todas'
-                leg_exibida = 0
+                leg_exibida = 57
 
             return {
                 "senador": {
@@ -400,8 +399,8 @@ WHERE codigo = %s;"""
             db.release_db_connection(conn)
 
 
-@router.get("/{senador_codigo}/despesas", summary="Obtém o extrato de despesas de um senador")
-def get_despesas_senador(senador_codigo: int, legislatura: int = Query(None), pagina: int = 1):
+@router.get("/{legislatura}/{senador_codigo}/despesas", summary="Obtém o extrato de despesas de um senador")
+def get_despesas_senador(legislatura: int, senador_codigo: int, pagina: int = 1):
     itens_per_page = 20
     offset = (pagina - 1) * itens_per_page
     conn = None
@@ -414,12 +413,13 @@ def get_despesas_senador(senador_codigo: int, legislatura: int = Query(None), pa
             # 1. Buscar o total de despesas para paginação
             query_count = """SELECT COUNT(*) 
                 FROM senado.despesa_ceaps d
-                INNER JOIN senado.mandato m ON d.cod_senador = m.codigo_parlamentar
                 WHERE d.cod_senador = %s"""
             params_count = [senador_codigo]
             if legislatura:
-                query_count += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
-                params_count.extend([str(legislatura), str(legislatura)])
+                start_year = 2023 - (57 - legislatura) * 4
+                end_year = start_year + 3
+                query_count += " AND CAST(d.ano AS INTEGER) BETWEEN %s AND %s"
+                params_count.extend([start_year, end_year])
             
             cursor.execute(query_count, tuple(params_count))
             total_items = cursor.fetchone()[0]
@@ -434,13 +434,14 @@ def get_despesas_senador(senador_codigo: int, legislatura: int = Query(None), pa
                     d.valor_reembolsado, 
                     d.data_despesa
                 FROM senado.despesa_ceaps d
-                INNER JOIN senado.mandato m ON d.cod_senador = m.codigo_parlamentar
                 WHERE d.cod_senador = %s 
             """
             params_rec = [senador_codigo]
             if legislatura:
-                query_recente += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
-                params_rec.extend([str(legislatura), str(legislatura)])
+                start_year = 2023 - (57 - legislatura) * 4
+                end_year = start_year + 3
+                query_recente += " AND CAST(d.ano AS INTEGER) BETWEEN %s AND %s"
+                params_rec.extend([start_year, end_year])
                 
             query_recente += " ORDER BY d.data_despesa DESC LIMIT %s OFFSET %s"
             params_rec.extend([itens_per_page, offset])
@@ -453,13 +454,14 @@ def get_despesas_senador(senador_codigo: int, legislatura: int = Query(None), pa
                     d.tipo_despesa, 
                     SUM(d.valor_reembolsado) as total
                 FROM senado.despesa_ceaps d
-                INNER JOIN senado.mandato m ON d.cod_senador = m.codigo_parlamentar
                 WHERE d.cod_senador = %s
             """
             params_cat = [senador_codigo]
             if legislatura:
-                query_categorias += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
-                params_cat.extend([str(legislatura), str(legislatura)])
+                start_year = 2023 - (57 - legislatura) * 4
+                end_year = start_year + 3
+                query_categorias += " AND CAST(d.ano AS INTEGER) BETWEEN %s AND %s"
+                params_cat.extend([start_year, end_year])
             
             query_categorias += " GROUP BY d.tipo_despesa ORDER BY total DESC"
             cursor.execute(query_categorias, tuple(params_cat))
@@ -498,9 +500,9 @@ def get_despesas_senador(senador_codigo: int, legislatura: int = Query(None), pa
         if conn:
             db.release_db_connection(conn)
 
-@router.get("/despesas/estatisticas")
+@router.get("/{legislatura}/despesas/estatisticas")
 @lru_cache(maxsize=16)
-def get_despesas_estatisticas(legislatura: int = Query(None)):
+def get_despesas_estatisticas(legislatura: int):
     conn = None
     try:
         conn = db.get_db_connection()
@@ -665,13 +667,13 @@ def get_despesas_estatisticas(legislatura: int = Query(None)):
             db.release_db_connection(conn)
 
 
-@router.get("/materia/listar")
+@router.get("/{legislatura}/materia/listar")
 def get_materia_listar(
+    legislatura: int,
     siglaTipo: str = Query(None),
     ano: int = Query(None),
     ementa: str = Query(None),
     senador: str = Query(None),
-    legislatura: int = Query(None),
     pagina: int = 1
 ):
     itens_por_pagina = 15
@@ -751,11 +753,11 @@ def get_materia_listar(
             db.release_db_connection(conn)
 
 
-@router.get("/emendas", summary="Busca uma lista de emendas parlamentares do Senado")
+@router.get("/{legislatura}/emendas", summary="Busca uma lista de emendas parlamentares do Senado")
 def get_lista_emendas(
+    legislatura: int,
     nome_senador: str = Query(None),
     ano: int = Query(None),
-    legislatura: int = Query(None),
     pagina: int = 1
 ):
     itens_por_pagina = 15
@@ -883,9 +885,9 @@ def get_lista_emendas(
             db.release_db_connection(conn)
 
 
-@router.get("/emendas/resumo", summary="Obtém resumo das emendas do Senado")
+@router.get("/{legislatura}/emendas/resumo", summary="Obtém resumo das emendas do Senado")
 @lru_cache(maxsize=32)
-def get_resumo_emendas(legislatura: int = Query(None)):
+def get_resumo_emendas(legislatura: int):
     conn = None
     try:
         conn = db.get_db_connection()
@@ -908,10 +910,11 @@ def get_resumo_emendas(legislatura: int = Query(None)):
                         COALESCE(SUM(e.valor_pago), 0) as valor_total
                     FROM portal.emendas e
                     JOIN senadores_nomes s ON lower(e.nome_autor) = s.nome
-                    JOIN senado.mandato m ON s.id = m.codigo_parlamentar
-                    WHERE (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)
+                    WHERE CAST(e.ano AS INTEGER) BETWEEN %s AND %s
                 """
-                cursor.execute(query_totais, (str(legislatura), str(legislatura)))
+                start_year = 2023 - (57 - legislatura) * 4
+                end_year = start_year + 3
+                cursor.execute(query_totais, (start_year, end_year))
             else:
                 query_totais = """
                     WITH senadores_nomes AS (
@@ -943,12 +946,13 @@ def get_resumo_emendas(legislatura: int = Query(None)):
                     SELECT e.funcao, SUM(e.valor_pago) as valor_total
                     FROM portal.emendas e
                     JOIN senadores_nomes s ON lower(e.nome_autor) = s.nome
-                    JOIN senado.mandato m ON s.id = m.codigo_parlamentar
-                    WHERE (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)
+                    WHERE CAST(e.ano AS INTEGER) BETWEEN %s AND %s
                     GROUP BY e.funcao
                     ORDER BY valor_total DESC
                 """
-                cursor.execute(query_areas, (str(legislatura), str(legislatura)))
+                start_year = 2023 - (57 - legislatura) * 4
+                end_year = start_year + 3
+                cursor.execute(query_areas, (start_year, end_year))
             else:
                 query_areas = """
                     WITH senadores_nomes AS (
@@ -990,13 +994,14 @@ def get_resumo_emendas(legislatura: int = Query(None)):
                     FROM portal.emendas e
                     JOIN senadores_nomes s ON lower(e.nome_autor) = s.nome
                     JOIN senado.parlamentar p ON s.id = p.codigo
-                    JOIN senado.mandato m ON p.codigo = m.codigo_parlamentar
-                    WHERE (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)
+                    WHERE CAST(e.ano AS INTEGER) BETWEEN %s AND %s
                     GROUP BY p.codigo, p.nome_parlamentar, p.sigla_partido, p.uf, p.url_foto
                     ORDER BY total_valor DESC
                     LIMIT 10
                 """
-                cursor.execute(query_top, (str(legislatura), str(legislatura)))
+                start_year = 2023 - (57 - legislatura) * 4
+                end_year = start_year + 3
+                cursor.execute(query_top, (start_year, end_year))
             else:
                 query_top = """
                     WITH senadores_nomes AS (
@@ -1046,8 +1051,8 @@ def get_resumo_emendas(legislatura: int = Query(None)):
             db.release_db_connection(conn)
 
 
-@router.get("/materia/votacao", summary="Obtém o histórico de votações de um projeto legislativo")
-def get_votacao_materia(codigo_materia: int):
+@router.get("/{legislatura}/materia/votacao", summary="Obtém o histórico de votações de um projeto legislativo")
+def get_votacao_materia(legislatura: int, codigo_materia: int):
     conn = None
     try:
         conn = db.get_db_connection()
@@ -1094,8 +1099,8 @@ def get_votacao_materia(codigo_materia: int):
         if conn:
             db.release_db_connection(conn)
 
-@router.get("/{senador_codigo}/emendas/lista", summary="Obtém a lista de emendas parlamentares de um senador")
-def get_emendas_lista_senador(senador_codigo: int, pagina: int = 1):
+@router.get("/{legislatura}/{senador_codigo}/emendas/lista", summary="Obtém a lista de emendas parlamentares de um senador")
+def get_emendas_lista_senador(legislatura: int, senador_codigo: int, pagina: int = 1):
     itens_per_page = 15
     offset = (pagina - 1) * itens_per_page
     conn = None
@@ -1165,9 +1170,9 @@ def get_emendas_lista_senador(senador_codigo: int, pagina: int = 1):
             db.release_db_connection(conn)
 
 
-@router.get("/empresas/estatisticas", summary="Obtém estatísticas gerais das empresas")
+@router.get("/{legislatura}/empresas/estatisticas", summary="Obtém estatísticas gerais das empresas")
 @lru_cache(maxsize=4)
-def get_estatisticas_empresas(legislatura: int = Query(None)):
+def get_estatisticas_empresas(legislatura: int):
     conn = None
     try:
         conn = db.get_db_connection()

@@ -175,7 +175,7 @@ export const useSenadoStore = defineStore("senado", () => {
         loading.value = true
         error.value = null
         try {
-            const response = await fetch(`${apiUrl}/api/senado/lista?legislatura=${legislatura.value}`)
+            const response = await fetch(`${apiUrl}/api/senado/${legislatura.value}/lista`)
             if (!response.ok) throw new Error("Falha ao buscar senadores")
 
             const data = await response.json()
@@ -208,7 +208,7 @@ export const useSenadoStore = defineStore("senado", () => {
         emendasPage.value = 1
         emendasTotalPages.value = 1
         try {
-            const response = await fetch(`${apiUrl}/api/senado/${id}?legislatura=${legislatura.value}`)
+            const response = await fetch(`${apiUrl}/api/senado/${legislatura.value}/${id}`)
             if (!response.ok) throw new Error("Falha ao buscar detalhes do senador")
             const data = await response.json()
             const s = data.senador
@@ -252,7 +252,7 @@ export const useSenadoStore = defineStore("senado", () => {
     const fetchDespesasSenador = async (id: number, page: number = 1) => {
         loadingDetail.value = true
         try {
-            const response = await fetch(`${apiUrl}/api/senado/${id}/despesas?legislatura=${legislatura.value}&pagina=${page}`)
+            const response = await fetch(`${apiUrl}/api/senado/${legislatura.value}/${id}/despesas?pagina=${page}`)
             if (!response.ok) throw new Error("Falha ao buscar despesas do senador")
             const data = await response.json()
             currentDespesas.value = data.despesas
@@ -267,7 +267,7 @@ export const useSenadoStore = defineStore("senado", () => {
 
     const fetchEmendasSenador = async (id: number, page: number = 1) => {
         try {
-            const response = await fetch(`${apiUrl}/api/senado/${id}/emendas/lista?pagina=${page}`)
+            const response = await fetch(`${apiUrl}/api/senado/${legislatura.value}/${id}/emendas/lista?pagina=${page}`)
             if (!response.ok) throw new Error("Falha ao buscar emendas")
             const data = await response.json()
             currentEmendas.value = data.emendas
@@ -281,7 +281,7 @@ export const useSenadoStore = defineStore("senado", () => {
     const fetchEstatisticasGerais = async () => {
         error.value = null
         try {
-            const response = await fetch(`${apiUrl}/api/senado/despesas/estatisticas?legislatura=${legislatura.value}`)
+            const response = await fetch(`${apiUrl}/api/senado/${legislatura.value}/despesas/estatisticas`)
             if (!response.ok) throw new Error('Falha ao buscar estatísticas do Senado')
             generalStats.value = await response.json()
         } catch (e: any) {
@@ -293,7 +293,7 @@ export const useSenadoStore = defineStore("senado", () => {
     const fetchEstatisticasSenadores = async () => {
         loadingStats.value = true
         try {
-            const response = await fetch(`${apiUrl}/api/senado/estatisticas?legislatura=${legislatura.value}`)
+            const response = await fetch(`${apiUrl}/api/senado/${legislatura.value}/estatisticas`)
             senadorStats.value = await response.json()
         } catch (e: any) {
             console.error('Erro ao buscar estatísticas gerais do senado:', e)
@@ -371,7 +371,7 @@ export const useSenadoStore = defineStore("senado", () => {
                 params.append("senador", projetosLegislativosFilters.value.senador)
             }
 
-            const response = await fetch(`${apiUrl}/api/senado/materia/listar?${params.toString()}`)
+            const response = await fetch(`${apiUrl}/api/senado/${legislatura.value}/materia/listar?${params.toString()}`)
             if (!response.ok) throw new Error("Falha ao buscar projetos legislativos")
             const data = await response.json()
 
@@ -410,7 +410,7 @@ export const useSenadoStore = defineStore("senado", () => {
         loadingVotos.value = true
         currentVotos.value = null
         try {
-            const response = await fetch(`${apiUrl}/api/senado/materia/votacao?codigo_materia=${codigoMateria}`)
+            const response = await fetch(`${apiUrl}/api/senado/${legislatura.value}/materia/votacao?codigo_materia=${codigoMateria}`)
             if (!response.ok) throw new Error("Falha ao buscar votação")
             const data = await response.json()
             currentVotos.value = { votacao: data.votacao }

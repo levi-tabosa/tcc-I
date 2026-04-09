@@ -84,7 +84,7 @@ async function carregarEmendas(pagina = 1) {
 
   try {
     const busca = filters.value.search || ''
-    const response = await fetch(`${API_URL}/api/camara/emendas?legislatura=${legislatura.value}&pagina=${pagina}&busca=${busca}`)
+    const response = await fetch(`${API_URL}/api/camara/${legislatura.value}/emendas?pagina=${pagina}&busca=${busca}`)
     
     if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

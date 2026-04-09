@@ -144,21 +144,7 @@
           <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
               <h2 class="text-2xl font-bold text-foreground">Ranking de Senadores</h2>
-              <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-                <input
-                  v-model="searchQuery"
-                  type="text"
-                  placeholder="Buscar senador..."
-                  class="px-3 py-1.5 text-sm rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-purple-500/50"
-                />
-                <select
-                  v-model="filterPartido"
-                  class="px-3 py-1.5 text-sm rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-purple-500/50"
-                >
-                  <option value="">Todos os partidos</option>
-                  <option v-for="p in partidosUnicos" :key="p" :value="p">{{ p }}</option>
-                </select>
-              </div>
+              <!-- Filtros removidos -->
             </div>
 
             <div class="space-y-3">
@@ -240,10 +226,6 @@ const store = useSenadoStore()
 const loadingStore = useLoadingStore()
 const router = useRouter()
 
-const searchQuery = ref('')
-const filterPartido = ref('')
-
-
 onMounted(async () => {
   store.fetchEstatisticasGerais()
 })
@@ -301,24 +283,10 @@ const categoriasAgregadas = computed(() => {
 })
 
 // ── Ranking Top 10 ──────────────────────────────────────────────────────────
-const partidosUnicos = computed(() => {
-  const set = new Set((store.generalStats?.top_10 || []).map(s => s.partido).filter(Boolean))
-  return Array.from(set).sort()
-})
-
-const normalizeString = (str: string) => {
-  return str ? str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() : ''
-}
-
 const senadorsFiltrados = computed(() => {
   const lista = store.generalStats?.top_10 || []
   const maxGasto = lista[0]?.total || 1
   return lista
-    .filter(s => {
-      if (searchQuery.value && !normalizeString(s.nome).includes(normalizeString(searchQuery.value))) return false
-      if (filterPartido.value && s.partido !== filterPartido.value) return false
-      return true
-    })
     .map(s => ({
       ...s,
       id: s.codigo,

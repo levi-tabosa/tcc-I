@@ -146,7 +146,7 @@ const camaraStore = useCamaraStore()
 
 async function carregarEstatisticas() {
   try {
-    const resposta = await fetch(`${API_URL}/api/camara/emendas/resumo?legislatura=${camaraStore.legislatura}`)
+    const resposta = await fetch(`${API_URL}/api/camara/${camaraStore.legislatura}/emendas/resumo`)
     if (!resposta.ok) throw new Error('Erro ao buscar estatísticas')
     estatisticas.value = await resposta.json()
   } catch (erro) {

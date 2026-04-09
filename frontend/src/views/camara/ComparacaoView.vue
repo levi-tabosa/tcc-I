@@ -54,6 +54,7 @@
                     class="flex items-center gap-3 w-full px-4 py-2.5 text-left hover:bg-muted transition-colors"
                     @mousedown.prevent="selectDeputado('A', dep)"
                   >
+                    <img
                       :src="dep.foto || '/placeholder-user.svg'"
                       :alt="dep.nome"
                       class="h-8 w-8 rounded-full object-cover border border-border"
@@ -540,7 +541,7 @@ const compareDeputados = async () => {
   comparisonReady.value = false
 
   try {
-    const response = await fetch(`${apiUrl}/api/camara/comparar?id1=${selectedA.value.id}&id2=${selectedB.value.id}`)
+    const response = await fetch(`${apiUrl}/api/camara/${store.legislatura}/comparar?id1=${selectedA.value.id}&id2=${selectedB.value.id}`)
     
     if (!response.ok) throw new Error('Falha ao obter dados de comparação')
     

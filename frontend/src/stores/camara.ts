@@ -193,7 +193,7 @@ export const useCamaraStore = defineStore("camara", () => {
     loading.value = true
     error.value = null
     try {
-      const response = await fetch(`${apiUrl}/api/camara/lista?legislatura=${legislatura.value}`)
+      const response = await fetch(`${apiUrl}/api/camara/${legislatura.value}/lista`)
       if (!response.ok) throw new Error("Falha ao buscar deputados")
 
       const data = await response.json()
@@ -220,7 +220,7 @@ export const useCamaraStore = defineStore("camara", () => {
     totalDespesas.value = 0
 
     try {
-      const response = await fetch(`${apiUrl}/api/camara/${id}?legislatura=${legislatura.value}`)
+      const response = await fetch(`${apiUrl}/api/camara/${legislatura.value}/${id}`)
       if (!response.ok) throw new Error("Falha ao buscar detalhes do deputado")
 
       const data = await response.json()
@@ -249,8 +249,8 @@ export const useCamaraStore = defineStore("camara", () => {
 
   const fetchEstatisticasGerais = async () => {
     try {
-      const response = await fetch(`${apiUrl}/api/camara/despesas/estatisticas?legislatura=${legislatura.value}`)
-      if (!response.ok) throw new Error("Falha ao buscar estatísticas de despesas")
+      const response = await fetch(`${apiUrl}/api/camara/${legislatura.value}/despesas/estatisticas`)
+      if (!response.ok) throw new Error("Falha ao buscar estatísticas")
       generalStats.value = await response.json()
     } catch (e: any) {
       console.error("Erro ao buscar estatísticas gerais de despesas:", e)
@@ -259,8 +259,8 @@ export const useCamaraStore = defineStore("camara", () => {
 
   const fetchEstatisticasDeputados = async () => {
     try {
-      const response = await fetch(`${apiUrl}/api/camara/estatisticas?legislatura=${legislatura.value}`)
-      if (!response.ok) throw new Error("Falha ao buscar estatísticas de deputados")
+      const response = await fetch(`${apiUrl}/api/camara/${legislatura.value}/estatisticas`)
+      if (!response.ok) throw new Error("Falha ao buscar estatísticas")
       deputadoStats.value = await response.json()
     } catch (e: any) {
       console.error("Erro ao buscar estatísticas gerais de deputados:", e)
@@ -289,9 +289,8 @@ export const useCamaraStore = defineStore("camara", () => {
       if (projetosLegislativosFilters.value.deputado) {
         params.append("deputado", projetosLegislativosFilters.value.deputado)
       }
-      params.append("legislatura", legislatura.value.toString())
 
-      const response = await fetch(`${apiUrl}/api/camara/proposicoes?${params.toString()}`)
+      const response = await fetch(`${apiUrl}/api/camara/${legislatura.value}/proposicoes?${params.toString()}`)
       if (!response.ok) throw new Error("Falha ao buscar projetos legislativos")
 
       const data = await response.json()
@@ -333,7 +332,7 @@ export const useCamaraStore = defineStore("camara", () => {
     loadingVotos.value = true
     currentVotos.value = null
     try {
-      const response = await fetch(`${apiUrl}/api/camara/proposicoes/${id}/votos`)
+      const response = await fetch(`${apiUrl}/api/camara/${legislatura.value}/proposicoes/${id}/votos`)
       if (!response.ok) throw new Error("Falha ao buscar votos")
       currentVotos.value = await response.json()
     } catch (e: any) {
@@ -345,7 +344,7 @@ export const useCamaraStore = defineStore("camara", () => {
 
   const fetchEmendasDeputado = async (id: number) => {
     try {
-      const response = await fetch(`${apiUrl}/api/camara/${id}/emendas`)
+      const response = await fetch(`${apiUrl}/api/camara/${legislatura.value}/${id}/emendas`)
       if (!response.ok) throw new Error("Falha ao buscar emendas")
       currentEmendas.value = await response.json()
     } catch (e: any) {
