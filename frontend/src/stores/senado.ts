@@ -107,7 +107,7 @@ export const useSenadoStore = defineStore("senado", () => {
   }
     const apiUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000"
 
-    const legislaturasDisponiveis = ref<number[]>([57, 56, 55])
+    const legislaturasDisponiveis = ref<number[]>([57, 56, 55, 54, 53, 52, 51, 50])
     
     const fetchLegislaturasDisponiveis = async () => {
       try {

@@ -504,98 +504,112 @@ def get_despesas_estatisticas(legislatura: int = Query(None)):
            WHERE 1=1
 """
             params = []
+            where_leg = ""
+            join_mandato = ""
             if legislatura:
-                query += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
+                where_leg = " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
+                join_mandato = " INNER JOIN senado.mandato m ON d.cod_senador = m.codigo_parlamentar"
                 params.extend([str(legislatura), str(legislatura)])
             
-            cursor.execute(query, tuple(params))
-            res_total = cursor.fetchone()
-            total_gastos = res_total[0] if res_total else 0
+            # 1. Total de Gastos
+            query_total = f"SELECT COALESCE(SUM(d.valor_reembolsado), 0) FROM senado.despesa_ceaps d {join_mandato} WHERE 1=1 {where_leg}"
+            cursor.execute(query_total, tuple(params))
+            total_gastos = cursor.fetchone()[0] or 0
 
-            query_media = """SELECT 
-    COALESCE(SUM(valor_reembolsado) / NULLIF(COUNT(DISTINCT cod_senador), 0), 0) AS media_por_senador
-FROM senado.despesa_ceaps;
-"""
-            cursor.execute(query_media)
-            res_media = cursor.fetchone()
-            media_por_senador = res_media[0] if res_media else 0
+            # 2. Média por Senador
+            query_media = f"""
+                SELECT COALESCE(SUM(d.valor_reembolsado) / NULLIF(COUNT(DISTINCT d.cod_senador), 0), 0)
+                FROM senado.despesa_ceaps d
+                {join_mandato}
+                WHERE 1=1 {where_leg}
+            """
+            cursor.execute(query_media, tuple(params))
+            media_por_senador = cursor.fetchone()[0] or 0
             
-            query_partidos = """WITH total_geral AS (
-    SELECT COALESCE(SUM(valor_reembolsado), 1) as soma_total 
-    FROM senado.despesa_ceaps 
-)
-SELECT 
-    p.sigla_partido,
-    SUM(d.valor_reembolsado) AS total_valor,
-    ROUND(
-        (SUM(d.valor_reembolsado) / (SELECT soma_total FROM total_geral)) * 100, 
-        2
-    ) AS percentual
-FROM senado.despesa_ceaps d
-JOIN senado.parlamentar p ON d.cod_senador = p.codigo
-GROUP BY p.sigla_partido
-ORDER BY total_valor DESC;
-"""
-            cursor.execute(query_partidos)
+            # 3. Gastos por Partido
+            query_partidos = f"""
+                SELECT 
+                    p.sigla_partido,
+                    SUM(d.valor_reembolsado) AS total_valor,
+                    ROUND((SUM(d.valor_reembolsado) / NULLIF({total_gastos}, 0)) * 100, 2) AS percentual
+                FROM senado.despesa_ceaps d
+                JOIN senado.parlamentar p ON d.cod_senador = p.codigo
+                {join_mandato}
+                WHERE 1=1 {where_leg}
+                GROUP BY p.sigla_partido
+                ORDER BY total_valor DESC
+            """
+            cursor.execute(query_partidos, tuple(params))
             partidos = cursor.fetchall()
             
-            query_cat = """WITH ranking_categorias AS (
-    SELECT 
-        tipo_despesa, 
-        SUM(valor_reembolsado) AS valor,
-        ROW_NUMBER() OVER (ORDER BY SUM(valor_reembolsado) DESC) as rank
-    FROM senado.despesa_ceaps
-    GROUP BY tipo_despesa
-)
-SELECT 
-    CASE WHEN rank <= 9 THEN tipo_despesa ELSE 'Outros' END AS categoria,
-    SUM(valor) AS total_valor
-FROM ranking_categorias
-GROUP BY 1
-ORDER BY (CASE WHEN SUM(valor) > 0 THEN 0 ELSE 1 END), total_valor DESC;
-"""
-            cursor.execute(query_cat)
+            # 4. Gastos por Categoria
+            query_cat = f"""
+                WITH ranking_categorias AS (
+                    SELECT 
+                        d.tipo_despesa, 
+                        SUM(d.valor_reembolsado) AS valor,
+                        ROW_NUMBER() OVER (ORDER BY SUM(d.valor_reembolsado) DESC) as rank
+                    FROM senado.despesa_ceaps d
+                    {join_mandato}
+                    WHERE 1=1 {where_leg}
+                    GROUP BY d.tipo_despesa
+                )
+                SELECT 
+                    CASE WHEN rank <= 9 THEN tipo_despesa ELSE 'Outros' END AS categoria,
+                    SUM(valor) AS total_valor
+                FROM ranking_categorias
+                GROUP BY 1
+                ORDER BY total_valor DESC
+            """
+            cursor.execute(query_cat, tuple(params))
             categorias = cursor.fetchall()
             
-            query_top = """SELECT 
-    p.codigo, 
-    p.nome_parlamentar, 
-    p.sigla_partido, 
-    p.uf, 
-    p.url_foto,
-    SUM(d.valor_reembolsado) AS total_valor
-FROM senado.despesa_ceaps d
-JOIN senado.parlamentar p ON d.cod_senador = p.codigo
-GROUP BY p.codigo, p.nome_parlamentar, p.sigla_partido, p.uf, p.url_foto
-ORDER BY total_valor DESC
-LIMIT 10;
-"""
-            cursor.execute(query_top)
+            # 5. Top 10 Senadores
+            query_top = f"""
+                SELECT 
+                    p.codigo, 
+                    p.nome_parlamentar, 
+                    p.sigla_partido, 
+                    p.uf, 
+                    p.url_foto,
+                    SUM(d.valor_reembolsado) AS total_valor
+                FROM senado.despesa_ceaps d
+                JOIN senado.parlamentar p ON d.cod_senador = p.codigo
+                {join_mandato}
+                WHERE 1=1 {where_leg}
+                GROUP BY p.codigo, p.nome_parlamentar, p.sigla_partido, p.uf, p.url_foto
+                ORDER BY total_valor DESC
+                LIMIT 10
+            """
+            cursor.execute(query_top, tuple(params))
             top_10 = cursor.fetchall()
 
-            # Evolução Mensal
-            query_evolucao = """SELECT 
-    EXTRACT(YEAR FROM data_despesa)::int AS ano,
-    EXTRACT(MONTH FROM data_despesa)::int AS mes,
-    SUM(valor_reembolsado) AS valor
-FROM senado.despesa_ceaps
-WHERE data_despesa IS NOT NULL
-  AND EXTRACT(YEAR FROM data_despesa) BETWEEN 2000 AND EXTRACT(YEAR FROM CURRENT_DATE)
-GROUP BY 1, 2
-ORDER BY 1 DESC, 2 DESC
-LIMIT 12;
-"""
-            cursor.execute(query_evolucao)
+            # 6. Evolução Mensal (últimos 12 meses registrados na legislatura ou total)
+            query_evolucao = f"""
+                SELECT 
+                    EXTRACT(YEAR FROM d.data_despesa)::int AS ano,
+                    EXTRACT(MONTH FROM d.data_despesa)::int AS mes,
+                    SUM(d.valor_reembolsado) AS valor
+                FROM senado.despesa_ceaps d
+                {join_mandato}
+                WHERE d.data_despesa IS NOT NULL {where_leg}
+                GROUP BY 1, 2
+                ORDER BY 1 DESC, 2 DESC
+                LIMIT 12
+            """
+            cursor.execute(query_evolucao, tuple(params))
             gastos_mensais = cursor.fetchall()
 
-            query_12m = """SELECT 
-    COALESCE(SUM(valor_reembolsado), 0) AS total_geral
-FROM senado.despesa_ceaps
-WHERE data_despesa >= (CURRENT_DATE - INTERVAL '1 year');
-"""
-            cursor.execute(query_12m)
-            res_total_12 = cursor.fetchone()
-            total_12_meses = res_total_12[0] if res_total_12 else 0
+            # 7. Total 12 meses (sempre global ou por legislatura?) 
+            # Mantendo global para contexto, ou filtrando se legislatura ativa 
+            query_12m = f"""
+                SELECT COALESCE(SUM(d.valor_reembolsado), 0)
+                FROM senado.despesa_ceaps d
+                {join_mandato}
+                WHERE d.data_despesa >= (CURRENT_DATE - INTERVAL '1 year') {where_leg}
+            """
+            cursor.execute(query_12m, tuple(params))
+            total_12_meses = cursor.fetchone()[0] or 0
             
             return {
                 "total_gastos": float(total_gastos),
