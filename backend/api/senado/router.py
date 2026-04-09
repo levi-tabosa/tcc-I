@@ -910,10 +910,11 @@ def get_resumo_emendas(legislatura: int):
                         COALESCE(SUM(e.valor_pago), 0) as valor_total
                     FROM portal.emendas e
                     JOIN senadores_nomes s ON lower(e.nome_autor) = s.nome
-                    JOIN senado.mandato m ON s.id = m.codigo_parlamentar
-                    WHERE (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)
+                    WHERE CAST(e.ano AS INTEGER) BETWEEN %s AND %s
                 """
-                cursor.execute(query_totais, (str(legislatura), str(legislatura)))
+                start_year = 2023 - (57 - legislatura) * 4
+                end_year = start_year + 3
+                cursor.execute(query_totais, (start_year, end_year))
             else:
                 query_totais = """
                     WITH senadores_nomes AS (
@@ -945,12 +946,13 @@ def get_resumo_emendas(legislatura: int):
                     SELECT e.funcao, SUM(e.valor_pago) as valor_total
                     FROM portal.emendas e
                     JOIN senadores_nomes s ON lower(e.nome_autor) = s.nome
-                    JOIN senado.mandato m ON s.id = m.codigo_parlamentar
-                    WHERE (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)
+                    WHERE CAST(e.ano AS INTEGER) BETWEEN %s AND %s
                     GROUP BY e.funcao
                     ORDER BY valor_total DESC
                 """
-                cursor.execute(query_areas, (str(legislatura), str(legislatura)))
+                start_year = 2023 - (57 - legislatura) * 4
+                end_year = start_year + 3
+                cursor.execute(query_areas, (start_year, end_year))
             else:
                 query_areas = """
                     WITH senadores_nomes AS (
@@ -992,13 +994,14 @@ def get_resumo_emendas(legislatura: int):
                     FROM portal.emendas e
                     JOIN senadores_nomes s ON lower(e.nome_autor) = s.nome
                     JOIN senado.parlamentar p ON s.id = p.codigo
-                    JOIN senado.mandato m ON p.codigo = m.codigo_parlamentar
-                    WHERE (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)
+                    WHERE CAST(e.ano AS INTEGER) BETWEEN %s AND %s
                     GROUP BY p.codigo, p.nome_parlamentar, p.sigla_partido, p.uf, p.url_foto
                     ORDER BY total_valor DESC
                     LIMIT 10
                 """
-                cursor.execute(query_top, (str(legislatura), str(legislatura)))
+                start_year = 2023 - (57 - legislatura) * 4
+                end_year = start_year + 3
+                cursor.execute(query_top, (start_year, end_year))
             else:
                 query_top = """
                     WITH senadores_nomes AS (

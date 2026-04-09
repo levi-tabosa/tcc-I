@@ -190,9 +190,11 @@ def get_resumo_emendas(legislatura: int):
             leg_params = []
             
             if legislatura:
-                leg_join = "JOIN camara.deputados_mandatos m ON p.id = m.deputado_id"
-                leg_where = "WHERE m.legislatura_id = %s"
-                leg_params = [legislatura]
+                leg_join = ""
+                start_year = 2023 - (57 - legislatura) * 4
+                end_year = start_year + 3
+                leg_where = "WHERE CAST(e.ano AS INTEGER) BETWEEN %s AND %s"
+                leg_params = [start_year, end_year]
             
             # 1. Totais Gerais
             query_totais = f"""
