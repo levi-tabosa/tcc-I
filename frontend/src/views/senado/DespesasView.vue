@@ -19,17 +19,7 @@
             </div>
 
             <!-- Legislatura Selector -->
-            <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-border shadow-sm">
-              <span class="text-[10px] font-bold text-foreground/50 uppercase tracking-wider">Legislatura:</span>
-              <select
-                :value="store.legislatura"
-                @change="store.setLegislatura(Number(($event.target as HTMLSelectElement).value))"
-                class="text-xs font-bold text-foreground bg-transparent border-none p-0 focus:ring-0 cursor-pointer"
-              >
-                <option :value="0">Todas as legislaturas</option>
-                <option v-for="leg in store.legislaturasDisponiveis" :key="leg" :value="leg">{{ formatLegislatura(leg) }}</option>
-              </select>
-            </div>
+            <HeroLegislaturaSelect :store="store" />
           </div>
         </div>
       </section>
@@ -41,7 +31,7 @@
       </section>
 
       <!-- Loading state -->
-      <BaseLoading v-if="loading" message="Carregando dados do Senado..." full-page />
+      <BaseLoading v-if="loadingStore.isLoading" :message="loadingStore.message" full-page />
 
       <template v-else-if="store.generalStats">
         <!-- Overview Cards -->
@@ -159,11 +149,11 @@
                   v-model="searchQuery"
                   type="text"
                   placeholder="Buscar senador..."
-                  class="px-3 py-1.5 text-xs rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-black/20"
+                  class="px-3 py-1.5 text-sm rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-purple-500/50"
                 />
                 <select
                   v-model="filterPartido"
-                  class="px-3 py-1.5 text-xs rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-black/20"
+                  class="px-3 py-1.5 text-sm rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-purple-500/50"
                 >
                   <option value="">Todos os partidos</option>
                   <option v-for="p in partidosUnicos" :key="p" :value="p">{{ p }}</option>
@@ -237,13 +227,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted} from 'vue'
 import { useRouter } from 'vue-router'
 import { Banknote, Users, Receipt, ChevronRight } from 'lucide-vue-next'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseLoading from '@/components/ui/BaseLoading.vue'
-import { useLoadingStore } from '@/stores/loading'
+import HeroLegislaturaSelect from '@/components/ui/HeroLegislaturaSelect.vue'
 import { useSenadoStore } from '@/stores/senado'
+import { useLoadingStore } from '@/stores/loading'
 
 const store = useSenadoStore()
 const loadingStore = useLoadingStore()
@@ -251,36 +242,10 @@ const router = useRouter()
 
 const searchQuery = ref('')
 const filterPartido = ref('')
-const loading = ref(true)
 
-const formatLegislatura = (legis: number) => {
-  if (legis === 0) return 'Todas as legislaturas'
-  if (legis === 57) return '57ª (2023-2027)'
-  if (legis === 56) return '56ª (2019-2023)'
-  if (legis === 55) return '55ª (2015-2019)'
-  if (legis === 54) return '54ª (2011-2015)'
-  if (legis === 53) return '53ª (2007-2011)'
-  return `${legis}ª`
-}
 
 onMounted(async () => {
-  loadingStore.startLoading('Carregando dados financeiros do Senado...')
-  try {
-    await store.fetchEstatisticasGerais()
-  } finally {
-    loadingStore.stopLoading()
-    loading.value = false
-  }
-})
-
-watch(() => store.legislatura, async () => {
-  loadingStore.startLoading('Atualizando dados legislativos...')
-  try {
-    await store.fetchEstatisticasGerais()
-  } finally {
-    loadingStore.stopLoading()
-    loading.value = false
-  }
+  store.fetchEstatisticasGerais()
 })
 
 // ── Gastos por Partido ──────────────────────────────────────────────────────

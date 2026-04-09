@@ -22,22 +22,12 @@
             </div>
 
             <!-- Legislatura Selector -->
-            <div class="flex items-center gap-3 bg-primary/10 px-4 py-2 rounded-xl border border-primary/20">
-              <span class="text-xs font-bold text-primary uppercase tracking-wider">Legislatura:</span>
-              <select
-                :value="store.legislatura"
-                @change="store.setLegislatura(Number(($event.target as HTMLSelectElement).value))"
-                class="text-sm font-bold text-primary bg-transparent border-none p-0 focus:ring-0 cursor-pointer"
-              >
-                <option :value="0">Todas as legislaturas</option>
-                <option v-for="leg in store.legislaturasDisponiveis" :key="leg" :value="leg">{{ formatLegislatura(leg) }}</option>
-              </select>
-            </div>
+            <HeroLegislaturaSelect :store="store" />
           </div>
         </div>
       </section>
 
-      <BaseLoading v-if="store.loadingStats" message="Carregando estatísticas da Câmara..." full-page />
+      <BaseLoading v-if="loadingStore.isLoading" :message="loadingStore.message" full-page />
 
       <template v-else-if="store.generalStats">
         <!-- Overview -->
@@ -234,38 +224,30 @@
 
 <script setup lang="ts">
 import { Banknote, Users, Building2, ChevronRight } from 'lucide-vue-next'
-import { onMounted, computed, ref, watch } from 'vue'
+import { onMounted, computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseLoading from '@/components/ui/BaseLoading.vue'
+import HeroLegislaturaSelect from '@/components/ui/HeroLegislaturaSelect.vue'
 import { useCamaraStore } from "@/stores/camara"
+import { useLoadingStore } from "@/stores/loading"
 
 const store = useCamaraStore()
+const loadingStore = useLoadingStore()
 const router = useRouter()
 
 const searchQuery = ref('')
 const filterPartido = ref('')
 
-const formatLegislatura = (legis: number) => {
-  if (legis === 0) return 'Todas as legislaturas'
-  if (legis === 57) return '57ª (2023-2027)'
-  if (legis === 56) return '56ª (2019-2023)'
-  if (legis === 55) return '55ª (2015-2019)'
-  if (legis === 54) return '54ª (2011-2015)'
-  if (legis === 53) return '53ª (2007-2011)'
-  return `${legis}ª`
-}
 
-watch(() => store.legislatura, async () => {
-  await Promise.all([
+onMounted(async () => {
+  loadingStore.startLoading('Carregando estatísticas da Câmara...')
+  await Promise.allSettled([
     store.fetchEstatisticasGerais(),
     store.fetchEstatisticasDeputados()
   ])
-})
-
-onMounted(() => {
-  store.fetchEstatisticasGerais()
-  store.fetchEstatisticasDeputados()
+  loadingStore.stopLoading()
+  
   if (store.deputadosList.length === 0) {
     store.fetchDeputados()
   }

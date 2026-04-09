@@ -134,7 +134,7 @@ export const useCamaraStore = defineStore("camara", () => {
   const legislatura = ref(57)
   const apiUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000"
 
-  const legislaturasDisponiveis = ref<number[]>([57, 56, 55])
+  const legislaturasDisponiveis = ref<number[]>([57, 56, 55, 54, 53, 52, 51, 50])
   
   const fetchLegislaturasDisponiveis = async () => {
     try {
@@ -248,28 +248,22 @@ export const useCamaraStore = defineStore("camara", () => {
 
 
   const fetchEstatisticasGerais = async () => {
-    loadingStats.value = true
     try {
       const response = await fetch(`${apiUrl}/api/camara/despesas/estatisticas?legislatura=${legislatura.value}`)
       if (!response.ok) throw new Error("Falha ao buscar estatísticas de despesas")
       generalStats.value = await response.json()
     } catch (e: any) {
       console.error("Erro ao buscar estatísticas gerais de despesas:", e)
-    } finally {
-      loadingStats.value = false
     }
   }
 
   const fetchEstatisticasDeputados = async () => {
-    loadingStats.value = true
     try {
       const response = await fetch(`${apiUrl}/api/camara/estatisticas?legislatura=${legislatura.value}`)
       if (!response.ok) throw new Error("Falha ao buscar estatísticas de deputados")
       deputadoStats.value = await response.json()
     } catch (e: any) {
       console.error("Erro ao buscar estatísticas gerais de deputados:", e)
-    } finally {
-      loadingStats.value = false
     }
   }
 
@@ -424,13 +418,15 @@ export const useCamaraStore = defineStore("camara", () => {
     currentPage.value = page
   }
 
-  const setLegislatura = (val: number) => {
+  const setLegislatura = async (val: number) => {
     legislatura.value = val
     // Invalidate/Refetch data
-    fetchDeputados()
-    fetchEstatisticasGerais()
-    fetchEstatisticasDeputados()
-    fetchProjetosLegislativos()
+    await Promise.allSettled([
+      fetchDeputados(),
+      fetchEstatisticasGerais(),
+      fetchEstatisticasDeputados(),
+      fetchProjetosLegislativos()
+    ])
   }
 
   const resetFilters = () => {

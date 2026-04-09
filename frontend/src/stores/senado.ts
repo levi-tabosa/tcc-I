@@ -96,16 +96,19 @@ import { useCamaraStore } from "./camara"
 export const useSenadoStore = defineStore("senado", () => {
     const camaraStore = useCamaraStore()
     const legislatura = computed(() => camaraStore.legislatura)
-    const setLegislatura = (val: number) => {
-    camaraStore.setLegislatura(val)
+    const setLegislatura = async (val: number) => {
+    await camaraStore.setLegislatura(val)
     // Refetch senator-specific data
-    fetchSenadores()
-    fetchEstatisticasGerais()
-    fetchProjetosLegislativos()
+    await Promise.allSettled([
+        fetchSenadores(),
+        fetchEstatisticasGerais(),
+        fetchEstatisticasSenadores(),
+        fetchProjetosLegislativos()
+    ])
   }
     const apiUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000"
 
-    const legislaturasDisponiveis = ref<number[]>([57, 56, 55])
+    const legislaturasDisponiveis = ref<number[]>([57, 56, 55, 54, 53, 52, 51, 50])
     
     const fetchLegislaturasDisponiveis = async () => {
       try {
@@ -276,7 +279,6 @@ export const useSenadoStore = defineStore("senado", () => {
     }
 
     const fetchEstatisticasGerais = async () => {
-        loadingStats.value = true
         error.value = null
         try {
             const response = await fetch(`${apiUrl}/api/senado/despesas/estatisticas?legislatura=${legislatura.value}`)
@@ -285,8 +287,6 @@ export const useSenadoStore = defineStore("senado", () => {
         } catch (e: any) {
             console.error('Erro ao buscar estatísticas do senado:', e)
             error.value = "Não foi possível carregar as estatísticas do Senado."
-        } finally {
-            loadingStats.value = false
         }
     }
 

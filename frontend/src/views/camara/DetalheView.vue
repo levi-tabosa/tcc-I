@@ -10,12 +10,12 @@
           </router-link>
 
           <!-- Legislatura Selector -->
-          <div class="flex items-center gap-3 bg-white px-4 py-2.5 rounded-xl border border-border shadow-sm">
-            <span class="text-xs font-bold text-foreground/50 uppercase tracking-wider">Visualizando:</span>
+          <div class="flex items-center gap-3 bg-neutral-50 px-3 py-1.5 rounded-full border border-neutral-200">
+            <span class="text-xs font-bold text-neutral-500 uppercase tracking-wider">Visualizando:</span>
             <select
               :value="store.legislatura"
               @change="store.setLegislatura(Number(($event.target as HTMLSelectElement).value))"
-              class="text-sm font-bold text-foreground bg-transparent border-none p-0 focus:ring-0 cursor-pointer"
+              class="text-sm font-bold text-neutral-800 bg-transparent border-none p-0 focus:ring-0 cursor-pointer"
             >
               <template v-if="store.currentDeputado?.legislaturas_ativas?.length">
                 <option :value="0">Todas as legislaturas (Histórico)</option>
@@ -223,22 +223,15 @@ import { ChevronLeft, Mail, Calendar, GraduationCap, User, FileText } from 'luci
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import BaseLoading from '@/components/ui/BaseLoading.vue'
-import { useLoadingStore } from '@/stores/loading'
 import { useCamaraStore } from "@/stores/camara"
 
 const route = useRoute()
 const store = useCamaraStore()
-const loadingStore = useLoadingStore()
 
-const loadData = async () => {
+const loadData = () => {
     const id = Number(route.params.id)
     if (id) {
-        loadingStore.startLoading('Carregando informações do deputado...')
-        try {
-            await store.fetchDeputado(id)
-        } finally {
-            loadingStore.stopLoading()
-        }
+        store.fetchDeputado(id)
     }
 }
 
@@ -262,12 +255,9 @@ const formatDate = (dateString: string) => {
 
 const formatLegislatura = (legis: number) => {
   if (legis === 0) return 'Todas as legislaturas (Histórico)'
-  if (legis === 57) return '57ª Legislatura (2023-2027)'
-  if (legis === 56) return '56ª Legislatura (2019-2023)'
-  if (legis === 55) return '55ª Legislatura (2015-2019)'
-  if (legis === 54) return '54ª Legislatura (2011-2015)'
-  if (legis === 53) return '53ª Legislatura (2007-2011)'
-  return `${legis}ª Legislatura`
+  const startYear = 2023 - (57 - legis) * 4
+  const endYear = startYear + 4
+  return `${legis}ª Legislatura (${startYear}-${endYear})`
 }
 
 const totalGastos = computed(() => {

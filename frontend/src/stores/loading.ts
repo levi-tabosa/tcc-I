@@ -1,28 +1,23 @@
-import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import { defineStore } from 'pinia'
 
 export const useLoadingStore = defineStore('loading', () => {
   const isLoading = ref(false)
-  const message = ref('Carregando...')
+  const message = ref('')
 
-  function setLoading(value: boolean, msg: string = 'Carregando...') {
-    isLoading.value = value
-    message.value = msg
-  }
-
-  function startLoading(msg: string = 'Carregando...') {
+  const startLoading = (msg = 'Carregando...') => {
     isLoading.value = true
     message.value = msg
   }
 
-  function stopLoading() {
+  const stopLoading = () => {
     isLoading.value = false
+    message.value = ''
   }
 
   return {
     isLoading,
     message,
-    setLoading,
     startLoading,
     stopLoading
   }

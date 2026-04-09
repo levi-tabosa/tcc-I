@@ -4,10 +4,15 @@
       <!-- Hero -->
       <section class="bg-gradient-to-br from-accent/10 via-background to-primary/10 py-12">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h1 class="text-3xl font-bold text-foreground sm:text-4xl">Emendas Parlamentares — Câmara</h1>
-          <p class="mt-2 text-muted-foreground max-w-2xl">
-            Acompanhe a distribuição de emendas parlamentares dos deputados. Rankings por deputado, área e município.
-          </p>
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 class="text-3xl font-bold text-foreground sm:text-4xl">Emendas Parlamentares — Câmara</h1>
+              <p class="mt-2 text-muted-foreground max-w-2xl">
+                Acompanhe a distribuição de emendas parlamentares dos deputados. Rankings por deputado, área e município.
+              </p>
+            </div>
+            <HeroLegislaturaSelect :store="camaraStore" />
+          </div>
         </div>
       </section>
 
@@ -119,12 +124,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Landmark, Users, TrendingUp } from 'lucide-vue-next'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseLoading from '@/components/ui/BaseLoading.vue'
-import { useLoadingStore } from '@/stores/loading'
+import HeroLegislaturaSelect from '@/components/ui/HeroLegislaturaSelect.vue'
+import { useCamaraStore } from '@/stores/camara'
 
 const estatisticas = ref({
   totais: { deputados: 0, municipios: 0, areas: 0, valor_total: 0 },
@@ -132,22 +138,21 @@ const estatisticas = ref({
   ranking: [] as any[]
 })
 
-const loadingStore = useLoadingStore()
 const router = useRouter()
 const carregando = ref(true)
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
+const camaraStore = useCamaraStore()
+
 async function carregarEstatisticas() {
-  loadingStore.startLoading('Carregando resumo de emendas...')
   try {
-    const resposta = await fetch(`${API_URL}/api/camara/emendas/resumo`)
+    const resposta = await fetch(`${API_URL}/api/camara/emendas/resumo?legislatura=${camaraStore.legislatura}`)
     if (!resposta.ok) throw new Error('Erro ao buscar estatísticas')
     estatisticas.value = await resposta.json()
   } catch (erro) {
     console.error('Falha ao carregar estatísticas:', erro)
   } finally {
     carregando.value = false
-    loadingStore.stopLoading()
   }
 }
 
@@ -156,6 +161,11 @@ function goToDeputado(id: number) {
 }
 
 onMounted(() => {
+  carregarEstatisticas()
+})
+
+watch(() => camaraStore.legislatura, () => {
+  carregando.value = true
   carregarEstatisticas()
 })
 </script>
