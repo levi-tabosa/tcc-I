@@ -458,9 +458,16 @@ def get_votos_proposicao(legislatura: int, proposicao_id: int):
                 INNER JOIN camara.votacoes_votos vv ON v.id = vv.votacao_id
                 INNER JOIN camara.deputados d ON vv.deputado_id = d.id
                 WHERE vp.proposicao_id = %s AND vv.tipo_voto != 'Artigo 17'
-                ORDER BY v.data DESC, d.nome_civil ASC
             """
-            cursor.execute(query, (proposicao_id,))
+            params = [proposicao_id]
+            if legislatura:
+                start_year = 2023 - (57 - legislatura) * 4
+                end_year = start_year + 3
+                query += " AND EXTRACT(YEAR FROM v.data) BETWEEN %s AND %s"
+                params.extend([start_year, end_year])
+            
+            query += " ORDER BY v.data DESC, d.nome_civil ASC"
+            cursor.execute(query, tuple(params))
             resultados = cursor.fetchall()
             
             votacoes_dict = {}
@@ -749,9 +756,9 @@ def get_perfil_deputado(legislatura: int, deputado_id: int):
                     # Existe mas sem mandatos registrados? (Raro)
                     raise HTTPException(status_code=404, detail=f"Deputado com ID {deputado_id} não possui mandatos registrados")
 
-            # A legislatura efetivamente encontrada (pode ser diferente da pedida)
-            # Se legislatura for 0, tratamos como 'Todas', então leg_efetiva fica None para não filtrar despesas
-            leg_efetiva = row[11] if legislatura else None
+            # A legislatura efetivamente encontrada
+            # Sempre usamos a legislatura do mandato encontrado, nunca deixamos como None/0
+            leg_efetiva = row[11]
             
             res = {
                 "id": row[0],
@@ -868,19 +875,23 @@ def get_emendas_deputado(legislatura: int, deputado_id: int):
         
         with conn.cursor() as cursor:
             query = """
-                SELECT 
-                    e.codigo_emenda as codigo,
-                    e.ano,
-                    e.tipo_emenda as tipo,
-                    e.valor_pago,
-                    e.funcao,
-                    e.localidade_gasto as localidade
                 FROM portal.emendas e
-                JOIN camara.deputados d ON lower(e.nome_autor) = lower(d.nome_civil)
+                JOIN (
+                    SELECT id, lower(nome_civil) as nome FROM camara.deputados
+                    UNION
+                    SELECT deputado_id as id, lower(nome_eleitoral) as nome FROM camara.deputados_mandatos
+                ) d ON lower(e.autor) = d.nome
                 WHERE d.id = %s
-                ORDER BY e.ano DESC, e.valor_pago DESC
             """
-            cursor.execute(query, (deputado_id,))
+            params = [deputado_id]
+            if legislatura:
+                start_year = 2023 - (57 - legislatura) * 4
+                end_year = start_year + 3
+                query += " AND e.ano BETWEEN %s AND %s"
+                params.extend([start_year, end_year])
+            
+            query += " ORDER BY e.ano DESC, e.valor_pago DESC"
+            cursor.execute(query, tuple(params))
             res = cursor.fetchall()
             
             return [

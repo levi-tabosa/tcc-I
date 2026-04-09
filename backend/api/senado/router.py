@@ -215,8 +215,8 @@ WHERE d.cod_senador IN (%s, %s)
             """
             params_stat = [id1, id2]
             if legislatura:
-                query_despesas += " AND m.codigo_legislatura = %s"
-                params_stat.append(legislatura)
+                query_despesas += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
+                params_stat.extend([str(legislatura), str(legislatura)])
                 
             query_despesas += " GROUP BY d.cod_senador, d.tipo_despesa"
             cursor.execute(query_despesas, tuple(params_stat))
@@ -366,14 +366,13 @@ WHERE codigo = %s;"""
                     legis_set.add(int(str(m[1]).strip()))
             legislaturas_ativas = sorted(list(legis_set), reverse=True)
 
-            # 4. Determinar Legislatura Exibida
-            leg_exibida = legislatura
-            if legislatura:
-                if legislatura not in legislaturas_ativas:
-                    leg_exibida = legislaturas_ativas[0] if legislaturas_ativas else 57
+            # Determinar Legislatura Exibida (Sempre forçamos uma real)
+            if legislatura and legislatura in legislaturas_ativas:
+                leg_exibida = legislatura
+            elif legislaturas_ativas:
+                leg_exibida = legislaturas_ativas[0]
             else:
-                # Se legislatura for 0 ou None, passamos 0 para indicar 'Todas'
-                leg_exibida = 0
+                leg_exibida = 57
 
             return {
                 "senador": {
