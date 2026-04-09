@@ -413,12 +413,13 @@ def get_despesas_senador(legislatura: int, senador_codigo: int, pagina: int = 1)
             # 1. Buscar o total de despesas para paginação
             query_count = """SELECT COUNT(*) 
                 FROM senado.despesa_ceaps d
-                INNER JOIN senado.mandato m ON d.cod_senador = m.codigo_parlamentar
                 WHERE d.cod_senador = %s"""
             params_count = [senador_codigo]
             if legislatura:
-                query_count += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
-                params_count.extend([str(legislatura), str(legislatura)])
+                start_year = 2023 - (57 - legislatura) * 4
+                end_year = start_year + 3
+                query_count += " AND CAST(d.ano AS INTEGER) BETWEEN %s AND %s"
+                params_count.extend([start_year, end_year])
             
             cursor.execute(query_count, tuple(params_count))
             total_items = cursor.fetchone()[0]
@@ -433,13 +434,14 @@ def get_despesas_senador(legislatura: int, senador_codigo: int, pagina: int = 1)
                     d.valor_reembolsado, 
                     d.data_despesa
                 FROM senado.despesa_ceaps d
-                INNER JOIN senado.mandato m ON d.cod_senador = m.codigo_parlamentar
                 WHERE d.cod_senador = %s 
             """
             params_rec = [senador_codigo]
             if legislatura:
-                query_recente += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
-                params_rec.extend([str(legislatura), str(legislatura)])
+                start_year = 2023 - (57 - legislatura) * 4
+                end_year = start_year + 3
+                query_recente += " AND CAST(d.ano AS INTEGER) BETWEEN %s AND %s"
+                params_rec.extend([start_year, end_year])
                 
             query_recente += " ORDER BY d.data_despesa DESC LIMIT %s OFFSET %s"
             params_rec.extend([itens_per_page, offset])
@@ -452,13 +454,14 @@ def get_despesas_senador(legislatura: int, senador_codigo: int, pagina: int = 1)
                     d.tipo_despesa, 
                     SUM(d.valor_reembolsado) as total
                 FROM senado.despesa_ceaps d
-                INNER JOIN senado.mandato m ON d.cod_senador = m.codigo_parlamentar
                 WHERE d.cod_senador = %s
             """
             params_cat = [senador_codigo]
             if legislatura:
-                query_categorias += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
-                params_cat.extend([str(legislatura), str(legislatura)])
+                start_year = 2023 - (57 - legislatura) * 4
+                end_year = start_year + 3
+                query_categorias += " AND CAST(d.ano AS INTEGER) BETWEEN %s AND %s"
+                params_cat.extend([start_year, end_year])
             
             query_categorias += " GROUP BY d.tipo_despesa ORDER BY total DESC"
             cursor.execute(query_categorias, tuple(params_cat))
