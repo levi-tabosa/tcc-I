@@ -45,7 +45,7 @@ onMounted(async () => {
     const [depRes, senRes, camaraGastosRes, senadoGastosRes] = await Promise.all([
       fetch(`${apiUrl}/api/camara/0/estatisticas`),
       fetch(`${apiUrl}/api/senado/0/estatisticas`),
-      fetch(`${apiUrl}/api/camara/0/estatisticas`), // Note: camara doesn't have despesas/estatisticas separately anymore, it's the same route
+      fetch(`${apiUrl}/api/camara/0/despesas/estatisticas`), 
       fetch(`${apiUrl}/api/senado/0/despesas/estatisticas`)
     ])
     
