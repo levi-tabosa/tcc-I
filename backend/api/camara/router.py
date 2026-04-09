@@ -38,11 +38,11 @@ def get_legislaturas_camara():
         if conn:
             db.release_db_connection(conn)
 
-@router.get("/emendas", summary="Busca uma lista de emendas parlamentares")
+@router.get("/{legislatura}/emendas", summary="Busca uma lista de emendas parlamentares")
 def get_lista_emendas(
+    legislatura: int,
     nome_deputado: str = Query(None),
     ano: int = Query(None),
-    legislatura: int = Query(None),
     pagina: int = 1
 ):
     itens_por_pagina = 15
@@ -174,9 +174,9 @@ def get_lista_emendas(
         if conn:
             db.release_db_connection(conn)
 
-@router.get("/emendas/resumo", summary="Obtém resumo das emendas")
+@router.get("/{legislatura}/emendas/resumo", summary="Obtém resumo das emendas")
 @lru_cache(maxsize=32)
-def get_resumo_emendas(legislatura: int = Query(None)):
+def get_resumo_emendas(legislatura: int):
     conn = None
     try:
         conn = db.get_db_connection()
@@ -310,13 +310,13 @@ def get_resumo_emendas(legislatura: int = Query(None)):
         if conn:
             db.release_db_connection(conn)
 
-@router.get("/proposicoes", summary="Busca uma lista de projetos legislativos")
+@router.get("/{legislatura}/proposicoes", summary="Busca uma lista de projetos legislativos")
 def get_lista_proposicoes(
+    legislatura: int,
     siglaTipo: str = Query(None), 
     ano: int = Query(None), 
     ementa: str = Query(None), 
     deputado: str = Query(None),
-    legislatura: int = Query(None),
     limite: int = Query(15),
     pagina: int = 1
 ):
@@ -436,8 +436,8 @@ def get_lista_proposicoes(
         if conn:
             db.release_db_connection(conn)
 
-@router.get("/proposicoes/{proposicao_id}/votos", summary="Obtém o histórico de votos de um projeto legislativo")
-def get_votos_proposicao(proposicao_id: int):
+@router.get("/{legislatura}/proposicoes/{proposicao_id}/votos", summary="Obtém o histórico de votos de um projeto legislativo")
+def get_votos_proposicao(legislatura: int, proposicao_id: int):
     conn = None
     try:
         conn = db.get_db_connection()
@@ -493,9 +493,9 @@ def get_votos_proposicao(proposicao_id: int):
         if conn:
             db.release_db_connection(conn)
 
-@router.get("/lista", summary="Lista todos os deputados ativos")
+@router.get("/{legislatura}/lista", summary="Lista todos os deputados ativos")
 @lru_cache(maxsize=16)
-def get_todos_deputados(legislatura: int = Query(None)):
+def get_todos_deputados(legislatura: int):
     conn = None
     try:
         conn = db.get_db_connection()
@@ -538,9 +538,9 @@ def get_todos_deputados(legislatura: int = Query(None)):
         if conn:
             db.release_db_connection(conn)
 
-@router.get("/estatisticas", summary="Obtém estatísticas gerais dos deputados")
+@router.get("/{legislatura}/estatisticas", summary="Obtém estatísticas gerais dos deputados")
 @lru_cache(maxsize=8)
-def get_estatisticas_gerais(legislatura: int = Query(None)):
+def get_estatisticas_gerais(legislatura: int):
     conn = None
     try:
         conn = db.get_db_connection()
@@ -594,8 +594,8 @@ def get_estatisticas_gerais(legislatura: int = Query(None)):
 
 
 
-@router.get("/comparar", summary="Compara perfil e gastos entre dois deputados")
-def get_comparativo_deputados(id1: int, id2: int, ano: int = None, legislatura: int = Query(None)):
+@router.get("/{legislatura}/comparar", summary="Compara perfil e gastos entre dois deputados")
+def get_comparativo_deputados(legislatura: int, id1: int, id2: int, ano: int = None):
     if id1 == id2:
         raise HTTPException(status_code=400, detail="Escolha dois deputados diferentes para comparar.")
 
@@ -710,8 +710,8 @@ def get_comparativo_deputados(id1: int, id2: int, ano: int = None, legislatura: 
         if conn:
             db.release_db_connection(conn)
 
-@router.get("/{deputado_id}", summary="Obtém os detalhes do perfil e despesas do deputado pelo ID")
-def get_perfil_deputado(deputado_id: int, legislatura: int = Query(None)):
+@router.get("/{legislatura}/{deputado_id}", summary="Obtém os detalhes do perfil e despesas do deputado pelo ID (via path)")
+def get_perfil_deputado(legislatura: int, deputado_id: int):
     conn = None
     try:
         conn = db.get_db_connection()
@@ -858,8 +858,8 @@ def get_perfil_deputado(deputado_id: int, legislatura: int = Query(None)):
         if conn:
             db.release_db_connection(conn)
 
-@router.get("/{deputado_id}/emendas", summary="Obtém a lista de emendas parlamentares de um deputado")
-def get_emendas_deputado(deputado_id: int):
+@router.get("/{legislatura}/{deputado_id}/emendas", summary="Obtém a lista de emendas parlamentares de um deputado")
+def get_emendas_deputado(legislatura: int, deputado_id: int):
     conn = None
     try:
         conn = db.get_db_connection()
@@ -901,9 +901,9 @@ def get_emendas_deputado(deputado_id: int):
         if conn:
             db.release_db_connection(conn)
 
-@router.get("/despesas/estatisticas", summary="Obtém o panorama geral de gastos da Câmara")
+@router.get("/{legislatura}/despesas/estatisticas", summary="Obtém o panorama geral de gastos da Câmara")
 @lru_cache(maxsize=4)
-def get_estatisticas_despesas(legislatura: int = Query(None)):
+def get_estatisticas_despesas(legislatura: int):
     conn = None
     try:
         conn = db.get_db_connection()
@@ -1079,9 +1079,9 @@ def get_estatisticas_despesas(legislatura: int = Query(None)):
         if conn:
             db.release_db_connection(conn)
 
-@router.get("/empresas/estatisticas", summary="Obtém as estatísticas e ranking das empresas contratadas")
+@router.get("/{legislatura}/empresas/estatisticas", summary="Obtém as estatísticas e ranking das empresas contratadas")
 @lru_cache(maxsize=4)
-def get_estatisticas_empresas(limit: int = 20, legislatura: int = Query(None)):
+def get_estatisticas_empresas(legislatura: int, limit: int = 20):
     conn = None
     try:
         conn = db.get_db_connection()

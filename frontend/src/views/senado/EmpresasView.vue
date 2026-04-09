@@ -200,8 +200,8 @@ const fetchStats = async () => {
   loading.value = true
   error.value = null
   try {
-    const legParam = store.legislatura ? `?legislatura=${store.legislatura}` : ''
-    const response = await fetch(`${apiUrl}/api/senado/empresas/estatisticas${legParam}`)
+    const url = `${apiUrl}/api/senado/${store.legislatura || 0}/empresas/estatisticas`
+    const response = await fetch(url)
     
     if (!response.ok) throw new Error(`Erro na API: ${response.status}`)
     

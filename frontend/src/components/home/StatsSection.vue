@@ -43,10 +43,10 @@ onMounted(async () => {
   
   try {
     const [depRes, senRes, camaraGastosRes, senadoGastosRes] = await Promise.all([
-      fetch(`${apiUrl}/api/camara/estatisticas`),
-      fetch(`${apiUrl}/api/senado/estatisticas`),
-      fetch(`${apiUrl}/api/camara/despesas/estatisticas`),
-      fetch(`${apiUrl}/api/senado/despesas/estatisticas`)
+      fetch(`${apiUrl}/api/camara/0/estatisticas`),
+      fetch(`${apiUrl}/api/senado/0/estatisticas`),
+      fetch(`${apiUrl}/api/camara/0/estatisticas`), // Note: camara doesn't have despesas/estatisticas separately anymore, it's the same route
+      fetch(`${apiUrl}/api/senado/0/despesas/estatisticas`)
     ])
     
     if (depRes.ok) {
