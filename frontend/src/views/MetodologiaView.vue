@@ -182,13 +182,23 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import {
   BookOpen, Building2, Landmark, Database, Receipt, FileText,
   Vote, ChevronRight, ChevronDown, Check, ArrowRight,
   Lightbulb,  Scale, Users
 } from 'lucide-vue-next'
+import { useLoadingStore } from '@/stores/loading'
 import BaseButton from '@/components/ui/BaseButton.vue'
+
+const loadingStore = useLoadingStore()
+
+onMounted(() => {
+  loadingStore.startLoading('Carregando metodologia...')
+  setTimeout(() => {
+    loadingStore.stopLoading()
+  }, 600)
+})
 
 // Steps
 const steps = [

@@ -37,11 +37,12 @@ const router = createRouter({
       meta: { title: "Emendas da Câmara" },
     },
     {
-      path: "/camara/empresas",
-      name: "empresas-camara",
-      component: () => import("@/views/camara/EmpresasView.vue"),
-      meta: { title: "Empresas e Fornecedores" },
+      path: "/camara/comissoes",
+      name: "comissoes-camara",
+      component: () => import("@/views/camara/ComissoesView.vue"),
+      meta: { title: "Comissões da Câmara" },
     },
+
     {
       path: "/camara/projetos-legislativos",
       name: "projetos-legislativos-camara",
@@ -87,11 +88,12 @@ const router = createRouter({
       meta: { title: "Projetos do Senado" },
     },
     {
-      path: "/senado/empresas",
-      name: "empresas-senado",
-      component: () => import("@/views/senado/EmpresasView.vue"),
-      meta: { title: "Empresas e Fornecedores" },
+      path: "/senado/comissoes",
+      name: "comissoes-senado",
+      component: () => import("@/views/senado/ComissoesView.vue"),
+      meta: { title: "Comissões do Senado" },
     },
+
     {
       path: "/senado/comparar",
       name: "comparar-senadores",
@@ -108,7 +110,7 @@ const router = createRouter({
     },
     {
       path: "/rankings",
-      redirect: "/camara/empresas",
+      redirect: "/camara/comissoes",
     },
 
     // ========== REDIRECTS (compatibilidade) ==========

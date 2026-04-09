@@ -305,6 +305,112 @@ ORDER BY data_despesa DESC;
         if conn:
             db.release_db_connection(conn)
                 
+@router.get("/comissoes", summary="Lista todas as comissões do Senado com membros")
+def get_comissoes_senado(legislatura: int = Query(None)):
+    conn = None
+    try:
+        conn = db.get_db_connection()
+        if not conn:
+            raise HTTPException(status_code=503, detail="Banco de dados indisponível")
+        
+        with conn.cursor() as cursor:
+            query = """
+                 SELECT
+                    c.codigo,
+                    c.sigla,
+                    c.nome,
+                    'Comissão' AS tipo,
+                    COUNT(DISTINCT mc.codigo_parlamentar) AS total_membros
+                FROM senado.comissao c
+                LEFT JOIN senado.membro_comissao mc ON c.codigo = mc.codigo_comissao
+            """
+            params = []
+            if legislatura:
+                query += """
+                    INNER JOIN senado.mandato m ON mc.codigo_parlamentar = m.codigo_parlamentar
+                    WHERE m.primeira_legislatura = %s OR m.segunda_legislatura = %s
+                """
+                params.extend([str(legislatura), str(legislatura)])
+            
+            query += " GROUP BY c.codigo, c.sigla, c.nome ORDER BY c.nome"
+            cursor.execute(query, tuple(params))
+            comissoes_raw = cursor.fetchall()
+            
+            comissoes = []
+            for row in comissoes_raw:
+                cod_comissao = row[0]
+
+                query_membros = f"""
+                    SELECT
+                        p.nome_parlamentar,
+                        p.sigla_partido,
+                        p.uf,
+                        mc.tipo_vaga AS cargo,
+                        p.codigo,
+                        p.url_foto
+                    FROM senado.membro_comissao mc
+                    JOIN senado.parlamentar p ON mc.codigo_parlamentar = p.codigo
+                    {"INNER" if legislatura else "LEFT"} JOIN senado.mandato m ON p.codigo = m.codigo_parlamentar
+                    WHERE mc.codigo_comissao = %s
+                    {"AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)" if legislatura else ""}
+                    ORDER BY mc.tipo_vaga NULLS LAST, p.nome_parlamentar
+                """
+                params_m = [cod_comissao]
+                if legislatura:
+                    params_m.extend([str(legislatura), str(legislatura)])
+                cursor.execute(query_membros, tuple(params_m))
+                membros_raw = cursor.fetchall()
+
+                query_partidos = f"""
+                    SELECT p.sigla_partido, COUNT(*) AS qtd
+                    FROM senado.membro_comissao mc
+                    JOIN senado.parlamentar p ON mc.codigo_parlamentar = p.codigo
+                    {"INNER" if legislatura else "LEFT"} JOIN senado.mandato m ON p.codigo = m.codigo_parlamentar
+                    WHERE mc.codigo_comissao = %s AND p.sigla_partido IS NOT NULL
+                    {"AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)" if legislatura else ""}
+                    GROUP BY p.sigla_partido
+                    ORDER BY qtd DESC
+                    LIMIT 4
+                """
+                params_p = [cod_comissao]
+                if legislatura:
+                    params_p.extend([str(legislatura), str(legislatura)])
+                cursor.execute(query_partidos, tuple(params_p))
+                partidos_raw = cursor.fetchall()
+
+                presidente = next((m[0] for m in membros_raw if m[3] and "presidente" in m[3].lower()), None)
+                
+                comissoes.append({
+                    "id": row[0],
+                    "sigla": row[1],
+                    "nome": row[2],
+                    "tipo": row[3],
+                    "total_membros": row[4],
+                    "presidente": presidente,
+                    "partidos_destaque": [p[0] for p in partidos_raw],
+                    "membros": [
+                        {
+                            "nome": mb[0],
+                            "partido": mb[1] or "S/P",
+                            "uf": mb[2] or "BR",
+                            "cargo": mb[3],
+                            "id": mb[4],
+                            "foto": mb[5]
+                        }
+                        for mb in membros_raw
+                    ]
+                })
+            return {
+                "total": len(comissoes),
+                "comissoes": comissoes
+            }
+
+    except Exception as e:
+        logging.error(f"Erro ao buscar comissões do senado: {e}")
+        raise HTTPException(status_code=500, detail="Erro ao processar comissões")
+    finally:
+        if conn:
+            db.release_db_connection(conn)
 
 @router.get("/{senador_codigo}", summary="Obtém o perfil detalhado de um senador")
 def get_perfil_senador(senador_codigo: int, legislatura: int = Query(None)):    
@@ -1163,147 +1269,7 @@ def get_emendas_lista_senador(senador_codigo: int, pagina: int = 1):
     finally:
         if conn:
             db.release_db_connection(conn)
+#     finally:
+#         if conn:
+#             db.release_db_connection(conn)
 
-
-@router.get("/empresas/estatisticas", summary="Obtém estatísticas gerais das empresas")
-@lru_cache(maxsize=4)
-def get_estatisticas_empresas(legislatura: int = Query(None)):
-    conn = None
-    try:
-        conn = db.get_db_connection()
-        if not conn:
-            raise HTTPException(status_code=503, detail="Banco de dados indisponível")
-        
-        with conn.cursor() as cursor:
-            query_gerais = """
-               SELECT
-                    COUNT(DISTINCT d.cpf_cnpj) as total_empresas,
-                    SUM(d.valor_reembolsado) as total_pago,
-                    COUNT(*) as total_contratos
-                FROM senado.despesa_ceaps d
-                LEFT JOIN senado.parlamentar p ON d.cod_senador = p.codigo
-                JOIN senado.mandato m ON p.codigo = m.codigo_parlamentar
-                WHERE 1=1
-            """
-            params_gerais = []
-            if legislatura:
-                query_gerais += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
-                params_gerais.extend([str(legislatura), str(legislatura)])
-            
-            cursor.execute(query_gerais, tuple(params_gerais))
-            row_gerais = cursor.fetchone()
-
-            query_top_10 = """
-                SELECT
-                    d.fornecedor as empresa,
-                    SUM(d.valor_reembolsado) as valor_total
-                FROM senado.despesa_ceaps d
-                LEFT JOIN senado.parlamentar p ON d.cod_senador = p.codigo
-                JOIN senado.mandato m ON p.codigo = m.codigo_parlamentar
-                WHERE 1=1
-            """
-            params_top10 = []
-            if legislatura:
-                query_top_10 += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
-                params_top10.extend([str(legislatura), str(legislatura)])
-            
-            query_top_10 += " GROUP BY d.fornecedor ORDER BY valor_total DESC LIMIT 10"
-            cursor.execute(query_top_10, tuple(params_top10))
-            res_top_10 = cursor.fetchall()
-            
-            query_top_20 = """
-WITH EmpresaStats AS (
-    SELECT
-        d.fornecedor,
-        d.cpf_cnpj,
-        SUM(d.valor_reembolsado) as valor_total,
-        COUNT(*) as contratos
-    FROM senado.despesa_ceaps d
-    LEFT JOIN senado.parlamentar p ON d.cod_senador = p.codigo
-    JOIN senado.mandato m ON p.codigo = m.codigo_parlamentar
-    WHERE 1=1
-"""
-            if legislatura:
-                query_top_20 += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
-            
-            query_top_20 += """
-    GROUP BY d.fornecedor, d.cpf_cnpj
-),
-TotalGeral AS (
-    SELECT SUM(d.valor_reembolsado) as soma_total FROM senado.despesa_ceaps d
-    LEFT JOIN senado.parlamentar p ON d.cod_senador = p.codigo
-    JOIN senado.mandato m ON p.codigo = m.codigo_parlamentar
-    WHERE 1=1
-"""
-            if legislatura:
-                query_top_20 += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
-                
-            query_top_20 += """
-),
-EmpresaPartidos AS (
-    SELECT
-        d.fornecedor,
-        d.cpf_cnpj,
-        STRING_AGG(DISTINCT p.sigla_partido, ', ') as partidos
-    FROM senado.despesa_ceaps d
-    LEFT JOIN senado.parlamentar p ON d.cod_senador = p.codigo
-    JOIN senado.mandato m ON p.codigo = m.codigo_parlamentar
-    WHERE 1=1
-"""
-            if legislatura:
-                query_top_20 += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
-
-            query_top_20 += """
-    GROUP BY d.fornecedor, d.cpf_cnpj
-)
-SELECT
-    ROW_NUMBER() OVER (ORDER BY es.valor_total DESC) as rank,
-    es.fornecedor as empresa,
-    COALESCE(ep.partidos, 'N/A') as partidos,
-    es.cpf_cnpj as cnpj,
-    es.valor_total,
-    es.contratos,
-    ROUND((es.valor_total / NULLIF(tg.soma_total, 0)) * 100, 2) as percentual
-FROM EmpresaStats es
-JOIN EmpresaPartidos ep ON es.fornecedor = ep.fornecedor AND es.cpf_cnpj = ep.cpf_cnpj
-CROSS JOIN TotalGeral tg
-ORDER BY es.valor_total DESC
-LIMIT 20;
-"""
-            params_top20 = []
-            if legislatura:
-                params_top20.extend([str(legislatura), str(legislatura), str(legislatura), str(legislatura), str(legislatura), str(legislatura)])
-            
-            cursor.execute(query_top_20, tuple(params_top20))
-            res_top_20 = cursor.fetchall()
-            
-            return {
-                "total_empresas": row_gerais[0],
-                "total_pago": float(row_gerais[1] or 0),
-                "total_contratos": row_gerais[2],
-                "top_10_empresas": [
-                    {
-                        "empresa": r[0],
-                        "valor_total": float(r[1])
-                    }
-                    for r in res_top_10
-                ],
-                "top_20_empresas": [
-                    {
-                        "rank": r[0],
-                        "empresa": r[1],
-                        "partidos": r[2],
-                        "cnpj": r[3],
-                        "valor_total": float(r[4]),
-                        "contratos": r[5],
-                        "percentual": float(r[6])
-                    }
-                    for r in res_top_20
-                ]
-            }
-    except Exception as e:
-        logging.error(f"Erro ao buscar estatísticas de empresas: {e}")
-        raise HTTPException(status_code=500, detail="Erro ao processar estatísticas")
-    finally:
-        if conn:
-            db.release_db_connection(conn)

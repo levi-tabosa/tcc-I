@@ -29,7 +29,7 @@
                       v-model="searchA"
                       type="text"
                       placeholder="Buscar deputado por nome..."
-                      class="input-base pl-10 pr-4 py-2.5 rounded-lg"
+                      class="input-base pl-10 pr-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:ring-black/20"
                       @focus="showDropdownA = true"
                       @blur="hideDropdown('A')"
                     />
@@ -92,7 +92,7 @@
                       v-model="searchB"
                       type="text"
                       placeholder="Buscar deputado por nome..."
-                      class="input-base pl-10 pr-4 py-2.5 rounded-lg"
+                      class="input-base pl-10 pr-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:ring-black/20"
                       @focus="showDropdownB = true"
                       @blur="hideDropdown('B')"
                     />
@@ -444,10 +444,12 @@ import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseLoading from '@/components/ui/BaseLoading.vue'
+import { useLoadingStore } from '@/stores/loading'
 import { useCamaraStore } from "@/stores/camara"
 import { type Deputado, type DeputadoDetail, type Despesa } from '@/stores/camara' // Assuming types are still needed from here or moved to a common types file
 
 const store = useCamaraStore()
+const loadingStore = useLoadingStore()
 
 const apiUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
 
@@ -536,6 +538,7 @@ const clearSelection = (side: 'A' | 'B') => {
 const compareDeputados = async () => {
   if (!selectedA.value || !selectedB.value) return
 
+  loadingStore.startLoading('Comparando deputados...')
   loadingComparison.value = true
   comparisonReady.value = false
 
@@ -562,6 +565,7 @@ const compareDeputados = async () => {
     alert('Erro ao carregar dados de comparação. Por favor, tente novamente.')
   } finally {
     loadingComparison.value = false
+    loadingStore.stopLoading()
   }
 }
 
