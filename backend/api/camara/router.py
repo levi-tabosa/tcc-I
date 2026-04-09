@@ -1112,7 +1112,7 @@ def get_estatisticas_empresas(legislatura: int, limit: int = 20):
             # 1. Estatísticas Gerais
             query_gerais = """
                 SELECT 
-                    COUNT(DISTINCT LEFT(REGEXP_REPLACE(d.cnpj_cpf_fornecedor, '[^0-9]', '', 'g'), 8)) as total_empresas,
+                    COUNT(DISTINCT UPPER(TRIM(REGEXP_REPLACE(d.nome_fornecedor, '\\s+(S/A|S\\.A\\.|SA|LTDA|EIRELI|ME|EPP|EI|LIMITADA).*$', '', 'gi')))) as total_empresas,
                     SUM(d.valor_documento) as total_pago,
                     COUNT(*) as total_contratos
                 FROM camara.deputados_despesas d
@@ -1196,7 +1196,8 @@ def get_estatisticas_empresas(legislatura: int, limit: int = 20):
             
             params_ranking = []
             if legislatura:
-                params_ranking.append(legislatura)
+                params_ranking.append(legislatura) # Para top_fornecedores
+                params_ranking.append(legislatura) # Para partidos_pagadores
             params_ranking.append(limit)
             
             cursor.execute(query_top, tuple(params_ranking))
