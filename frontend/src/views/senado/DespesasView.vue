@@ -213,7 +213,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted} from 'vue'
+import { computed, onMounted} from 'vue'
 import { useRouter } from 'vue-router'
 import { Banknote, Users, Receipt, ChevronRight } from 'lucide-vue-next'
 import BaseCard from '@/components/ui/BaseCard.vue'
