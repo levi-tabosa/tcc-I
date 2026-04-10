@@ -933,7 +933,7 @@ def get_resumo_emendas(legislatura: int):
                 cursor.execute(query_totais)
             
             totais_row = cursor.fetchone()
-            valor_total_global_totais = float(totais_row[3]) if totais_row[3] else 1.0
+            valor_total_global = float(totais_row[3]) if totais_row[3] and float(totais_row[3]) > 0 else 1.0
             
             # 2. Distribuição por Área (Optimized with CTE)
             if legislatura:
@@ -969,7 +969,6 @@ def get_resumo_emendas(legislatura: int):
                 cursor.execute(query_areas)
             
             areas_raw = cursor.fetchall()
-            valor_total_global = sum(float(r[1]) for r in areas_raw) if areas_raw else 1.0
 
             areas_formatadas = [
                 {
@@ -1074,9 +1073,16 @@ def get_votacao_materia(legislatura: int, codigo_materia: int):
                 JOIN senado.parlamentar p ON vp.codigo_parlamentar = p.codigo
                 WHERE vp.codigo_materia = %s
                   AND vp.sigla_descricao_voto NOT IN ('P-NRV', 'AP', 'Presidente (art. 51 RISF)', 'LS', 'NCom')
-                ORDER BY m.ano DESC, m.sigla, m.numero, p.nome_parlamentar
             """
-            cursor.execute(query, (codigo_materia,))
+            params = [codigo_materia]
+            if legislatura:
+                start_year = 2023 - (57 - legislatura) * 4
+                end_year = start_year + 3
+                query += " AND m.ano BETWEEN %s AND %s"
+                params.extend([start_year, end_year])
+
+            query += " ORDER BY m.ano DESC, m.sigla, m.numero, p.nome_parlamentar"
+            cursor.execute(query, tuple(params))
             resultados = cursor.fetchall()
             return {
                 "votacao": [
@@ -1119,7 +1125,14 @@ def get_emendas_lista_senador(legislatura: int, senador_codigo: int, pagina: int
                        OR lower(e.nome_autor) = lower(s.nome_parlamentar))
                 WHERE s.codigo = %s
             """
-            cursor.execute(query_count, (senador_codigo,))
+            params_count = [senador_codigo]
+            if legislatura:
+                start_year = 2023 - (57 - legislatura) * 4
+                end_year = start_year + 3
+                query_count += " AND e.ano BETWEEN %s AND %s"
+                params_count.extend([start_year, end_year])
+
+            cursor.execute(query_count, tuple(params_count))
             total_items = cursor.fetchone()[0]
             total_paginas = (total_items + itens_per_page - 1) // itens_per_page
 
@@ -1137,10 +1150,17 @@ def get_emendas_lista_senador(legislatura: int, senador_codigo: int, pagina: int
                   ON (lower(e.nome_autor) = lower(s.nome_completo) 
                       OR lower(e.nome_autor) = lower(s.nome_parlamentar))
                 WHERE s.codigo = %s
-                ORDER BY e.ano DESC, e.valor_pago DESC
-                LIMIT %s OFFSET %s
             """
-            cursor.execute(query, (senador_codigo, itens_per_page, offset))
+            params = [senador_codigo]
+            if legislatura:
+                start_year = 2023 - (57 - legislatura) * 4
+                end_year = start_year + 3
+                query += " AND e.ano BETWEEN %s AND %s"
+                params.extend([start_year, end_year])
+
+            query += " ORDER BY e.ano DESC, e.valor_pago DESC LIMIT %s OFFSET %s"
+            params.extend([itens_per_page, offset])
+            cursor.execute(query, tuple(params))
             res = cursor.fetchall()
             
             return {
