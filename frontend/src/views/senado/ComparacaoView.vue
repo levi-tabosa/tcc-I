@@ -54,6 +54,7 @@
                     class="flex items-center gap-3 w-full px-4 py-2.5 text-left hover:bg-muted transition-colors"
                     @mousedown.prevent="selectSenador('A', sen)"
                   >
+                    <img
                       :src="sen.foto || '/placeholder-user.svg'"
                       :alt="sen.nome"
                       class="h-8 w-8 rounded-full object-cover border border-border"
