@@ -23,7 +23,7 @@
             <BaseCard v-for="i in 3" :key="i" class="animate-pulse h-32" />
           </div>
           <div v-else class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            <BaseCard hover class="border-l-4 border-primary">
+            <BaseCard class="border-l-4 border-primary">
               <div class="flex items-center gap-4">
                 <div class="p-3 rounded-xl bg-primary/10">
                   <Users class="h-6 w-6 text-primary" />
@@ -34,7 +34,7 @@
                 </div>
               </div>
             </BaseCard>
-            <BaseCard hover class="border-l-4 border-accent">
+            <BaseCard class="border-l-4 border-accent">
               <div class="flex items-center gap-4">
                 <div class="p-3 rounded-xl bg-accent/10">
                   <Landmark class="h-6 w-6 text-accent" />
@@ -45,7 +45,7 @@
                 </div>
               </div>
             </BaseCard>
-            <BaseCard hover class="border-l-4 border-chart-2 sm:col-span-2 lg:col-span-1">
+            <BaseCard class="border-l-4 border-chart-2 sm:col-span-2 lg:col-span-1">
               <div class="flex items-center gap-4">
                 <div class="p-3 rounded-xl bg-chart-2/10">
                   <TrendingUp class="h-6 w-6 text-chart-2" />
@@ -71,7 +71,7 @@
             <BaseCard v-for="i in 6" :key="i" class="animate-pulse h-24" />
           </div>
           <div v-else class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            <BaseCard v-for="area in estatisticas.areas" :key="area.nome" hover class="group bg-card/50 backdrop-blur-sm">
+            <BaseCard v-for="area in estatisticas.areas" :key="area.nome" class="group bg-card/50 backdrop-blur-sm">
               <div class="flex items-center justify-between mb-3">
                 <span class="font-semibold text-foreground group-hover:text-primary transition-colors">{{ area.nome }}</span>
                 <span class="text-lg font-bold text-accent">{{ area.percentual }}%</span>

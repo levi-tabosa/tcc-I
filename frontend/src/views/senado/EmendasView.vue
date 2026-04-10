@@ -23,7 +23,7 @@
         <section class="py-12 bg-muted/30">
           <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              <BaseCard hover class="border-l-4 border-purple-500">
+              <BaseCard class="border-l-4 border-purple-500">
                 <div class="flex items-center gap-4">
                   <div class="p-3 rounded-xl bg-purple-500/10">
                     <Users class="h-6 w-6 text-purple-500" />
@@ -34,7 +34,7 @@
                   </div>
                 </div>
               </BaseCard>
-              <BaseCard hover class="border-l-4 border-accent">
+              <BaseCard class="border-l-4 border-accent">
                 <div class="flex items-center gap-4">
                   <div class="p-3 rounded-xl bg-accent/10">
                     <Landmark class="h-6 w-6 text-accent" />
@@ -45,7 +45,7 @@
                   </div>
                 </div>
               </BaseCard>
-              <BaseCard hover class="border-l-4 border-chart-2 sm:col-span-2 lg:col-span-1">
+              <BaseCard class="border-l-4 border-chart-2 sm:col-span-2 lg:col-span-1">
                 <div class="flex items-center gap-4">
                   <div class="p-3 rounded-xl bg-chart-2/10">
                     <TrendingUp class="h-6 w-6 text-chart-2" />
@@ -68,7 +68,7 @@
               <span class="text-sm text-muted-foreground">Total: R$ {{ (estatisticas.totais.valor_total / 1000000000).toFixed(1) }} Bi</span>
             </div>
             <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              <BaseCard v-for="area in estatisticas.areas" :key="area.nome" hover class="group bg-card/50 backdrop-blur-sm">
+              <BaseCard v-for="area in estatisticas.areas" :key="area.nome" class="group bg-card/50 backdrop-blur-sm">
                 <div class="flex items-center justify-between mb-3">
                   <span class="font-semibold text-foreground group-hover:text-purple-500 transition-colors">{{ area.nome }}</span>
                   <span class="text-lg font-bold text-accent">{{ area.percentual }}%</span>

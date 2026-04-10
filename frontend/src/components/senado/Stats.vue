@@ -3,7 +3,7 @@
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <!-- Resumo Principal -->
       <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-        <BaseCard hover>
+        <BaseCard>
           <div class="flex items-center gap-4">
             <div class="p-3 rounded-xl bg-purple-500/10">
               <Users class="h-6 w-6 text-purple-600 dark:text-purple-400" />
@@ -17,7 +17,7 @@
           </div>
         </BaseCard>
 
-        <BaseCard hover>
+        <BaseCard>
           <div class="flex items-center gap-4">
             <div class="p-3 rounded-xl bg-accent/10">
               <MapPin class="h-6 w-6 text-accent" />
@@ -29,7 +29,7 @@
           </div>
         </BaseCard>
 
-        <BaseCard hover>
+        <BaseCard>
           <div class="flex items-center gap-4">
             <div class="p-3 rounded-xl bg-chart-1/10">
               <Flag class="h-6 w-6 text-chart-1" />
@@ -43,7 +43,7 @@
           </div>
         </BaseCard>
 
-        <BaseCard hover>
+        <BaseCard>
           <div class="flex items-center gap-4">
             <div class="p-3 rounded-xl bg-chart-2/10">
               <Map class="h-6 w-6 text-chart-2" />

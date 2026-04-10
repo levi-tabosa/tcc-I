@@ -2,7 +2,7 @@
   <section class="py-8 bg-muted/30">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <BaseCard hover>
+        <BaseCard>
           <div class="flex items-center gap-4">
             <div class="p-3 rounded-xl bg-primary/10">
               <FileText class="h-6 w-6 text-primary" />
@@ -14,7 +14,7 @@
           </div>
         </BaseCard>
 
-        <BaseCard hover>
+        <BaseCard>
           <div class="flex items-center gap-4">
             <div class="p-3 rounded-xl bg-accent/10">
               <BarChart3 class="h-6 w-6 text-accent" />
@@ -26,7 +26,7 @@
           </div>
         </BaseCard>
 
-        <BaseCard hover class="sm:col-span-2 lg:col-span-1">
+        <BaseCard class="sm:col-span-2 lg:col-span-1">
           <div class="flex items-center gap-4">
             <div class="p-3 rounded-xl bg-chart-2/10">
               <TrendingUp class="h-6 w-6 text-chart-2" />

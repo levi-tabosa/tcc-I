@@ -38,7 +38,7 @@
       <section class="py-8 bg-muted/30">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div class="grid gap-4 sm:grid-cols-3">
-            <BaseCard hover>
+            <BaseCard>
               <div class="flex items-center gap-4">
                 <div class="p-3 rounded-xl bg-primary/10">
                   <Building2 class="h-6 w-6 text-primary" />
@@ -50,7 +50,7 @@
                 <div v-else class="animate-pulse h-10 w-32 bg-muted rounded"></div>
               </div>
             </BaseCard>
-            <BaseCard hover>
+            <BaseCard>
               <div class="flex items-center gap-4">
                 <div class="p-3 rounded-xl bg-chart-2/10">
                   <Banknote class="h-6 w-6 text-chart-2" />
@@ -62,7 +62,7 @@
                 <div v-else class="animate-pulse h-10 w-32 bg-muted rounded"></div>
               </div>
             </BaseCard>
-            <BaseCard hover>
+            <BaseCard>
               <div class="flex items-center gap-4">
                 <div class="p-3 rounded-xl bg-chart-3/10">
                   <TrendingUp class="h-6 w-6 text-chart-3" />

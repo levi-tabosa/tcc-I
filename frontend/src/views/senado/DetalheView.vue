@@ -143,7 +143,7 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-purple-50 bg-card">
-                                <tr v-for="(emenda, index) in store.currentEmendas" :key="index" class="hover:bg-purple-50/50 transition-colors">
+                                <tr v-for="(emenda, index) in store.currentEmendas" :key="index" class="transition-colors">
                                     <td class="whitespace-nowrap">
                                         <div class="flex flex-col">
                                             <span class="font-medium text-purple-900">{{ emenda.ano }}</span>
@@ -205,7 +205,7 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-border bg-card">
-                                <tr v-for="(despesa, index) in store.currentDespesas" :key="index" class="hover:bg-muted/50 transition-colors">
+                                <tr v-for="(despesa, index) in store.currentDespesas" :key="index" class="transition-colors">
                                     <td class="whitespace-nowrap">{{ despesa.mes }}/{{ despesa.ano }}</td>
                                     <td class="truncate max-w-xs">{{ despesa.tipoDespesa || despesa.tipo_despesa }}</td>
                                     <td class="truncate max-w-xs hidden sm:table-cell">{{ despesa.fornecedor || '--' }}</td>

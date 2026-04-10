@@ -34,7 +34,7 @@
         <section class="py-8 bg-muted/30">
           <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <BaseCard v-for="stat in overviewStats" :key="stat.label" hover>
+              <BaseCard v-for="stat in overviewStats" :key="stat.label">
                 <div class="flex items-center gap-4">
                   <div :class="`p-3 rounded-xl ${stat.bgColor}`">
                     <component :is="stat.icon" :class="`h-6 w-6 ${stat.color}`" />
