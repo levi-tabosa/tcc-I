@@ -1200,142 +1200,56 @@ def get_estatisticas_empresas(legislatura: int):
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
         with conn.cursor() as cursor:
-            query_gerais = """
-               SELECT
-                    COUNT(DISTINCT UPPER(TRIM(REGEXP_REPLACE(d.fornecedor, '\\s+(S/A|S\\.A\\.|SA|LTDA|EIRELI|ME|EPP|EI|LIMITADA).*$', '', 'gi')))) as total_empresas,
-                    SUM(d.valor_reembolsado) as total_pago,
-                    COUNT(*) as total_contratos
-                FROM senado.despesa_ceaps d
-                LEFT JOIN senado.parlamentar p ON d.cod_senador = p.codigo
-                JOIN senado.mandato m ON p.codigo = m.codigo_parlamentar
-                WHERE LENGTH(REGEXP_REPLACE(d.cpf_cnpj, '[^0-9]', '', 'g')) > 11
-            """
-            params_gerais = []
-            if legislatura:
-                query_gerais += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
-                params_gerais.extend([str(legislatura), str(legislatura)])
+            # 1. Estatísticas Gerais from summary table
+            query_gerais = "SELECT total_empresas, total_pago, total_contratos FROM senado.summary_empresas_geral WHERE legislatura = %s"
+            cursor.execute(query_gerais, (legislatura,))
+            res_stats = cursor.fetchone()
             
-            cursor.execute(query_gerais, tuple(params_gerais))
-            row_gerais = cursor.fetchone()
+            if not res_stats:
+                return {
+                    "total_empresas": 0,
+                    "total_pago": 0.0,
+                    "total_contratos": 0,
+                    "top_10_empresas": [],
+                    "top_20_empresas": []
+                }
 
-            query_top_10 = """
-                SELECT
-                    MAX(d.fornecedor) as empresa,
-                    SUM(d.valor_reembolsado) as valor_total
-                FROM senado.despesa_ceaps d
-                LEFT JOIN senado.parlamentar p ON d.cod_senador = p.codigo
-                JOIN senado.mandato m ON p.codigo = m.codigo_parlamentar
-                WHERE LENGTH(REGEXP_REPLACE(d.cpf_cnpj, '[^0-9]', '', 'g')) > 11
+            # 2. Ranking from summary table
+            query_ranking = """
+                SELECT rank, empresa, partidos, cnpj, valor_total, contratos, percentual
+                FROM senado.summary_empresas_ranking
+                WHERE legislatura = %s
+                ORDER BY rank ASC
+                LIMIT 20
             """
-            params_top10 = []
-            if legislatura:
-                query_top_10 += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
-                params_top10.extend([str(legislatura), str(legislatura)])
+            cursor.execute(query_ranking, (legislatura,))
+            res_ranking = cursor.fetchall()
             
-            query_top_10 += " GROUP BY UPPER(TRIM(REGEXP_REPLACE(d.fornecedor, '\\s+(S/A|S\\.A\\.|SA|LTDA|EIRELI|ME|EPP|EI|LIMITADA).*$', '', 'gi'))) ORDER BY valor_total DESC LIMIT 10"
-            cursor.execute(query_top_10, tuple(params_top10))
-            res_top_10 = cursor.fetchall()
-            
-            query_top_20 = """
-WITH normalized_data AS (
-    SELECT
-        d.fornecedor,
-        d.cpf_cnpj,
-        p.sigla_partido,
-        d.valor_reembolsado,
-        m.primeira_legislatura,
-        m.segunda_legislatura,
-        UPPER(TRIM(REGEXP_REPLACE(d.fornecedor, '\\s+(S/A|S\\.A\\.|SA|LTDA|EIRELI|ME|EPP|EI|LIMITADA).*$', '', 'gi'))) as nome_chave
-    FROM senado.despesa_ceaps d
-    LEFT JOIN senado.parlamentar p ON d.cod_senador = p.codigo
-    JOIN senado.mandato m ON p.codigo = m.codigo_parlamentar
-    WHERE LENGTH(REGEXP_REPLACE(d.cpf_cnpj, '[^0-9]', '', 'g')) > 11
-),
-EmpresaStats AS (
-    SELECT
-        nome_chave,
-        MAX(fornecedor) as fornecedor,
-        LEFT(REGEXP_REPLACE(MAX(cpf_cnpj), '[^0-9]', '', 'g'), 8) as cpf_cnpj_raiz,
-        SUM(valor_reembolsado) as valor_total,
-        COUNT(*) as contratos
-    FROM normalized_data
-    WHERE 1=1
-"""
-            if legislatura:
-                query_top_20 += " AND (primeira_legislatura = %s OR segunda_legislatura = %s)"
-            
-            query_top_20 += """
-    GROUP BY nome_chave
-),
-TotalGeral AS (
-    SELECT SUM(valor_reembolsado) as soma_total FROM normalized_data
-    WHERE 1=1
-"""
-            if legislatura:
-                query_top_20 += " AND (primeira_legislatura = %s OR segunda_legislatura = %s)"
-                
-            query_top_20 += """
-),
-EmpresaPartidos AS (
-    SELECT
-        nome_chave,
-        STRING_AGG(DISTINCT sigla_partido, ', ') as partidos
-    FROM normalized_data
-    WHERE 1=1
-"""
-            if legislatura:
-                query_top_20 += " AND (primeira_legislatura = %s OR segunda_legislatura = %s)"
+            top_20 = [
+                {
+                    "rank": r[0],
+                    "empresa": r[1],
+                    "partidos": r[2],
+                    "cnpj": r[3],
+                    "valor_total": float(r[4]),
+                    "contratos": r[5],
+                    "percentual": float(r[6])
+                }
+                for r in res_ranking
+            ]
 
-            query_top_20 += """
-    GROUP BY nome_chave
-)
-SELECT
-    ROW_NUMBER() OVER (ORDER BY es.valor_total DESC) as rank,
-    es.fornecedor as empresa,
-    COALESCE(ep.partidos, 'N/A') as partidos,
-    es.cpf_cnpj_raiz as cnpj,
-    es.valor_total,
-    es.contratos,
-    ROUND((es.valor_total / NULLIF(tg.soma_total, 0)) * 100, 2) as percentual
-FROM EmpresaStats es
-JOIN EmpresaPartidos ep ON es.nome_chave = ep.nome_chave
-CROSS JOIN TotalGeral tg
-ORDER BY es.valor_total DESC
-LIMIT 20;
-"""
-            params_top20 = []
-            if legislatura:
-                params_top20.extend([str(legislatura), str(legislatura), str(legislatura), str(legislatura), str(legislatura), str(legislatura)])
-            
-            cursor.execute(query_top_20, tuple(params_top20))
-            res_top_20 = cursor.fetchall()
-            
             return {
-                "total_empresas": row_gerais[0],
-                "total_pago": float(row_gerais[1] or 0),
-                "total_contratos": row_gerais[2],
+                "total_empresas": res_stats[0],
+                "total_pago": float(res_stats[1]),
+                "total_contratos": res_stats[2],
                 "top_10_empresas": [
-                    {
-                        "empresa": r[0],
-                        "valor_total": float(r[1])
-                    }
-                    for r in res_top_10
+                    {"empresa": r["empresa"], "valor_total": r["valor_total"]}
+                    for r in top_20[:10]
                 ],
-                "top_20_empresas": [
-                    {
-                        "rank": r[0],
-                        "empresa": r[1],
-                        "partidos": r[2],
-                        "cnpj": r[3],
-                        "valor_total": float(r[4]),
-                        "contratos": r[5],
-                        "percentual": float(r[6])
-                    }
-                    for r in res_top_20
-                ]
+                "top_20_empresas": top_20
             }
     except Exception as e:
-        logging.error(f"Erro ao buscar estatísticas de empresas: {e}")
+        logging.error(f"Erro ao buscar estatísticas de empresas (summary): {e}")
         raise HTTPException(status_code=500, detail="Erro ao processar estatísticas")
     finally:
         if conn:
