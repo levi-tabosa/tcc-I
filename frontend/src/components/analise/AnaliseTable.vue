@@ -44,10 +44,10 @@ import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 
 const ranking = ref([
-  { id: 1, nome: 'João Silva', partido: 'PT', presenca: 98.5, despesas: 'R$ 45K', emendas: 234, pontuacao: 9.5 },
-  { id: 2, nome: 'Maria Santos', partido: 'PSDB', presenca: 97.2, despesas: 'R$ 52K', emendas: 198, pontuacao: 9.3 },
-  { id: 3, nome: 'Carlos Lima', partido: 'MDB', presenca: 96.8, despesas: 'R$ 48K', emendas: 212, pontuacao: 9.2 },
-  { id: 4, nome: 'Ana Costa', partido: 'PP', presenca: 95.5, despesas: 'R$ 58K', emendas: 187, pontuacao: 9.0 },
-  { id: 5, nome: 'Pedro Oliveira', partido: 'PL', presenca: 94.2, despesas: 'R$ 62K', emendas: 165, pontuacao: 8.8 },
+  { id: 1, nome: 'João Silva', partido: 'PT', presenca: 98.5, despesas: 'R$ 45 mil', emendas: 234, pontuacao: 9.5 },
+  { id: 2, nome: 'Maria Santos', partido: 'PSDB', presenca: 97.2, despesas: 'R$ 52 mil', emendas: 198, pontuacao: 9.3 },
+  { id: 3, nome: 'Carlos Lima', partido: 'MDB', presenca: 96.8, despesas: 'R$ 48 mil', emendas: 212, pontuacao: 9.2 },
+  { id: 4, nome: 'Ana Costa', partido: 'PP', presenca: 95.5, despesas: 'R$ 58 mil', emendas: 187, pontuacao: 9.0 },
+  { id: 5, nome: 'Pedro Oliveira', partido: 'PL', presenca: 94.2, despesas: 'R$ 62 mil', emendas: 165, pontuacao: 8.8 },
 ])
 </script>

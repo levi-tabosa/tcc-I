@@ -76,10 +76,7 @@
                       <GraduationCap class="h-4 w-4 text-purple-500" />
                       <span>{{ store.currentSenador.escolaridade || 'Indisponível' }}</span>
                     </div>
-                    <div class="flex items-center gap-3 text-muted-foreground">
-                      <User class="h-4 w-4 text-purple-500" />
-                      <span>{{ store.currentSenador.cpf ? `***.${store.currentSenador.cpf.slice(3, 6)}.***-**` : 'Indisponível' }}</span>
-                    </div>
+                    <!-- CPF removed per user request -->
                   </div>
                 </div>
               </BaseCard>
@@ -88,10 +85,9 @@
               <div class="flex-1 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <BaseCard class="border-purple-100">
                   <div class="flex items-center justify-between">
-                    <p class="text-sm text-muted-foreground">Gastos Totais</p>
-                    <BaseBadge variant="secondary" class="bg-purple-100 text-purple-800">Mandato</BaseBadge>
+                    <p class="text-sm text-muted-foreground">Gastos Totais Mandato</p>
                   </div>
-                  <p v-if="totalGastos > 0" class="mt-2 text-3xl font-bold text-foreground">R$ {{ (totalGastos / 1000).toFixed(0) }}K</p>
+                  <p v-if="totalGastos > 0" class="mt-2 text-3xl font-bold text-foreground">R$ {{ (totalGastos / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 }) }} mil</p>
                   <p v-else class="mt-2 text-xl font-bold text-muted-foreground">0</p>
                   <p class="mt-1 text-xs text-muted-foreground">Soma de todas despesas registradas</p>
                 </BaseCard>
@@ -115,7 +111,7 @@
                     <div v-for="item in gastosCategorias" :key="item.categoria">
                       <div class="flex items-center justify-between text-sm mb-1">
                         <span class="text-muted-foreground">{{ item.categoria }}</span>
-                        <span class="font-medium text-foreground">R$ {{ (item.valor / 1000).toFixed(0) }}K</span>
+                        <span class="font-medium text-foreground">R$ {{ (item.valor / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 }) }} mil</span>
                       </div>
                       <div class="progress-bar bg-purple-100">
                         <div
@@ -262,7 +258,7 @@
 <script setup lang="ts">
 import { computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { ChevronLeft, ChevronRight, Mail, Calendar, User, GraduationCap } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight, Mail, Calendar, GraduationCap } from 'lucide-vue-next'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import BaseLoading from '@/components/ui/BaseLoading.vue'

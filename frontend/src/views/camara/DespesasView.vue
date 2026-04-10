@@ -244,8 +244,8 @@ const todosPartidos = computed(() => {
     partido: p.partido,
     valor: p.valor,
     valorFormatado: p.valor >= 1000000 
-      ? `R$ ${(p.valor / 1000000).toFixed(1)}M`
-      : `R$ ${(p.valor / 1000).toFixed(0)}K`,
+      ? `R$ ${(p.valor / 1000000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}M`
+      : `R$ ${(p.valor / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} mil`,
     percentual: ((p.valor / totalGeral) * 100).toFixed(1)
   }))
 })
@@ -325,8 +325,8 @@ const deputadosFiltrados = computed(() => {
     .map(d => ({
       ...d,
       valorFormatado: d.totalGasto >= 1000000
-        ? `R$ ${(d.totalGasto / 1000000).toFixed(1)}M`
-        : `R$ ${(d.totalGasto / 1000).toFixed(0)}K`,
+        ? `R$ ${(d.totalGasto / 1000000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}M`
+        : `R$ ${(d.totalGasto / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} mil`,
       percentualMax: (d.totalGasto / maxGasto) * 100
     }))
 })
@@ -354,7 +354,7 @@ const overviewStats = computed(() => [
   { 
     label: "Média por Deputado", 
     value: store.generalStats && store.deputadoStats && store.deputadoStats.total_deputados > 0
-      ? `R$ ${(store.generalStats.total_gastos / store.deputadoStats.total_deputados / 1000).toFixed(0)}K`
+      ? `R$ ${(store.generalStats.total_gastos / store.deputadoStats.total_deputados / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} mil`
       : "...", 
     icon: Users, 
     color: "text-accent", 

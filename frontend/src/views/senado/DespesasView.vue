@@ -238,15 +238,15 @@ const gastosPorPartido = computed(() => {
     partido: p.partido,
     valor: p.total,
     valorFormatado: p.total >= 1000000
-      ? `R$ ${(p.total / 1000000).toFixed(1)}M`
-      : `R$ ${(p.total / 1000).toFixed(0)}K`,
+      ? `R$ ${(p.total / 1000000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}M`
+      : `R$ ${(p.total / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} mil`,
     percentual: ((p.total / totalGeral) * 100).toFixed(1)
   }))
 })
 
 const totalGastosFormatado = computed(() => {
   const total = store.generalStats?.total_gastos || 0
-  return total >= 1000000 ? `R$ ${(total / 1000000).toFixed(0)}M` : `R$ ${(total / 1000).toFixed(0)}K`
+  return total >= 1000000 ? `R$ ${(total / 1000000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}M` : `R$ ${(total / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} mil`
 })
 
 const allPieSegments = computed(() => {
@@ -275,8 +275,8 @@ const categoriasAgregadas = computed(() => {
     nome: c.categoria,
     total: c.total,
     valorFormatado: c.total >= 1000000
-      ? `R$ ${(c.total / 1000000).toFixed(1)}M`
-      : `R$ ${(c.total / 1000).toFixed(0)}K`,
+      ? `R$ ${(c.total / 1000000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}M`
+      : `R$ ${(c.total / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} mil`,
     percentual: (c.total / maxValor) * 100,
     percentualTotal: (c.total / totalCats) * 100
   }))
@@ -292,8 +292,8 @@ const senadorsFiltrados = computed(() => {
       id: s.codigo,
       estado: s.uf,
       valorFormatado: s.total >= 1000000
-        ? `R$ ${(s.total / 1000000).toFixed(1)}M`
-        : `R$ ${(s.total / 1000).toFixed(0)}K`,
+        ? `R$ ${(s.total / 1000000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}M`
+        : `R$ ${(s.total / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} mil`,
       percentualMax: (s.total / maxGasto) * 100
     }))
 })
@@ -313,7 +313,7 @@ const overviewStats = computed(() => [
   {
     label: 'Média por Senador',
     value: store.generalStats
-      ? `R$ ${(store.generalStats.media_por_senador / 1000).toFixed(0)}K`
+      ? `R$ ${(store.generalStats.media_por_senador / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} mil`
       : '...',
     icon: Users,
     color: 'text-accent',
