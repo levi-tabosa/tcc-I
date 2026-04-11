@@ -824,7 +824,7 @@ def get_perfil_deputado(legislatura: int, deputado_id: int):
             categorias = [{"categoria": r[0], "valor": float(r[1])} for r in categorias_raw]
             total_despesas = sum(c["valor"] for c in categorias)
 
-            # 4. Buscar Resumo de Emendas (Não depende de legislatura do mandato)
+            # 4. Buscar Resumo de Emendas (Total de emendas pago ao autor)
             query_emendas_resumo = """
                 WITH parlamentares_nomes AS (
                     SELECT id, lower(nome_civil) as nome FROM camara.deputados
@@ -836,7 +836,14 @@ def get_perfil_deputado(legislatura: int, deputado_id: int):
                 JOIN parlamentares_nomes p ON lower(e.autor) = p.nome
                 WHERE p.id = %s
             """
-            cursor.execute(query_emendas_resumo, (deputado_id,))
+            params_emendas = [deputado_id]
+            if legislatura:
+                start_year = 2023 - (57 - legislatura) * 4
+                end_year = start_year + 3
+                query_emendas_resumo += " AND e.ano BETWEEN %s AND %s"
+                params_emendas.extend([start_year, end_year])
+
+            cursor.execute(query_emendas_resumo, tuple(params_emendas))
             row_emendas = cursor.fetchone()
             total_emendas = float(row_emendas[0]) if row_emendas and row_emendas[0] else 0.0
 

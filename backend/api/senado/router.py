@@ -346,7 +346,14 @@ WHERE codigo = %s;"""
                 JOIN senadores_nomes s ON lower(e.nome_autor) = s.nome
                 WHERE s.id = %s
             """
-            cursor.execute(query_emendas, (senador_codigo,))
+            params_emendas = [senador_codigo]
+            if legislatura:
+                start_year = 2023 - (57 - legislatura) * 4
+                end_year = start_year + 3
+                query_emendas += " AND e.ano BETWEEN %s AND %s"
+                params_emendas.extend([start_year, end_year])
+
+            cursor.execute(query_emendas, tuple(params_emendas))
             emendas_res_row = cursor.fetchone()
             total_emendas = float(emendas_res_row[0]) if emendas_res_row and emendas_res_row[0] else 0.0
 
