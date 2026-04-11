@@ -364,9 +364,9 @@ WHERE codigo = %s;"""
                       SELECT 1 FROM senado.mandato m 
                       WHERE m.codigo_parlamentar = s.id 
                       AND (
-                          CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - m.primeira_legislatura) * 4 AND 2023 - (57 - m.primeira_legislatura) * 4 + 3
+                          CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - CAST(m.primeira_legislatura AS INTEGER)) * 4 AND 2023 - (57 - CAST(m.primeira_legislatura AS INTEGER)) * 4 + 3
                           OR
-                          CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - m.segunda_legislatura) * 4 AND 2023 - (57 - m.segunda_legislatura) * 4 + 3
+                          CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - CAST(m.segunda_legislatura AS INTEGER)) * 4 AND 2023 - (57 - CAST(m.segunda_legislatura AS INTEGER)) * 4 + 3
                       )
                   )
             """
@@ -1037,9 +1037,9 @@ def get_resumo_emendas(legislatura: int):
                           SELECT 1 FROM senado.mandato m 
                           WHERE m.codigo_parlamentar = p.codigo 
                           AND (
-                              CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - m.primeira_legislatura) * 4 AND 2023 - (57 - m.primeira_legislatura) * 4 + 3
+                              CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - CAST(m.primeira_legislatura AS INTEGER)) * 4 AND 2023 - (57 - CAST(m.primeira_legislatura AS INTEGER)) * 4 + 3
                               OR
-                              CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - m.segunda_legislatura) * 4 AND 2023 - (57 - m.segunda_legislatura) * 4 + 3
+                              CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - CAST(m.segunda_legislatura AS INTEGER)) * 4 AND 2023 - (57 - CAST(m.segunda_legislatura AS INTEGER)) * 4 + 3
                           )
                       )
                     GROUP BY p.codigo, p.nome_parlamentar, p.sigla_partido, p.uf, p.url_foto
@@ -1066,9 +1066,9 @@ def get_resumo_emendas(legislatura: int):
                           SELECT 1 FROM senado.mandato m 
                           WHERE m.codigo_parlamentar = p.codigo 
                           AND (
-                              CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - m.primeira_legislatura) * 4 AND 2023 - (57 - m.primeira_legislatura) * 4 + 3
+                              CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - CAST(m.primeira_legislatura AS INTEGER)) * 4 AND 2023 - (57 - CAST(m.primeira_legislatura AS INTEGER)) * 4 + 3
                               OR
-                              CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - m.segunda_legislatura) * 4 AND 2023 - (57 - m.segunda_legislatura) * 4 + 3
+                              CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - CAST(m.segunda_legislatura AS INTEGER)) * 4 AND 2023 - (57 - CAST(m.segunda_legislatura AS INTEGER)) * 4 + 3
                           )
                       )
                     GROUP BY p.codigo, p.nome_parlamentar, p.sigla_partido, p.uf, p.url_foto
@@ -1189,9 +1189,9 @@ def get_emendas_lista_senador(legislatura: int, senador_codigo: int, pagina: int
                       SELECT 1 FROM senado.mandato m 
                       WHERE m.codigo_parlamentar = s.codigo 
                       AND (
-                          CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - m.primeira_legislatura) * 4 AND 2023 - (57 - m.primeira_legislatura) * 4 + 3
+                          CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - CAST(m.primeira_legislatura AS INTEGER)) * 4 AND 2023 - (57 - CAST(m.primeira_legislatura AS INTEGER)) * 4 + 3
                           OR
-                          CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - m.segunda_legislatura) * 4 AND 2023 - (57 - m.segunda_legislatura) * 4 + 3
+                          CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - CAST(m.segunda_legislatura AS INTEGER)) * 4 AND 2023 - (57 - CAST(m.segunda_legislatura AS INTEGER)) * 4 + 3
                       )
                   )
             """
@@ -1224,9 +1224,9 @@ def get_emendas_lista_senador(legislatura: int, senador_codigo: int, pagina: int
                       SELECT 1 FROM senado.mandato m 
                       WHERE m.codigo_parlamentar = s.codigo 
                       AND (
-                          CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - m.primeira_legislatura) * 4 AND 2023 - (57 - m.primeira_legislatura) * 4 + 3
+                          CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - CAST(m.primeira_legislatura AS INTEGER)) * 4 AND 2023 - (57 - CAST(m.primeira_legislatura AS INTEGER)) * 4 + 3
                           OR
-                          CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - m.segunda_legislatura) * 4 AND 2023 - (57 - m.segunda_legislatura) * 4 + 3
+                          CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - CAST(m.segunda_legislatura AS INTEGER)) * 4 AND 2023 - (57 - CAST(m.segunda_legislatura AS INTEGER)) * 4 + 3
                       )
                   )
             """
