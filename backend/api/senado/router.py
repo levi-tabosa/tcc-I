@@ -123,8 +123,10 @@ def get_estatisticas_senado(legislatura: int):
             """
             params_gastos = []
             if legislatura:
-                query_gastos += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
-                params_gastos.extend([str(legislatura), str(legislatura)])
+                start_year = 2023 - (57 - legislatura) * 4
+                end_year = start_year + 3
+                query_gastos += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s) AND CAST(d.ano AS INTEGER) BETWEEN %s AND %s"
+                params_gastos.extend([str(legislatura), str(legislatura), start_year, end_year])
             
             cursor.execute(query_gastos, tuple(params_gastos))
             total_gastos = cursor.fetchone()[0] or 0
@@ -215,8 +217,10 @@ WHERE d.cod_senador IN (%s, %s)
             """
             params_stat = [id1, id2]
             if legislatura:
-                query_despesas += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
-                params_stat.extend([str(legislatura), str(legislatura)])
+                start_year = 2023 - (57 - legislatura) * 4
+                end_year = start_year + 3
+                query_despesas += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s) AND CAST(d.ano AS INTEGER) BETWEEN %s AND %s"
+                params_stat.extend([str(legislatura), str(legislatura), start_year, end_year])
                 
             query_despesas += " GROUP BY d.cod_senador, d.tipo_despesa"
             cursor.execute(query_despesas, tuple(params_stat))
@@ -527,9 +531,11 @@ def get_despesas_estatisticas(legislatura: int):
             where_leg = ""
             join_mandato = ""
             if legislatura:
-                where_leg = " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
+                start_year = 2023 - (57 - legislatura) * 4
+                end_year = start_year + 3
+                where_leg = " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s) AND CAST(d.ano AS INTEGER) BETWEEN %s AND %s"
                 join_mandato = " INNER JOIN senado.mandato m ON d.cod_senador = m.codigo_parlamentar"
-                params.extend([str(legislatura), str(legislatura)])
+                params.extend([str(legislatura), str(legislatura), start_year, end_year])
             
             # 1. Total de Gastos
             query_total = f"SELECT COALESCE(SUM(d.valor_reembolsado), 0) FROM senado.despesa_ceaps d {join_mandato} WHERE 1=1 {where_leg}"
@@ -796,8 +802,10 @@ def get_lista_emendas(
                 query_count += """
                     JOIN senado.mandato m ON s.id = m.codigo_parlamentar
                 """
-                where_conditions.append("(m.primeira_legislatura = %s OR m.segunda_legislatura = %s)")
-                params_count.extend([str(legislatura), str(legislatura)])
+                start_year = 2023 - (57 - legislatura) * 4
+                end_year = start_year + 3
+                where_conditions.append("(m.primeira_legislatura = %s OR m.segunda_legislatura = %s) AND CAST(e.ano AS INTEGER) BETWEEN %s AND %s")
+                params_count.extend([str(legislatura), str(legislatura), start_year, end_year])
             
             if nome_senador:
                 where_conditions.append("""s.id IN (
@@ -844,8 +852,10 @@ def get_lista_emendas(
                 query += """
                     JOIN senado.mandato m ON s.id = m.codigo_parlamentar
                 """
-                where_conditions_data.append("(m.primeira_legislatura = %s OR m.segunda_legislatura = %s)")
-                params.extend([str(legislatura), str(legislatura)])
+                start_year = 2023 - (57 - legislatura) * 4
+                end_year = start_year + 3
+                where_conditions_data.append("(m.primeira_legislatura = %s OR m.segunda_legislatura = %s) AND CAST(e.ano AS INTEGER) BETWEEN %s AND %s")
+                params.extend([str(legislatura), str(legislatura), start_year, end_year])
             
             if nome_senador:
                 where_conditions_data.append("s.nome_senador ILIKE %s")
