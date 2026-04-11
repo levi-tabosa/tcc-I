@@ -39,12 +39,6 @@
           © 2026 Fiscaliza Brasil. Dados públicos para uma democracia transparente.
         </p>
         <div class="flex gap-4">
-          <a href="#" class="text-muted-foreground hover:text-primary transition-colors">
-            <Github class="h-5 w-5" />
-          </a>
-          <a href="#" class="text-muted-foreground hover:text-primary transition-colors">
-            <Twitter class="h-5 w-5" />
-          </a>
           <!-- contato removido -->
         </div>
       </div>
@@ -53,7 +47,6 @@
 </template>
 
 <script setup lang="ts">
-import { Github, Twitter } from 'lucide-vue-next'
 
 const dataSources = [
   { name: 'Dados Abertos da Câmara', url: 'https://dadosabertos.camara.leg.br' },
