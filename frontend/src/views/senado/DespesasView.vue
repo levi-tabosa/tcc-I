@@ -2,13 +2,13 @@
   <div class="min-h-screen flex flex-col">
     <main class="flex-1">
       <!-- Hero -->
-      <section class="bg-gradient-to-br from-purple-500/10 via-background to-accent/10 py-12">
+      <section class="bg-background border-b border-border/50 py-12">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div class="flex items-center gap-3 mb-3">
-            <div class="p-2 rounded-lg bg-purple-500/15">
-              <Receipt class="h-6 w-6 text-purple-500" />
+            <div class="p-2 rounded-lg bg-primary-500/15">
+              <Receipt class="h-6 w-6 text-primary-500" />
             </div>
-            <span class="text-sm font-medium text-purple-500 uppercase tracking-wider">Senado Federal</span>
+            <span class="text-sm font-medium text-primary-500 uppercase tracking-wider">Senado Federal</span>
           </div>
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
@@ -176,7 +176,7 @@
                   <div class="flex-1 min-w-0">
                     <p class="font-semibold text-foreground truncate">{{ senador.nome }}</p>
                     <div class="flex items-center gap-2 mt-0.5">
-                      <span class="text-xs px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-600 dark:text-purple-400 font-medium">
+                      <span class="text-xs px-1.5 py-0.5 rounded bg-primary-500/10 text-primary-600 dark:text-primary-400 font-medium">
                         {{ senador.partido }}
                       </span>
                       <span class="text-xs text-muted-foreground">{{ senador.estado }}</span>
@@ -189,7 +189,7 @@
                     <span class="text-base font-bold text-foreground">{{ senador.valorFormatado }}</span>
                     <div class="w-full bg-muted rounded-full h-1.5">
                       <div
-                        class="h-1.5 rounded-full bg-purple-500"
+                        class="h-1.5 rounded-full bg-primary-500"
                         :style="{ width: `${senador.percentualMax}%` }"
                       />
                     </div>
@@ -307,8 +307,8 @@ const overviewStats = computed(() => [
       : '...',
     subvalue: 'Acumulado Total',
     icon: Banknote,
-    color: 'text-purple-500',
-    bgColor: 'bg-purple-500/10'
+    color: 'text-primary-500',
+    bgColor: 'bg-primary-500/10'
   },
   {
     label: 'Média por Senador',
@@ -344,7 +344,7 @@ const getBgColorClass = (index: number) => {
   const colors = [
     'bg-chart-1', 'bg-chart-2', 'bg-chart-3', 'bg-chart-4', 'bg-chart-5',
     'bg-primary', 'bg-accent', 'bg-red-500', 'bg-blue-500', 'bg-green-500',
-    'bg-yellow-500', 'bg-purple-500', 'bg-pink-500', 'bg-indigo-500', 'bg-teal-500',
+    'bg-yellow-500', 'bg-primary-500', 'bg-pink-500', 'bg-indigo-500', 'bg-teal-500',
     'bg-orange-500', 'bg-cyan-500', 'bg-lime-500', 'bg-amber-500', 'bg-emerald-500'
   ]
   return colors[index % colors.length]
@@ -354,7 +354,7 @@ const getStrokeColorClass = (index: number) => {
   const textColors = [
     'text-chart-1', 'text-chart-2', 'text-chart-3', 'text-chart-4', 'text-chart-5',
     'text-primary', 'text-accent', 'text-red-500', 'text-blue-500', 'text-green-500',
-    'text-yellow-500', 'text-purple-500', 'text-pink-500', 'text-indigo-500', 'text-teal-500',
+    'text-yellow-500', 'text-primary-500', 'text-pink-500', 'text-indigo-500', 'text-teal-500',
     'text-orange-500', 'text-cyan-500', 'text-lime-500', 'text-amber-500', 'text-emerald-500'
   ]
   return textColors[index % textColors.length]

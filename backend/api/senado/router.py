@@ -1074,7 +1074,9 @@ def get_votacao_materia(legislatura: int, codigo_materia: int):
                     p.sigla_partido,
                     p.uf,
                     vp.sigla_descricao_voto AS voto,
-                    vp.descricao_resultado AS resultado
+                    vp.descricao_resultado AS resultado,
+                    p.codigo,
+                    p.url_foto
                 FROM senado.votacao_parlamentar vp
                 JOIN senado.materia m ON vp.codigo_materia = m.codigo
                 JOIN senado.parlamentar p ON vp.codigo_parlamentar = p.codigo
@@ -1100,7 +1102,9 @@ def get_votacao_materia(legislatura: int, codigo_materia: int):
                         "siglaPartido": r[3],
                         "uf": r[4],
                         "voto": r[5],
-                        "resultado": r[6]
+                        "resultado": r[6],
+                        "codigo": r[7],
+                        "foto": r[8]
                     }
                     for r in resultados
                 ]

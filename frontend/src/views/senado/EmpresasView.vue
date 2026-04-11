@@ -2,16 +2,16 @@
   <div class="min-h-screen flex flex-col">
     <main class="flex-1">
       <!-- Hero -->
-      <section class="bg-gradient-to-br from-purple-500/10 via-background to-accent/10 py-12 border-b border-border/50">
+      <section class="bg-background border-b border-border/50 py-12 border-b border-border/50">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div class="flex items-start gap-4">
-              <div class="p-3 rounded-2xl bg-purple-500/10 border border-purple-500/20 hidden sm:block">
-                <Building2 class="h-8 w-8 text-purple-600" />
+              <div class="p-3 rounded-2xl bg-primary-500/10 border border-primary-500/20 hidden sm:block">
+                <Building2 class="h-8 w-8 text-primary-600" />
               </div>
               <div>
                 <div class="flex items-center gap-2 mb-1">
-                  <span class="text-[10px] font-bold text-purple-600 uppercase tracking-widest opacity-70">Senado Federal</span>
+                  <span class="text-[10px] font-bold text-primary-600 uppercase tracking-widest opacity-70">Senado Federal</span>
                 </div>
                 <h1 class="text-3xl font-bold text-foreground sm:text-4xl tracking-tight leading-tight">
                   Ranking de Fornecedores do Senado

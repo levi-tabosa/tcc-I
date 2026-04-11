@@ -2,7 +2,7 @@
   <div class="min-h-screen flex flex-col">
     <main class="flex-1">
       <!-- Hero -->
-      <section class="bg-gradient-to-br from-primary/10 via-background to-accent/10 py-12">
+      <section class="bg-background border-b border-border/50 py-12">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>

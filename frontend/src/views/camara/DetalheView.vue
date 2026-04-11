@@ -41,7 +41,7 @@
 
       <template v-else-if="store.currentDeputado">
         <!-- Profile -->
-        <section class="py-8 bg-gradient-to-br from-primary/5 via-background to-accent/5">
+        <section class="py-8 bg-background border-b border-border/50">
           <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="flex flex-col lg:flex-row gap-8">
               <!-- Profile card -->
@@ -64,17 +64,28 @@
                   </div>
 
                   <div class="mt-6 space-y-3 text-sm text-left">
-                    <div class="flex items-center gap-3 text-muted-foreground">
-                      <Mail class="h-4 w-4 text-primary" />
-                      <span class="truncate">{{ store.currentDeputado.email || 'Indisponível' }}</span>
+                    <div class="flex flex-col gap-1">
+                      <div class="flex items-center gap-2 text-muted-foreground">
+                        <Mail class="h-4 w-4 text-primary" />
+                        <span class="text-xs font-bold uppercase tracking-wider">E-mail</span>
+                      </div>
+                      <span class="truncate pl-6">{{ store.currentDeputado.email || 'Indisponível' }}</span>
                     </div>
-                    <div class="flex items-center gap-3 text-muted-foreground">
-                      <Calendar class="h-4 w-4 text-primary" />
-                      <span>{{ store.currentDeputado.data_nascimento ? formatDate(store.currentDeputado.data_nascimento) : 'Indisponível' }}</span>
+
+                    <div class="flex flex-col gap-1">
+                      <div class="flex items-center gap-2 text-muted-foreground">
+                        <Calendar class="h-4 w-4 text-primary" />
+                        <span class="text-xs font-bold uppercase tracking-wider">Nascimento</span>
+                      </div>
+                      <span class="pl-6">{{ store.currentDeputado.data_nascimento ? formatDate(store.currentDeputado.data_nascimento) : 'Indisponível' }}</span>
                     </div>
-                    <div class="flex items-center gap-3 text-muted-foreground">
-                      <GraduationCap class="h-4 w-4 text-primary" />
-                      <span>{{ store.currentDeputado.escolaridade || 'Indisponível' }}</span>
+
+                    <div class="flex flex-col gap-1">
+                      <div class="flex items-center gap-2 text-muted-foreground">
+                        <GraduationCap class="h-4 w-4 text-primary" />
+                        <span class="text-xs font-bold uppercase tracking-wider">Escolaridade</span>
+                      </div>
+                      <span class="pl-6">{{ store.currentDeputado.escolaridade || 'Indisponível' }}</span>
                     </div>
                     <!-- CPF removed per user request -->
                   </div>
@@ -145,15 +156,15 @@
                             </thead>
                             <tbody class="divide-y divide-border bg-card">
                                 <tr v-for="(emenda, index) in store.currentEmendas" :key="index" class="hover:bg-muted/50 transition-colors">
-                                    <td class="whitespace-nowrap">
+                                    <td class="whitespace-nowrap px-4 py-3">
                                         <div class="flex flex-col">
                                             <span class="font-medium">{{ emenda.ano }}</span>
                                             <span class="text-xs text-muted-foreground">{{ emenda.tipo }}</span>
                                         </div>
                                     </td>
-                                    <td>{{ emenda.funcao }}</td>
-                                    <td>{{ emenda.localidade }}</td>
-                                    <td class="text-right whitespace-nowrap font-medium text-primary">R$ {{ emenda.valorPago.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</td>
+                                    <td class="px-4 py-3">{{ emenda.funcao }}</td>
+                                    <td class="px-4 py-3">{{ emenda.localidade }}</td>
+                                    <td class="text-right whitespace-nowrap font-medium text-primary px-4 py-3">R$ {{ emenda.valorPago.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</td>
                                 </tr>
                                 <tr v-if="store.currentEmendas.length === 0">
                                     <td colspan="4" class="py-12 text-center text-muted-foreground italic">Dados Indisponíveis</td>
@@ -182,10 +193,10 @@
                             </thead>
                             <tbody class="divide-y divide-border bg-card">
                                 <tr v-for="(despesa, index) in store.currentDespesas.slice(0, 50)" :key="index" class="hover:bg-muted/50 transition-colors">
-                                    <td class="whitespace-nowrap">{{ despesa.mes }}/{{ despesa.ano }}</td>
-                                    <td class="truncate max-w-xs">{{ despesa.tipo_despesa }}</td>
-                                    <td class="text-right whitespace-nowrap font-medium">R$ {{ despesa.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</td>
-                                    <td class="text-center hidden sm:table-cell">
+                                    <td class="whitespace-nowrap px-4 py-3">{{ despesa.mes }}/{{ despesa.ano }}</td>
+                                    <td class="truncate max-w-xs px-4 py-3">{{ despesa.tipo_despesa }}</td>
+                                    <td class="text-right whitespace-nowrap font-medium px-4 py-3">R$ {{ despesa.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</td>
+                                    <td class="text-center hidden sm:table-cell px-4 py-3">
                                         <a v-if="despesa.url_documento" :href="despesa.url_documento" target="_blank" class="text-primary hover:text-primary-700 transition-colors" title="Ver documento">
                                             <FileText class="h-4 w-4 mx-auto" />
                                         </a>

@@ -2,7 +2,7 @@
   <div class="min-h-screen flex flex-col">
     <main class="flex-1">
       <!-- Hero -->
-      <section class="bg-gradient-to-br from-purple-500/10 via-background to-accent/10 py-12">
+      <section class="bg-background border-b border-border/50 py-12">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
@@ -23,10 +23,10 @@
         <section class="py-12 bg-muted/30">
           <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              <BaseCard class="border-l-4 border-purple-500">
+              <BaseCard class="border-l-4 border-primary-500">
                 <div class="flex items-center gap-4">
-                  <div class="p-3 rounded-xl bg-purple-500/10">
-                    <Users class="h-6 w-6 text-purple-500" />
+                  <div class="p-3 rounded-xl bg-primary-500/10">
+                    <Users class="h-6 w-6 text-primary-500" />
                   </div>
                   <div>
                     <p class="text-sm font-medium text-muted-foreground uppercase tracking-wider">Senadores com Emendas</p>
@@ -70,11 +70,11 @@
             <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               <BaseCard v-for="area in estatisticas.areas" :key="area.nome" class="group bg-card/50 backdrop-blur-sm">
                 <div class="flex items-center justify-between mb-3">
-                  <span class="font-semibold text-foreground group-hover:text-purple-500 transition-colors">{{ area.nome }}</span>
+                  <span class="font-semibold text-foreground group-hover:text-primary-500 transition-colors">{{ area.nome }}</span>
                   <span class="text-lg font-bold text-accent">{{ area.percentual }}%</span>
                 </div>
                 <div class="h-2 bg-muted rounded-full overflow-hidden mb-3">
-                  <div class="h-full bg-purple-500 rounded-full transition-all duration-1000" :style="{ width: `${area.percentual}%` }" />
+                  <div class="h-full bg-primary-500 rounded-full transition-all duration-1000" :style="{ width: `${area.percentual}%` }" />
                 </div>
                 <p class="text-sm font-medium text-muted-foreground">R$ {{ (area.valor / 1000000).toFixed(1) }}M</p>
               </BaseCard>
@@ -94,8 +94,8 @@
                     class="flex items-center gap-3 sm:gap-6 p-3 sm:p-6 hover:bg-muted/50 transition-all duration-300 group cursor-pointer"
                     @click="goToSenador(senador.id)"
                   >
-                    <span class="text-lg sm:text-xl font-black text-muted-foreground/30 w-6 sm:w-8 group-hover:text-purple-500/50 transition-colors">{{ index + 1 }}º</span>
-                  <div class="h-10 w-10 sm:h-14 sm:w-14 rounded-xl sm:rounded-2xl bg-muted overflow-hidden border-2 border-purple-500/20 group-hover:border-purple-500/50 group-hover:scale-110 transition-all duration-300 shadow-sm flex-shrink-0">
+                    <span class="text-lg sm:text-xl font-black text-muted-foreground/30 w-6 sm:w-8 group-hover:text-primary-500/50 transition-colors">{{ index + 1 }}º</span>
+                  <div class="h-10 w-10 sm:h-14 sm:w-14 rounded-xl sm:rounded-2xl bg-muted overflow-hidden border-2 border-primary-500/20 group-hover:border-primary-500/50 group-hover:scale-110 transition-all duration-300 shadow-sm flex-shrink-0">
                     <img 
                       :src="senador.foto || '/placeholder-user.svg'" 
                       :alt="senador.nome"

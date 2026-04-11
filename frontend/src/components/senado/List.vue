@@ -19,10 +19,10 @@
         v-for="senador in store.paginatedSenadores"
         :key="senador.id"
         hover
-        class="overflow-hidden border-purple-100 hover:border-purple-300 transition-colors cursor-pointer group"
+        class="overflow-hidden border-primary-100 hover:border-primary-300 transition-colors cursor-pointer group"
       >
         <div class="flex items-start gap-4">
-          <div class="h-16 w-16 rounded-full border-2 border-purple-200 overflow-hidden bg-purple-50 flex items-center justify-center shrink-0">
+          <div class="h-16 w-16 rounded-full border-2 border-primary-200 overflow-hidden bg-primary-50 flex items-center justify-center shrink-0">
             <img
               :src="senador.foto || '/placeholder-user.svg'"
               :alt="senador.nome"
@@ -31,9 +31,9 @@
             />
           </div>
           <div class="flex-1 min-w-0">
-            <h3 class="font-semibold text-foreground truncate group-hover:text-purple-600 transition-colors">{{ senador.nome }}</h3>
+            <h3 class="font-semibold text-foreground truncate group-hover:text-primary-600 transition-colors">{{ senador.nome }}</h3>
             <div class="flex items-center gap-2 mt-1">
-              <BaseBadge variant="outline" class="border-purple-200 text-purple-700 bg-purple-50">{{ senador.partido }}</BaseBadge>
+              <BaseBadge variant="outline" class="border-primary-200 text-primary-700 bg-primary-50">{{ senador.partido }}</BaseBadge>
               <span class="text-xs text-muted-foreground">{{ senador.estado }}</span>
             </div>
           </div>
@@ -41,7 +41,7 @@
 
         <router-link
           :to="`/senado/senadores/${senador.id}`"
-          class="mt-4 w-full inline-flex items-center justify-center py-2 text-sm font-medium text-purple-600 hover:bg-purple-50 rounded-lg transition-colors group-link"
+          class="mt-4 w-full inline-flex items-center justify-center py-2 text-sm font-medium text-primary-600 hover:bg-primary-50 rounded-lg transition-colors group-link"
         >
           Ver detalhes
           <ArrowRight class="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -59,7 +59,7 @@
       <button
         @click="store.setPage(Math.max(1, store.currentPage - 1))"
         :disabled="store.currentPage === 1"
-        class="p-2 rounded-lg border border-purple-200 text-purple-700 hover:bg-purple-50 disabled:opacity-50 disabled:cursor-not-allowed"
+        class="p-2 rounded-lg border border-primary-200 text-primary-700 hover:bg-primary-50 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <ChevronLeft class="h-4 w-4" />
       </button>
@@ -70,7 +70,7 @@
           :key="page"
           @click="store.setPage(page)"
           class="h-10 w-10 rounded-lg text-sm font-medium transition-colors border"
-          :class="store.currentPage === page ? 'bg-purple-600 text-white border-purple-600' : 'border-purple-200 text-purple-700 hover:bg-purple-50'"
+          :class="store.currentPage === page ? 'bg-primary-600 text-white border-primary-600' : 'border-primary-200 text-primary-700 hover:bg-primary-50'"
         >
           {{ page }}
         </button>
@@ -79,7 +79,7 @@
       <button
         @click="store.setPage(Math.min(store.totalPages, store.currentPage + 1))"
         :disabled="store.currentPage === store.totalPages"
-        class="p-2 rounded-lg border border-purple-200 text-purple-700 hover:bg-purple-50 disabled:opacity-50 disabled:cursor-not-allowed"
+        class="p-2 rounded-lg border border-primary-200 text-primary-700 hover:bg-primary-50 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <ChevronRight class="h-4 w-4" />
       </button>

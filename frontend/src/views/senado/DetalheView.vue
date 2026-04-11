@@ -41,13 +41,13 @@
 
       <template v-else-if="store.currentSenador">
         <!-- Profile -->
-        <section class="py-8 bg-gradient-to-br from-purple-500/10 via-background to-accent/5">
+        <section class="py-8 bg-background border-b border-border/50">
           <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="flex flex-col lg:flex-row gap-8">
               <!-- Profile card -->
-              <BaseCard class="lg:w-80 flex-shrink-0 border-purple-100">
+              <BaseCard class="lg:w-80 flex-shrink-0 border-primary-100">
                 <div class="text-center">
-                  <div class="h-32 w-32 mx-auto rounded-full border-4 border-purple-200 overflow-hidden bg-purple-50 flex items-center justify-center">
+                  <div class="h-32 w-32 mx-auto rounded-full border-4 border-primary-200 overflow-hidden bg-primary-50 flex items-center justify-center">
                     <img
                       :src="store.currentSenador.foto || '/placeholder-user.svg'"
                       :alt="store.currentSenador.nome_civil"
@@ -64,17 +64,28 @@
                   </div>
 
                   <div class="mt-6 space-y-3 text-sm text-left">
-                    <div class="flex items-center gap-3 text-muted-foreground">
-                      <Mail class="h-4 w-4 text-purple-500" />
-                      <span class="truncate">{{ store.currentSenador.email || 'Indisponível' }}</span>
+                    <div class="flex flex-col gap-1">
+                      <div class="flex items-center gap-2 text-muted-foreground">
+                        <Mail class="h-4 w-4 text-primary-500" />
+                        <span class="text-xs font-bold uppercase tracking-wider">E-mail</span>
+                      </div>
+                      <span class="truncate pl-6">{{ store.currentSenador.email || 'Indisponível' }}</span>
                     </div>
-                    <div class="flex items-center gap-3 text-muted-foreground">
-                      <Calendar class="h-4 w-4 text-purple-500" />
-                      <span>{{ store.currentSenador.data_nascimento ? formatDate(store.currentSenador.data_nascimento) : 'Indisponível' }}</span>
+
+                    <div class="flex flex-col gap-1">
+                      <div class="flex items-center gap-2 text-muted-foreground">
+                        <Calendar class="h-4 w-4 text-primary-500" />
+                        <span class="text-xs font-bold uppercase tracking-wider">Nascimento</span>
+                      </div>
+                      <span class="pl-6">{{ store.currentSenador.data_nascimento ? formatDate(store.currentSenador.data_nascimento) : 'Indisponível' }}</span>
                     </div>
-                    <div class="flex items-center gap-3 text-muted-foreground">
-                      <GraduationCap class="h-4 w-4 text-purple-500" />
-                      <span>{{ store.currentSenador.escolaridade || 'Indisponível' }}</span>
+
+                    <div class="flex flex-col gap-1">
+                      <div class="flex items-center gap-2 text-muted-foreground">
+                        <GraduationCap class="h-4 w-4 text-primary-500" />
+                        <span class="text-xs font-bold uppercase tracking-wider">Escolaridade</span>
+                      </div>
+                      <span class="pl-6">{{ store.currentSenador.escolaridade || 'Indisponível' }}</span>
                     </div>
                     <!-- CPF removed per user request -->
                   </div>
@@ -83,7 +94,7 @@
 
               <!-- Stats cards -->
               <div class="flex-1 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <BaseCard class="border-purple-100">
+                <BaseCard class="border-primary-100">
                   <div class="flex items-center justify-between">
                     <p class="text-sm text-muted-foreground">Gastos Totais Mandato</p>
                   </div>
@@ -92,17 +103,17 @@
                   <p class="mt-1 text-xs text-muted-foreground">Soma de todas despesas registradas</p>
                 </BaseCard>
 
-                <BaseCard class="border-purple-100">
+                <BaseCard class="border-primary-100">
                   <div class="flex items-center justify-between">
                     <p class="text-sm text-muted-foreground">Emendas</p>
-                    <BaseBadge variant="secondary" class="bg-purple-100 text-purple-800">Mandato</BaseBadge>
+                    <BaseBadge variant="secondary" class="bg-primary-100 text-primary-800">Mandato</BaseBadge>
                   </div>
                   <p v-if="store.totalEmendas > 0" class="mt-2 text-3xl font-bold text-foreground">R$ {{ (store.totalEmendas / 1000000).toFixed(1) }}M</p>
                   <p v-else class="mt-2 text-xl font-bold text-muted-foreground">Dados Indisponíveis</p>
-                  <p class="mt-1 text-xs text-muted-foreground text-purple-600/70">Soma das emendas pagas ao senador</p>
+                  <p class="mt-1 text-xs text-muted-foreground text-primary-600/70">Soma das emendas pagas ao senador</p>
                 </BaseCard>
 
-                <BaseCard class="sm:col-span-2 lg:col-span-3 border-purple-100">
+                <BaseCard class="sm:col-span-2 lg:col-span-3 border-primary-100">
                   <h3 class="font-semibold text-foreground mb-4">Principais Gastos por Categoria</h3>
                   <div class="space-y-3">
                     <div v-if="gastosCategorias.length === 0" class="py-6 text-center text-muted-foreground italic">
@@ -113,9 +124,9 @@
                         <span class="text-muted-foreground">{{ item.categoria }}</span>
                         <span class="font-medium text-foreground">R$ {{ (item.valor / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 }) }} mil</span>
                       </div>
-                      <div class="progress-bar bg-purple-100">
+                      <div class="progress-bar bg-primary-100">
                         <div
-                          class="progress-fill bg-purple-500"
+                          class="progress-fill bg-primary-500"
                           :style="{ width: `${item.percentage}%` }"
                         />
                       </div>
@@ -128,31 +139,31 @@
         </section>
         
         <!-- Emendas Table Section -->
-        <section class="py-8 bg-purple-50/30">
+        <section class="py-8 bg-primary-50/30">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <h3 class="text-xl font-bold text-foreground mb-4">Emendas Parlamentares</h3>
-                <BaseCard variant="elevated" class="p-0 overflow-hidden border-purple-100 shadow-purple-900/5">
+                <BaseCard variant="elevated" class="p-0 overflow-hidden border-primary-100 shadow-primary-900/5">
                     <div class="overflow-x-auto max-h-[600px] relative">
                         <table class="table-professional w-full border-collapse">
-                            <thead class="sticky top-0 z-10 bg-card border-b border-purple-100 shadow-sm">
+                            <thead class="sticky top-0 z-10 bg-card border-b border-primary-100 shadow-sm">
                                 <tr>
-                                    <th class="bg-card py-4 px-4 text-left font-bold text-xs uppercase tracking-wider text-muted-foreground border-b border-purple-100">Ano/Tipo</th>
-                                    <th class="bg-card py-4 px-4 text-left font-bold text-xs uppercase tracking-wider text-muted-foreground border-b border-purple-100">Função</th>
-                                    <th class="bg-card py-4 px-4 text-left font-bold text-xs uppercase tracking-wider text-muted-foreground border-b border-purple-100">Localidade</th>
-                                    <th class="bg-card py-4 px-4 text-right font-bold text-xs uppercase tracking-wider text-muted-foreground border-b border-purple-100">Valor Pago</th>
+                                    <th class="bg-card py-4 px-4 text-left font-bold text-xs uppercase tracking-wider text-muted-foreground border-b border-primary-100">Ano/Tipo</th>
+                                    <th class="bg-card py-4 px-4 text-left font-bold text-xs uppercase tracking-wider text-muted-foreground border-b border-primary-100">Função</th>
+                                    <th class="bg-card py-4 px-4 text-left font-bold text-xs uppercase tracking-wider text-muted-foreground border-b border-primary-100">Localidade</th>
+                                    <th class="bg-card py-4 px-4 text-right font-bold text-xs uppercase tracking-wider text-muted-foreground border-b border-primary-100">Valor Pago</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-purple-50 bg-card">
+                            <tbody class="divide-y divide-primary-50 bg-card">
                                 <tr v-for="(emenda, index) in store.currentEmendas" :key="index" class="transition-colors">
-                                    <td class="whitespace-nowrap">
+                                    <td class="whitespace-nowrap px-4 py-3">
                                         <div class="flex flex-col">
-                                            <span class="font-medium text-purple-900">{{ emenda.ano }}</span>
+                                            <span class="font-medium text-primary-900">{{ emenda.ano }}</span>
                                             <span class="text-xs text-muted-foreground">{{ emenda.tipo }}</span>
                                         </div>
                                     </td>
-                                    <td class="text-muted-foreground">{{ emenda.funcao }}</td>
-                                    <td class="text-muted-foreground">{{ emenda.localidade }}</td>
-                                    <td class="text-right whitespace-nowrap font-medium text-purple-600">R$ {{ emenda.valorPago.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</td>
+                                    <td class="text-muted-foreground px-4 py-3">{{ emenda.funcao }}</td>
+                                    <td class="text-muted-foreground px-4 py-3">{{ emenda.localidade }}</td>
+                                    <td class="text-right whitespace-nowrap font-medium text-primary-600 px-4 py-3">R$ {{ emenda.valorPago.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</td>
                                 </tr>
                                 <tr v-if="store.currentEmendas.length === 0">
                                     <td colspan="4" class="py-12 text-center text-muted-foreground italic">Dados Indisponíveis</td>
@@ -206,10 +217,10 @@
                             </thead>
                             <tbody class="divide-y divide-border bg-card">
                                 <tr v-for="(despesa, index) in store.currentDespesas" :key="index" class="transition-colors">
-                                    <td class="whitespace-nowrap">{{ despesa.mes }}/{{ despesa.ano }}</td>
-                                    <td class="truncate max-w-xs">{{ despesa.tipoDespesa || despesa.tipo_despesa }}</td>
-                                    <td class="truncate max-w-xs hidden sm:table-cell">{{ despesa.fornecedor || '--' }}</td>
-                                    <td class="text-right whitespace-nowrap font-medium">R$ {{ (despesa.valorReembolsado || despesa.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</td>
+                                    <td class="whitespace-nowrap px-4 py-3">{{ despesa.mes }}/{{ despesa.ano }}</td>
+                                    <td class="truncate max-w-xs px-4 py-3">{{ despesa.tipoDespesa || despesa.tipo_despesa }}</td>
+                                    <td class="truncate max-w-xs hidden sm:table-cell px-4 py-3">{{ despesa.fornecedor || '--' }}</td>
+                                    <td class="text-right whitespace-nowrap font-medium px-4 py-3">R$ {{ (despesa.valorReembolsado || despesa.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</td>
                                 </tr>
                                 <tr v-if="store.currentDespesas.length === 0">
                                     <td colspan="4" class="py-12 text-center text-muted-foreground italic">Dados Indisponíveis</td>

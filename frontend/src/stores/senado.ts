@@ -72,6 +72,8 @@ export interface VotoSenador {
     uf: string
     voto: string
     resultado: string
+    codigo?: number
+    foto?: string
 }
 
 export interface VotacaoMateriaSenado {

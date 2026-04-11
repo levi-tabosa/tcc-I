@@ -50,7 +50,7 @@
       <span class="text-sm text-muted-foreground">Filtros ativos:</span>
       <button
         @click="store.resetFilters()"
-        class="text-sm text-purple-600 hover:text-purple-700 hover:underline font-medium transition-colors"
+        class="text-sm text-primary-600 hover:text-primary-700 hover:underline font-medium transition-colors"
       >
         Limpar todos
       </button>

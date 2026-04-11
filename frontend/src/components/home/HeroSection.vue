@@ -1,5 +1,5 @@
 <template>
-  <section class="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-purple-500/10">
+  <section class="relative overflow-hidden bg-background border-b border-border/50">
     <!-- Background pattern -->
     <div class="absolute inset-0 opacity-5">
       <div class="absolute inset-0" :style="backgroundStyle" />

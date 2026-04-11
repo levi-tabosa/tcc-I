@@ -5,8 +5,8 @@
       <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
         <BaseCard>
           <div class="flex items-center gap-4">
-            <div class="p-3 rounded-xl bg-purple-500/10">
-              <Users class="h-6 w-6 text-purple-600 dark:text-purple-400" />
+            <div class="p-3 rounded-xl bg-primary-500/10">
+              <Users class="h-6 w-6 text-primary-600 dark:text-primary-400" />
             </div>
             <div>
               <p class="text-sm text-muted-foreground">Total de Senadores</p>
@@ -94,7 +94,7 @@
               </div>
               <div class="flex items-center gap-2">
                 <div class="w-24 h-2 bg-muted rounded-full overflow-hidden">
-                  <div class="h-full bg-purple-600 rounded-full" :style="{ width: `${(partido.senadores / maxBancada) * 100}%` }" />
+                  <div class="h-full bg-primary-600 rounded-full" :style="{ width: `${(partido.senadores / maxBancada) * 100}%` }" />
                 </div>
                 <span class="text-sm text-muted-foreground w-8 text-right">{{ partido.senadores }}</span>
               </div>
@@ -120,7 +120,7 @@
                 </div>
                 <div class="h-2 bg-muted rounded-full overflow-hidden">
                   <div 
-                    class="h-full rounded-full bg-purple-500" 
+                    class="h-full rounded-full bg-primary-500" 
                     :style="{ width: `${(regiao.value / store.senadorStats.total_senadores) * 100}%` }" 
                   />
                 </div>

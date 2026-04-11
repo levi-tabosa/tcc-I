@@ -2,7 +2,7 @@
   <div class="min-h-screen flex flex-col bg-background">
     <main class="flex-1">
       <!-- Hero -->
-      <section class="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-accent/10 py-20 lg:py-28">
+      <section class="relative overflow-hidden bg-background border-b border-border/50 py-20 lg:py-28">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
           <span class="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary mb-6">
             <BookOpen class="h-4 w-4" />

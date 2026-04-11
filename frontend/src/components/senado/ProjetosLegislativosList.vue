@@ -141,23 +141,38 @@
               <table class="table-professional">
                 <thead>
                   <tr>
-                    <th>Senador(a)</th>
-                    <th class="text-center w-32">Partido</th>
-                    <th class="text-center w-20">UF</th>
-                    <th class="text-center w-32">Voto</th>
+                    <th class="w-12 text-center px-4 py-2">Foto</th>
+                    <th class="whitespace-nowrap px-4 py-2 text-left">Senador(a)</th>
+                    <th class="text-center w-32 px-4 py-2">Partido</th>
+                    <th class="text-center w-20 px-4 py-2">UF</th>
+                    <th class="text-center w-32 px-4 py-2">Voto</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-if="filteredVotos.length === 0">
-                    <td colspan="4" class="text-center text-muted-foreground py-4">
+                    <td colspan="5" class="text-center text-muted-foreground py-4">
                       Nenhum senador encontrado com "{{ votosSearch }}"
                     </td>
                   </tr>
                   <tr v-for="(voto, idx) in filteredVotos" :key="idx">
-                    <td>{{ voto.nomeParlamentar }}</td>
-                    <td class="text-center">{{ voto.siglaPartido }}</td>
-                    <td class="text-center">{{ voto.uf }}</td>
-                    <td class="text-center">
+                    <td class="text-center px-4 py-2">
+                      <div class="flex justify-center">
+                        <img 
+                          :src="voto.foto || '/placeholder-user.svg'" 
+                          :alt="voto.nomeParlamentar"
+                          class="h-8 w-8 rounded-full object-cover border border-border"
+                          loading="lazy"
+                        />
+                      </div>
+                    </td>
+                    <td class="px-4 py-2">
+                      <a :href="voto.codigo ? `/senado/senadores/${voto.codigo}` : '#'" :target="voto.codigo ? '_blank' : undefined" class="text-foreground border-b border-transparent hover:border-foreground transition-colors cursor-pointer font-medium">
+                        {{ voto.nomeParlamentar }}
+                      </a>
+                    </td>
+                    <td class="text-center px-4 py-2">{{ voto.siglaPartido }}</td>
+                    <td class="text-center px-4 py-2">{{ voto.uf }}</td>
+                    <td class="text-center px-4 py-2">
                       <span
                         class="inline-block px-2 py-0.5 rounded-full text-xs font-medium border"
                         :class="getVotoBadgeClass(voto.voto)"

@@ -138,14 +138,29 @@
                   <table class="table-professional w-full">
                     <thead>
                       <tr>
-                        <th class="whitespace-nowrap">Deputado(a)</th>
-                        <th class="text-center w-24 sm:w-32 whitespace-nowrap">Voto</th>
+                        <th class="w-12 text-center px-4 py-2">Foto</th>
+                        <th class="whitespace-nowrap px-4 py-2 text-left">Deputado(a)</th>
+                        <th class="text-center w-24 sm:w-32 whitespace-nowrap px-4 py-2">Voto</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr v-for="voto in votacao.lista_votos" :key="voto.deputado_id">
-                        <td>{{ voto.nome }}</td>
-                        <td class="text-center">
+                        <td class="text-center px-4 py-2">
+                          <div class="flex justify-center">
+                            <img 
+                              :src="`https://www.camara.leg.br/internet/deputado/bandep/${voto.deputado_id}.jpg`" 
+                              :alt="voto.nome"
+                              class="h-8 w-8 rounded-full object-cover border border-border"
+                              loading="lazy"
+                            />
+                          </div>
+                        </td>
+                        <td class="px-4 py-2">
+                          <a :href="`/camara/deputados/${voto.deputado_id}`" target="_blank" class="text-foreground border-b border-transparent hover:border-foreground transition-colors cursor-pointer font-medium">
+                            {{ voto.nome }}
+                          </a>
+                        </td>
+                        <td class="text-center px-4 py-2">
                           <span
                             class="inline-block px-2 py-0.5 rounded-full text-xs font-medium border"
                             :class="getVotoBadgeClass(voto.voto)"
