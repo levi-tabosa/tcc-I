@@ -17,7 +17,7 @@
             <div>
               <h1 class="text-3xl font-bold text-foreground sm:text-4xl">Despesas e Gastos</h1>
               <p class="mt-2 text-muted-foreground max-w-2xl">
-                Acompanhe a utilização da cota parlamentar.
+                Acompanhe a utilização da cota parlamentar (CEAP). Totais, rankings e análises por deputado.
               </p>
             </div>
 
