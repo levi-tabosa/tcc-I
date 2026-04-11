@@ -193,8 +193,12 @@ def get_resumo_emendas(legislatura: int):
                 leg_join = ""
                 start_year = 2023 - (57 - legislatura) * 4
                 end_year = start_year + 3
-                leg_where = "WHERE CAST(e.ano AS INTEGER) BETWEEN %s AND %s"
+                leg_where = "WHERE CAST(e.ano AS INTEGER) BETWEEN %s AND %s AND EXISTS (SELECT 1 FROM camara.deputados_mandatos m WHERE m.deputado_id = p.id AND CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - m.legislatura_id) * 4 AND 2023 - (57 - m.legislatura_id) * 4 + 3)"
                 leg_params = [start_year, end_year]
+            else:
+                leg_join = ""
+                leg_where = "WHERE EXISTS (SELECT 1 FROM camara.deputados_mandatos m WHERE m.deputado_id = p.id AND CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - m.legislatura_id) * 4 AND 2023 - (57 - m.legislatura_id) * 4 + 3)"
+                leg_params = []
             
             # 1. Totais Gerais
             query_totais = f"""
@@ -759,8 +763,9 @@ def get_perfil_deputado(legislatura: int, deputado_id: int):
                     raise HTTPException(status_code=404, detail=f"Deputado com ID {deputado_id} não possui mandatos registrados")
 
             # A legislatura efetivamente encontrada
-            # Sempre usamos a legislatura do mandato encontrado, nunca deixamos como None/0
+            # Para histórico (legislatura=0), não filtramos despesas/categorias por legislatura.
             leg_efetiva = row[11]
+            leg_despesas = None if legislatura == 0 else leg_efetiva
             
             res = {
                 "id": row[0],
@@ -775,10 +780,10 @@ def get_perfil_deputado(legislatura: int, deputado_id: int):
                 "sigla_partido": row[9] if row[9] else "S/P",
                 "sigla_uf": row[10],
                 "foto": f"https://www.camara.leg.br/internet/deputado/bandep/{row[0]}.jpg",
-                "legislatura_exibida": leg_efetiva
+                "legislatura_exibida": 0 if legislatura == 0 else leg_efetiva
             }
 
-            # 2. Buscar as 50 despesas mais recentes (Usando a legislatura efetiva)
+            # 2. Buscar as 50 despesas mais recentes
             query_recente = """
                 SELECT 
                     desp.ano, desp.mes, desp.tipo_despesa, 
@@ -788,9 +793,9 @@ def get_perfil_deputado(legislatura: int, deputado_id: int):
                 WHERE mand.deputado_id = %s
             """
             params_recente = [deputado_id]
-            if leg_efetiva:
+            if leg_despesas:
                 query_recente += " AND mand.legislatura_id = %s"
-                params_recente.append(leg_efetiva)
+                params_recente.append(leg_despesas)
             
             query_recente += " ORDER BY desp.ano DESC, desp.mes DESC LIMIT 50"
             cursor.execute(query_recente, tuple(params_recente))
@@ -806,7 +811,7 @@ def get_perfil_deputado(legislatura: int, deputado_id: int):
                 for r in despesas_raw
             ]
 
-            # 3. Resumo por categoria (Usando a legislatura efetiva)
+            # 3. Resumo por categoria
             query_categorias = """
                 SELECT desp.tipo_despesa as categoria, SUM(desp.valor_documento) as valor
                 FROM camara.deputados_despesas AS desp
@@ -814,9 +819,9 @@ def get_perfil_deputado(legislatura: int, deputado_id: int):
                 WHERE mand.deputado_id = %s
             """
             params_cat = [deputado_id]
-            if leg_efetiva:
+            if leg_despesas:
                 query_categorias += " AND mand.legislatura_id = %s"
-                params_cat.append(leg_efetiva)
+                params_cat.append(leg_despesas)
             
             query_categorias += " GROUP BY desp.tipo_despesa ORDER BY valor DESC"
             cursor.execute(query_categorias, tuple(params_cat))
@@ -835,12 +840,17 @@ def get_perfil_deputado(legislatura: int, deputado_id: int):
                 FROM portal.emendas e
                 JOIN parlamentares_nomes p ON lower(e.autor) = p.nome
                 WHERE p.id = %s
+                  AND EXISTS (
+                      SELECT 1 FROM camara.deputados_mandatos m 
+                      WHERE m.deputado_id = p.id 
+                      AND CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - m.legislatura_id) * 4 AND 2023 - (57 - m.legislatura_id) * 4 + 3
+                  )
             """
             params_emendas = [deputado_id]
             if legislatura:
                 start_year = 2023 - (57 - legislatura) * 4
                 end_year = start_year + 3
-                query_emendas_resumo += " AND e.ano BETWEEN %s AND %s"
+                query_emendas_resumo += " AND CAST(e.ano AS INTEGER) BETWEEN %s AND %s"
                 params_emendas.extend([start_year, end_year])
 
             cursor.execute(query_emendas_resumo, tuple(params_emendas))
@@ -898,12 +908,17 @@ def get_emendas_deputado(legislatura: int, deputado_id: int):
                     SELECT deputado_id as id, lower(nome_eleitoral) as nome FROM camara.deputados_mandatos
                 ) d ON lower(e.autor) = d.nome
                 WHERE d.id = %s
+                  AND EXISTS (
+                      SELECT 1 FROM camara.deputados_mandatos m 
+                      WHERE m.deputado_id = d.id 
+                      AND CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - m.legislatura_id) * 4 AND 2023 - (57 - m.legislatura_id) * 4 + 3
+                  )
             """
             params = [deputado_id]
             if legislatura:
                 start_year = 2023 - (57 - legislatura) * 4
                 end_year = start_year + 3
-                query += " AND e.ano BETWEEN %s AND %s"
+                query += " AND CAST(e.ano AS INTEGER) BETWEEN %s AND %s"
                 params.extend([start_year, end_year])
             
             query += " ORDER BY e.ano DESC, e.valor_pago DESC"

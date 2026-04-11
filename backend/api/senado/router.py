@@ -118,14 +118,19 @@ def get_estatisticas_senado(legislatura: int):
             query_gastos = """
                 SELECT COALESCE(SUM(d.valor_reembolsado), 0) 
                 FROM senado.despesa_ceaps d
-                INNER JOIN senado.mandato m ON d.cod_senador = m.codigo_parlamentar
-                WHERE 1=1
             """
             params_gastos = []
             if legislatura:
                 start_year = 2023 - (57 - legislatura) * 4
                 end_year = start_year + 3
-                query_gastos += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s) AND CAST(d.ano AS INTEGER) BETWEEN %s AND %s"
+                query_gastos += """
+                    INNER JOIN (
+                        SELECT DISTINCT codigo_parlamentar
+                        FROM senado.mandato
+                        WHERE primeira_legislatura = %s OR segunda_legislatura = %s
+                    ) m ON d.cod_senador = m.codigo_parlamentar
+                    WHERE CAST(d.ano AS INTEGER) BETWEEN %s AND %s
+                """
                 params_gastos.extend([str(legislatura), str(legislatura), start_year, end_year])
             
             cursor.execute(query_gastos, tuple(params_gastos))
@@ -212,14 +217,20 @@ SELECT
     SUM(d.valor_reembolsado) as total,
     COUNT(*) as qtd
 FROM senado.despesa_ceaps d
-INNER JOIN senado.mandato m ON d.cod_senador = m.codigo_parlamentar
 WHERE d.cod_senador IN (%s, %s)
             """
             params_stat = [id1, id2]
             if legislatura:
                 start_year = 2023 - (57 - legislatura) * 4
                 end_year = start_year + 3
-                query_despesas += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s) AND CAST(d.ano AS INTEGER) BETWEEN %s AND %s"
+                query_despesas += """
+                    AND d.cod_senador IN (
+                        SELECT DISTINCT codigo_parlamentar
+                        FROM senado.mandato
+                        WHERE primeira_legislatura = %s OR segunda_legislatura = %s
+                    )
+                    AND CAST(d.ano AS INTEGER) BETWEEN %s AND %s
+                """
                 params_stat.extend([str(legislatura), str(legislatura), start_year, end_year])
                 
             query_despesas += " GROUP BY d.cod_senador, d.tipo_despesa"
@@ -349,12 +360,21 @@ WHERE codigo = %s;"""
                 FROM portal.emendas e
                 JOIN senadores_nomes s ON lower(e.nome_autor) = s.nome
                 WHERE s.id = %s
+                  AND EXISTS (
+                      SELECT 1 FROM senado.mandato m 
+                      WHERE m.codigo_parlamentar = s.id 
+                      AND (
+                          CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - m.primeira_legislatura) * 4 AND 2023 - (57 - m.primeira_legislatura) * 4 + 3
+                          OR
+                          CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - m.segunda_legislatura) * 4 AND 2023 - (57 - m.segunda_legislatura) * 4 + 3
+                      )
+                  )
             """
             params_emendas = [senador_codigo]
             if legislatura:
                 start_year = 2023 - (57 - legislatura) * 4
                 end_year = start_year + 3
-                query_emendas += " AND e.ano BETWEEN %s AND %s"
+                query_emendas += " AND CAST(e.ano AS INTEGER) BETWEEN %s AND %s"
                 params_emendas.extend([start_year, end_year])
 
             cursor.execute(query_emendas, tuple(params_emendas))
@@ -377,8 +397,10 @@ WHERE codigo = %s;"""
                     legis_set.add(int(str(m[1]).strip()))
             legislaturas_ativas = sorted(list(legis_set), reverse=True)
 
-            # Determinar Legislatura Exibida (Sempre forçamos uma real)
-            if legislatura and legislatura in legislaturas_ativas:
+            # Determinar Legislatura Exibida (Sempre forçamos uma real, exceto se for 0)
+            if legislatura == 0:
+                leg_exibida = 0
+            elif legislatura and legislatura in legislaturas_ativas:
                 leg_exibida = legislatura
             elif legislaturas_ativas:
                 leg_exibida = legislaturas_ativas[0]
@@ -521,20 +543,20 @@ def get_despesas_estatisticas(legislatura: int):
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
         with conn.cursor() as cursor:
-            query = """
-           SELECT COALESCE(SUM(d.valor_reembolsado), 0) AS total_gastos
-           FROM senado.despesa_ceaps d
-           INNER JOIN senado.mandato m ON d.cod_senador = m.codigo_parlamentar
-           WHERE 1=1
-"""
             params = []
             where_leg = ""
             join_mandato = ""
             if legislatura:
                 start_year = 2023 - (57 - legislatura) * 4
                 end_year = start_year + 3
-                where_leg = " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s) AND CAST(d.ano AS INTEGER) BETWEEN %s AND %s"
-                join_mandato = " INNER JOIN senado.mandato m ON d.cod_senador = m.codigo_parlamentar"
+                where_leg = " AND CAST(d.ano AS INTEGER) BETWEEN %s AND %s"
+                join_mandato = """
+                    INNER JOIN (
+                        SELECT DISTINCT codigo_parlamentar
+                        FROM senado.mandato
+                        WHERE primeira_legislatura = %s OR segunda_legislatura = %s
+                    ) m ON d.cod_senador = m.codigo_parlamentar
+                """
                 params.extend([str(legislatura), str(legislatura), start_year, end_year])
             
             # 1. Total de Gastos
@@ -1011,6 +1033,15 @@ def get_resumo_emendas(legislatura: int):
                     JOIN senadores_nomes s ON lower(e.nome_autor) = s.nome
                     JOIN senado.parlamentar p ON s.id = p.codigo
                     WHERE CAST(e.ano AS INTEGER) BETWEEN %s AND %s
+                      AND EXISTS (
+                          SELECT 1 FROM senado.mandato m 
+                          WHERE m.codigo_parlamentar = p.codigo 
+                          AND (
+                              CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - m.primeira_legislatura) * 4 AND 2023 - (57 - m.primeira_legislatura) * 4 + 3
+                              OR
+                              CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - m.segunda_legislatura) * 4 AND 2023 - (57 - m.segunda_legislatura) * 4 + 3
+                          )
+                      )
                     GROUP BY p.codigo, p.nome_parlamentar, p.sigla_partido, p.uf, p.url_foto
                     ORDER BY total_valor DESC
                     LIMIT 10
@@ -1031,6 +1062,15 @@ def get_resumo_emendas(legislatura: int):
                     FROM portal.emendas e
                     JOIN senadores_nomes s ON lower(e.nome_autor) = s.nome
                     JOIN senado.parlamentar p ON s.id = p.codigo
+                    WHERE EXISTS (
+                          SELECT 1 FROM senado.mandato m 
+                          WHERE m.codigo_parlamentar = p.codigo 
+                          AND (
+                              CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - m.primeira_legislatura) * 4 AND 2023 - (57 - m.primeira_legislatura) * 4 + 3
+                              OR
+                              CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - m.segunda_legislatura) * 4 AND 2023 - (57 - m.segunda_legislatura) * 4 + 3
+                          )
+                      )
                     GROUP BY p.codigo, p.nome_parlamentar, p.sigla_partido, p.uf, p.url_foto
                     ORDER BY total_valor DESC
                     LIMIT 10
@@ -1145,12 +1185,21 @@ def get_emendas_lista_senador(legislatura: int, senador_codigo: int, pagina: int
                    ON (lower(e.nome_autor) = lower(s.nome_completo) 
                        OR lower(e.nome_autor) = lower(s.nome_parlamentar))
                 WHERE s.codigo = %s
+                  AND EXISTS (
+                      SELECT 1 FROM senado.mandato m 
+                      WHERE m.codigo_parlamentar = s.codigo 
+                      AND (
+                          CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - m.primeira_legislatura) * 4 AND 2023 - (57 - m.primeira_legislatura) * 4 + 3
+                          OR
+                          CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - m.segunda_legislatura) * 4 AND 2023 - (57 - m.segunda_legislatura) * 4 + 3
+                      )
+                  )
             """
             params_count = [senador_codigo]
             if legislatura:
                 start_year = 2023 - (57 - legislatura) * 4
                 end_year = start_year + 3
-                query_count += " AND e.ano BETWEEN %s AND %s"
+                query_count += " AND CAST(e.ano AS INTEGER) BETWEEN %s AND %s"
                 params_count.extend([start_year, end_year])
 
             cursor.execute(query_count, tuple(params_count))
@@ -1171,12 +1220,21 @@ def get_emendas_lista_senador(legislatura: int, senador_codigo: int, pagina: int
                   ON (lower(e.nome_autor) = lower(s.nome_completo) 
                       OR lower(e.nome_autor) = lower(s.nome_parlamentar))
                 WHERE s.codigo = %s
+                  AND EXISTS (
+                      SELECT 1 FROM senado.mandato m 
+                      WHERE m.codigo_parlamentar = s.codigo 
+                      AND (
+                          CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - m.primeira_legislatura) * 4 AND 2023 - (57 - m.primeira_legislatura) * 4 + 3
+                          OR
+                          CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - m.segunda_legislatura) * 4 AND 2023 - (57 - m.segunda_legislatura) * 4 + 3
+                      )
+                  )
             """
             params = [senador_codigo]
             if legislatura:
                 start_year = 2023 - (57 - legislatura) * 4
                 end_year = start_year + 3
-                query += " AND e.ano BETWEEN %s AND %s"
+                query += " AND CAST(e.ano AS INTEGER) BETWEEN %s AND %s"
                 params.extend([start_year, end_year])
 
             query += " ORDER BY e.ano DESC, e.valor_pago DESC LIMIT %s OFFSET %s"
