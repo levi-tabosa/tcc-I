@@ -17,7 +17,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    command: sh -c "python main.py"
+    command: sh -c "python scripts/esperar_postgres.py && python main.py"
 
   frontend:
     image: tcc-frontend
@@ -51,8 +51,7 @@ services:
     networks:
       - tcc-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
+      test: ["CMD-SHELL", "pg_isready -U postgres -d fiscaliza_db"]
       timeout: 5s
       retries: 15
 
