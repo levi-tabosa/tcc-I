@@ -31,8 +31,10 @@ Dependências Python principais (instaladas via pip):
 - psycopg2-binary
 - fastapi
 - uvicorn
+- APScheduler
 
-O arquivo `requirements.txt` inclui várias dependências do projeto, porém não inclui `fastapi` e `uvicorn` por padrão — veja a seção de instalação para instruções.
+O arquivo `requirements.txt` na raiz do projeto já inclui todas as dependências necessárias, incluindo `fastapi`, `uvicorn` e `APScheduler`.
+
 
 ## Estrutura do repositório
 
@@ -77,7 +79,6 @@ python -m venv .venv
 
 ```powershell
 pip install -r ..\requirements.txt
-pip install fastapi uvicorn
 ```
 
 3. Criar `.env` conforme mostrado na seção anterior (na pasta `backend/`).
@@ -104,7 +105,6 @@ python -m venv .venv
 
 # instalar deps
 pip install -r ..\requirements.txt
-pip install fastapi uvicorn
 
 # criar .env (editar valores conforme necessário)
 # New-Item -Path . -Name '.env' -ItemType 'file' -Value 'DB_HOST=localhost`nDB_PORT=5432`nDB_NAME=pgdb`nDB_USER=postgres`nDB_PASSWORD=pgpwd'
@@ -190,6 +190,9 @@ CREATE TABLE deputados (
 
 ## Ajuda / Troubleshooting
 
+- **ModuleNotFoundError: No module named 'apscheduler'**:
+  - **No Docker**: Certifique-se de que o venv está ativo e rode `pip install -r ..\requirements.txt`.
+  - **No Docker**: Rode `docker compose build backend` seguido de `docker compose up -d` para garantir que a imagem foi construída com as novas dependências.
 - Erro de conexão ao banco: verifique `.env`, se o PostgreSQL está em execução e se o usuário/ senha/ host/ porta estão corretos.
 - Erro de import (psycopg2): execute `pip install psycopg2-binary` no venv.
 - Se houver mensagens de CORS no frontend, verifique `origins` em `backend/main.py` e ajuste conforme o `host:port` do frontend.
