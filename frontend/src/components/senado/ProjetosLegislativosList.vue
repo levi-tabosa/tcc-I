@@ -2,7 +2,7 @@
   <div>
     <!-- Results count -->
     <p class="text-sm text-muted-foreground mb-4">
-      {{ store.filteredProjetosLegislativos.length }} projetos legislativos encontrados
+      {{ store.totalProjetosLegislativos.toLocaleString('pt-BR') }} projetos legislativos encontrados
     </p>
 
     <!-- Loading -->
@@ -187,6 +187,17 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- Load more -->
+    <div v-if="store.hasMoreProjetosLegislativos && store.projetosLegislativosList.length > 0" class="flex justify-center mt-8">
+      <button
+        @click="store.loadMoreProjetosLegislativos()"
+        class="px-6 py-3 rounded-lg border border-border bg-background text-foreground font-medium hover:bg-muted transition-colors inline-flex items-center gap-2"
+      >
+        <span>Carregar mais</span>
+        <ChevronDown class="h-4 w-4" />
+      </button>
     </div>
   </div>
 </template>

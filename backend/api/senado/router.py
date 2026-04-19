@@ -12,6 +12,10 @@ router = APIRouter(
     tags=["Senado"]
 )
 
+def _periodo_legislatura(legislatura: int):
+    inicio = 2023 - (57 - legislatura) * 4
+    return inicio, inicio + 3
+
 @router.get("/legislaturas", summary="Lista todas as legislaturas disponíveis na base")
 @lru_cache(maxsize=1)
 def get_legislaturas_senado():
@@ -360,22 +364,31 @@ WHERE codigo = %s;"""
                 FROM portal.emendas e
                 JOIN senadores_nomes s ON lower(e.nome_autor) = s.nome
                 WHERE s.id = %s
-                  AND EXISTS (
-                      SELECT 1 FROM senado.mandato m 
-                      WHERE m.codigo_parlamentar = s.id 
-                      AND (
-                          CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - CAST(m.primeira_legislatura AS INTEGER)) * 4 AND 2023 - (57 - CAST(m.primeira_legislatura AS INTEGER)) * 4 + 3
-                          OR
-                          CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - CAST(m.segunda_legislatura AS INTEGER)) * 4 AND 2023 - (57 - CAST(m.segunda_legislatura AS INTEGER)) * 4 + 3
-                      )
-                  )
             """
             params_emendas = [senador_codigo]
             if legislatura:
-                start_year = 2023 - (57 - legislatura) * 4
-                end_year = start_year + 3
-                query_emendas += " AND CAST(e.ano AS INTEGER) BETWEEN %s AND %s"
-                params_emendas.extend([start_year, end_year])
+                start_year, end_year = _periodo_legislatura(legislatura)
+                query_emendas += """
+                    AND CAST(e.ano AS INTEGER) BETWEEN %s AND %s
+                    AND EXISTS (
+                        SELECT 1 FROM senado.mandato m
+                        WHERE m.codigo_parlamentar = s.id
+                          AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)
+                    )
+                """
+                params_emendas.extend([start_year, end_year, str(legislatura), str(legislatura)])
+            else:
+                query_emendas += """
+                    AND EXISTS (
+                        SELECT 1 FROM senado.mandato m
+                        WHERE m.codigo_parlamentar = s.id
+                          AND (
+                              CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - CAST(m.primeira_legislatura AS INTEGER)) * 4 AND 2023 - (57 - CAST(m.primeira_legislatura AS INTEGER)) * 4 + 3
+                              OR
+                              CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - CAST(m.segunda_legislatura AS INTEGER)) * 4 AND 2023 - (57 - CAST(m.segunda_legislatura AS INTEGER)) * 4 + 3
+                          )
+                    )
+                """
 
             cursor.execute(query_emendas, tuple(params_emendas))
             emendas_res_row = cursor.fetchone()
@@ -594,13 +607,13 @@ def get_despesas_estatisticas(legislatura: int):
             query_cat = f"""
                 WITH ranking_categorias AS (
                     SELECT 
-                        d.tipo_despesa, 
+                        COALESCE(NULLIF(TRIM(d.tipo_despesa), ''), 'Não informado') AS tipo_despesa,
                         SUM(d.valor_reembolsado) AS valor,
                         ROW_NUMBER() OVER (ORDER BY SUM(d.valor_reembolsado) DESC) as rank
                     FROM senado.despesa_ceaps d
                     {join_mandato}
                     WHERE 1=1 {where_leg}
-                    GROUP BY d.tipo_despesa
+                    GROUP BY COALESCE(NULLIF(TRIM(d.tipo_despesa), ''), 'Não informado')
                 )
                 SELECT 
                     CASE WHEN rank <= 9 THEN tipo_despesa ELSE 'Outros' END AS categoria,
@@ -709,10 +722,10 @@ def get_materia_listar(
     ano: int = Query(None),
     ementa: str = Query(None),
     senador: str = Query(None),
-    pagina: int = 1
+    limite: int = Query(15, ge=1, le=200),
+    pagina: int = Query(1, ge=1)
 ):
-    itens_por_pagina = 15
-    offset = (pagina - 1) * itens_por_pagina
+    offset = (pagina - 1) * limite
     conn = None
     try:
         conn = db.get_db_connection()
@@ -720,52 +733,90 @@ def get_materia_listar(
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
         with conn.cursor() as cursor:
-            query = """
-                SELECT DISTINCT
-                    m.codigo AS id,
-                    m.sigla,
-                    m.numero,
-                    m.ano,
-                    m.ementa,
-                    m.data,
-                    autor.nome_parlamentar AS autor_principal
+            from_clause = """
                 FROM senado.materia m
+            """
+            if senador:
+                from_clause += """
+                    INNER JOIN senado.votacao_parlamentar vp ON m.codigo = vp.codigo_materia
+                    INNER JOIN senado.parlamentar sv ON vp.codigo_parlamentar = sv.codigo
+                """
+
+            filtros = ["1=1"]
+            params = []
+
+            if siglaTipo:
+                filtros.append("m.sigla = %s")
+                params.append(siglaTipo)
+            if ano:
+                filtros.append("m.ano = %s")
+                params.append(ano)
+            if legislatura:
+                start_year, end_year = _periodo_legislatura(legislatura)
+                filtros.append("m.ano BETWEEN %s AND %s")
+                params.extend([start_year, end_year])
+            if ementa:
+                filtros.append("m.ementa ILIKE %s")
+                params.append(f"%{ementa}%")
+            if senador:
+                filtros.append("(sv.nome_parlamentar ILIKE %s OR sv.nome_completo ILIKE %s)")
+                params.extend([f"%{senador}%", f"%{senador}%"])
+
+            where_clause = " WHERE " + " AND ".join(filtros)
+
+            # 1. Total para paginação
+            query_count = f"""
+                SELECT COUNT(DISTINCT m.codigo)
+                {from_clause}
+                {where_clause}
+            """
+            cursor.execute(query_count, tuple(params))
+            total_items = cursor.fetchone()[0]
+            total_paginas = (total_items + limite - 1) // limite
+
+            # 2. Distribuição por tipo (sobre todo o conjunto filtrado)
+            query_tipos = f"""
+                SELECT m.sigla, COUNT(DISTINCT m.codigo) as quantidade
+                {from_clause}
+                {where_clause}
+                GROUP BY m.sigla
+                ORDER BY quantidade DESC, m.sigla ASC
+            """
+            cursor.execute(query_tipos, tuple(params))
+            tipos_raw = cursor.fetchall()
+            distribuicao_tipos = [
+                {"tipo": r[0], "quantidade": int(r[1])}
+                for r in tipos_raw
+            ]
+
+            # 3. Página de dados
+            from_clause_data = from_clause + """
                 LEFT JOIN senado.autoria a ON a.codigo_materia = m.codigo AND a.autor_principal = true
                 LEFT JOIN senado.parlamentar autor ON a.codigo_parlamentar = autor.codigo
             """
-            params = []
-
-            if senador:
-                query += """
-                    INNER JOIN senado.votacao_parlamentar vp ON m.codigo = vp.codigo_materia
-                    INNER JOIN senado.parlamentar p ON vp.codigo_parlamentar = p.codigo
-                """
-
-            query += " WHERE 1=1"
-
-            if siglaTipo:
-                query += " AND m.sigla = %s"
-                params.append(siglaTipo)
-            if ano:
-                query += " AND m.ano = %s"
-                params.append(ano)
-            if legislatura:
-                start_year = 2023 - (57 - legislatura) * 4
-                end_year = start_year + 3
-                query += " AND m.ano BETWEEN %s AND %s"
-                params.extend([start_year, end_year])
-            if ementa:
-                query += " AND m.ementa ILIKE %s"
-                params.append(f"%{ementa}%")
-            if senador:
-                query += " AND p.nome_parlamentar ILIKE %s"
-                params.append(f"%{senador}%")
-
-            query += " ORDER BY m.ano DESC, m.sigla, m.numero LIMIT %s OFFSET %s"
-            params.extend([itens_por_pagina, offset])
-
-            cursor.execute(query, tuple(params))
+            query = f"""
+                WITH materia_filtrada AS (
+                    SELECT DISTINCT ON (m.codigo)
+                        m.codigo AS id,
+                        m.sigla,
+                        m.numero,
+                        m.ano,
+                        m.ementa,
+                        m.data,
+                        autor.nome_parlamentar AS autor_principal
+                    {from_clause_data}
+                    {where_clause}
+                    ORDER BY m.codigo, m.data DESC NULLS LAST, m.ano DESC
+                )
+                SELECT id, sigla, numero, ano, ementa, data, autor_principal
+                FROM materia_filtrada
+                ORDER BY ano DESC, sigla, numero
+                LIMIT %s OFFSET %s
+            """
+            params_data = [*params, limite, offset]
+            cursor.execute(query, tuple(params_data))
             resultados = cursor.fetchall()
+
             return {
                 "materia": [
                     {
@@ -778,7 +829,19 @@ def get_materia_listar(
                         "autor_principal": r[6]
                     }
                     for r in resultados
-                ]
+                ],
+                "paginacao": {
+                    "total": total_items,
+                    "pagina": pagina,
+                    "total_paginas": total_paginas,
+                    "itens_por_pagina": limite
+                },
+                "estatisticas": {
+                    "total": total_items,
+                    "tipos_diferentes": len(distribuicao_tipos),
+                    "tipo_mais_frequente": distribuicao_tipos[0]["tipo"] if distribuicao_tipos else None,
+                    "distribuicao_tipos": distribuicao_tipos
+                }
             }
     except Exception as e:
         logging.error(f"Erro ao buscar matéria: {e}")
@@ -804,8 +867,50 @@ def get_lista_emendas(
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
         with conn.cursor() as cursor:
+            filtros_base = []
+            params_base = []
+
+            if legislatura:
+                start_year, end_year = _periodo_legislatura(legislatura)
+                filtros_base.append("CAST(e.ano AS INTEGER) BETWEEN %s AND %s")
+                params_base.extend([start_year, end_year])
+                filtros_base.append("""
+                    EXISTS (
+                        SELECT 1
+                        FROM senado.mandato m
+                        WHERE m.codigo_parlamentar = p.codigo
+                          AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)
+                    )
+                """)
+                params_base.extend([str(legislatura), str(legislatura)])
+            else:
+                filtros_base.append("""
+                    EXISTS (
+                        SELECT 1
+                        FROM senado.mandato m
+                        WHERE m.codigo_parlamentar = p.codigo
+                          AND (
+                              CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - CAST(m.primeira_legislatura AS INTEGER)) * 4
+                                                         AND 2023 - (57 - CAST(m.primeira_legislatura AS INTEGER)) * 4 + 3
+                              OR
+                              CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - CAST(m.segunda_legislatura AS INTEGER)) * 4
+                                                         AND 2023 - (57 - CAST(m.segunda_legislatura AS INTEGER)) * 4 + 3
+                          )
+                    )
+                """)
+
+            if nome_senador:
+                filtros_base.append("(p.nome_completo ILIKE %s OR p.nome_parlamentar ILIKE %s)")
+                params_base.extend([f"%{nome_senador}%", f"%{nome_senador}%"])
+
+            if ano:
+                filtros_base.append("CAST(e.ano AS INTEGER) = %s")
+                params_base.append(ano)
+
+            where_clause = " AND ".join(filtros_base)
+
             # 1. Total para paginação
-            query_count = """
+            query_count = f"""
                 WITH senadores_nomes AS (
                     SELECT codigo as id, lower(nome_completo) as nome FROM senado.parlamentar
                     UNION
@@ -814,48 +919,23 @@ def get_lista_emendas(
                 SELECT COUNT(*)
                 FROM portal.emendas e
                 JOIN senadores_nomes s ON lower(e.nome_autor) = s.nome
+                JOIN senado.parlamentar p ON p.codigo = s.id
+                WHERE {where_clause}
             """
-            
-            # Adicionar filtro de legislatura se especificado
-            where_conditions = []
-            params_count = []
-            
-            if legislatura:
-                query_count += """
-                    JOIN senado.mandato m ON s.id = m.codigo_parlamentar
-                """
-                start_year = 2023 - (57 - legislatura) * 4
-                end_year = start_year + 3
-                where_conditions.append("(m.primeira_legislatura = %s OR m.segunda_legislatura = %s) AND CAST(e.ano AS INTEGER) BETWEEN %s AND %s")
-                params_count.extend([str(legislatura), str(legislatura), start_year, end_year])
-            
-            if nome_senador:
-                where_conditions.append("""s.id IN (
-                    SELECT codigo FROM senado.parlamentar 
-                    WHERE nome_completo ILIKE %s OR nome_parlamentar ILIKE %s
-                )""")
-                params_count.extend([f"%{nome_senador}%", f"%{nome_senador}%"])
-            
-            if ano:
-                where_conditions.append("e.ano = %s")
-                params_count.append(ano)
-            
-            if where_conditions:
-                query_count += " WHERE " + " AND ".join(where_conditions)
-            
-            cursor.execute(query_count, tuple(params_count))
+
+            cursor.execute(query_count, tuple(params_base))
             total_items = cursor.fetchone()[0]
             total_paginas = (total_items + itens_por_pagina - 1) // itens_por_pagina
 
             # 2. Dados paginados
-            query = """
+            query = f"""
                 WITH senadores_nomes AS (
-                    SELECT codigo as id, lower(nome_parlamentar) as nome, nome_parlamentar as nome_senador FROM senado.parlamentar
+                    SELECT codigo as id, lower(nome_completo) as nome FROM senado.parlamentar
                     UNION
-                    SELECT codigo as id, lower(nome_completo) as nome, nome_parlamentar as nome_senador FROM senado.parlamentar
+                    SELECT codigo as id, lower(nome_parlamentar) as nome FROM senado.parlamentar
                 )
                 SELECT 
-                    s.nome_senador as senador,
+                    p.nome_parlamentar as senador,
                     e.codigo_emenda as codigo,
                     e.ano,
                     e.tipo_emenda as tipo,
@@ -864,34 +944,12 @@ def get_lista_emendas(
                     e.localidade_gasto as localidade
                 FROM portal.emendas e
                 JOIN senadores_nomes s ON lower(e.nome_autor) = s.nome
+                JOIN senado.parlamentar p ON p.codigo = s.id
+                WHERE {where_clause}
+                ORDER BY CAST(e.ano AS INTEGER) DESC, e.valor_pago DESC
+                LIMIT %s OFFSET %s
             """
-            
-            # Adicionar JOIN e filtros
-            where_conditions_data = []
-            params = []
-            
-            if legislatura:
-                query += """
-                    JOIN senado.mandato m ON s.id = m.codigo_parlamentar
-                """
-                start_year = 2023 - (57 - legislatura) * 4
-                end_year = start_year + 3
-                where_conditions_data.append("(m.primeira_legislatura = %s OR m.segunda_legislatura = %s) AND CAST(e.ano AS INTEGER) BETWEEN %s AND %s")
-                params.extend([str(legislatura), str(legislatura), start_year, end_year])
-            
-            if nome_senador:
-                where_conditions_data.append("s.nome_senador ILIKE %s")
-                params.append(f"%{nome_senador}%")
-            
-            if ano:
-                where_conditions_data.append("e.ano = %s")
-                params.append(ano)
-            
-            if where_conditions_data:
-                query += " WHERE " + " AND ".join(where_conditions_data)
-                
-            query += " ORDER BY e.ano DESC, e.valor_pago DESC LIMIT %s OFFSET %s"
-            params.extend([itens_por_pagina, offset])
+            params = [*params_base, itens_por_pagina, offset]
 
             cursor.execute(query, tuple(params))
             res = cursor.fetchall()
@@ -934,149 +992,102 @@ def get_resumo_emendas(legislatura: int):
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
         with conn.cursor() as cursor:
-            # 1. Totais Gerais (Optimized with CTE)
+            params_base = []
             if legislatura:
-                query_totais = """
-                    WITH senadores_nomes AS (
-                        SELECT codigo as id, lower(nome_completo) as nome FROM senado.parlamentar
-                        UNION
-                        SELECT codigo as id, lower(nome_parlamentar) as nome FROM senado.parlamentar
+                start_year, end_year = _periodo_legislatura(legislatura)
+                where_base = """
+                    CAST(e.ano AS INTEGER) BETWEEN %s AND %s
+                    AND EXISTS (
+                        SELECT 1
+                        FROM senado.mandato m
+                        WHERE m.codigo_parlamentar = p.codigo
+                          AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)
                     )
-                    SELECT 
-                        COUNT(DISTINCT s.id) as total_senadores,
-                        COUNT(DISTINCT e.localidade_gasto) as total_municipios,
-                        COUNT(DISTINCT e.funcao) as total_areas,
-                        COALESCE(SUM(e.valor_pago), 0) as valor_total
-                    FROM portal.emendas e
-                    JOIN senadores_nomes s ON lower(e.nome_autor) = s.nome
-                    WHERE CAST(e.ano AS INTEGER) BETWEEN %s AND %s
                 """
-                start_year = 2023 - (57 - legislatura) * 4
-                end_year = start_year + 3
-                cursor.execute(query_totais, (start_year, end_year))
+                params_base.extend([start_year, end_year, str(legislatura), str(legislatura)])
             else:
-                query_totais = """
-                    WITH senadores_nomes AS (
-                        SELECT codigo as id, lower(nome_completo) as nome FROM senado.parlamentar
-                        UNION
-                        SELECT codigo as id, lower(nome_parlamentar) as nome FROM senado.parlamentar
+                where_base = """
+                    EXISTS (
+                        SELECT 1
+                        FROM senado.mandato m
+                        WHERE m.codigo_parlamentar = p.codigo
+                          AND (
+                              CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - CAST(m.primeira_legislatura AS INTEGER)) * 4
+                                                         AND 2023 - (57 - CAST(m.primeira_legislatura AS INTEGER)) * 4 + 3
+                              OR
+                              CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - CAST(m.segunda_legislatura AS INTEGER)) * 4
+                                                         AND 2023 - (57 - CAST(m.segunda_legislatura AS INTEGER)) * 4 + 3
+                          )
                     )
-                    SELECT 
-                        COUNT(DISTINCT s.id) as total_senadores,
-                        COUNT(DISTINCT e.localidade_gasto) as total_municipios,
-                        COUNT(DISTINCT e.funcao) as total_areas,
-                        COALESCE(SUM(e.valor_pago), 0) as valor_total
-                    FROM portal.emendas e
-                    JOIN senadores_nomes s ON lower(e.nome_autor) = s.nome
                 """
-                cursor.execute(query_totais)
-            
-            totais_row = cursor.fetchone()
-            valor_total_global = float(totais_row[3]) if totais_row[3] and float(totais_row[3]) > 0 else 1.0
-            
-            # 2. Distribuição por Área (Optimized with CTE)
-            if legislatura:
-                query_areas = """
-                    WITH senadores_nomes AS (
-                        SELECT codigo as id, lower(nome_completo) as nome FROM senado.parlamentar
-                        UNION
-                        SELECT codigo as id, lower(nome_parlamentar) as nome FROM senado.parlamentar
-                    )
-                    SELECT e.funcao, SUM(e.valor_pago) as valor_total
-                    FROM portal.emendas e
-                    JOIN senadores_nomes s ON lower(e.nome_autor) = s.nome
-                    WHERE CAST(e.ano AS INTEGER) BETWEEN %s AND %s
-                    GROUP BY e.funcao
-                    ORDER BY valor_total DESC
-                """
-                start_year = 2023 - (57 - legislatura) * 4
-                end_year = start_year + 3
-                cursor.execute(query_areas, (start_year, end_year))
-            else:
-                query_areas = """
-                    WITH senadores_nomes AS (
-                        SELECT lower(nome_completo) as nome FROM senado.parlamentar
-                        UNION
-                        SELECT lower(nome_parlamentar) as nome FROM senado.parlamentar
-                    )
-                    SELECT e.funcao, SUM(e.valor_pago) as valor_total
-                    FROM portal.emendas e
-                    JOIN senadores_nomes s ON lower(e.nome_autor) = s.nome
-                    GROUP BY e.funcao
-                    ORDER BY valor_total DESC
-                """
-                cursor.execute(query_areas)
-            
-            areas_raw = cursor.fetchall()
 
+            base_cte = f"""
+                WITH senadores_nomes AS (
+                    SELECT codigo as id, lower(nome_completo) as nome FROM senado.parlamentar
+                    UNION
+                    SELECT codigo as id, lower(nome_parlamentar) as nome FROM senado.parlamentar
+                ),
+                emendas_base AS (
+                    SELECT
+                        e.valor_pago,
+                        e.localidade_gasto,
+                        e.funcao,
+                        p.codigo,
+                        p.nome_parlamentar,
+                        p.sigla_partido,
+                        p.uf,
+                        p.url_foto
+                    FROM portal.emendas e
+                    JOIN senadores_nomes s ON lower(e.nome_autor) = s.nome
+                    JOIN senado.parlamentar p ON s.id = p.codigo
+                    WHERE {where_base}
+                )
+            """
+
+            # 1. Totais gerais
+            query_totais = base_cte + """
+                SELECT
+                    COUNT(DISTINCT codigo) as total_senadores,
+                    COUNT(DISTINCT localidade_gasto) as total_municipios,
+                    COUNT(DISTINCT funcao) as total_areas,
+                    COALESCE(SUM(valor_pago), 0) as valor_total
+                FROM emendas_base
+            """
+            cursor.execute(query_totais, tuple(params_base))
+            totais_row = cursor.fetchone()
+
+            valor_total_real = float(totais_row[3]) if totais_row and totais_row[3] else 0.0
+            base_percentual = valor_total_real if valor_total_real > 0 else 1.0
+
+            # 2. Distribuição por área
+            query_areas = base_cte + """
+                SELECT funcao, SUM(valor_pago) as valor_total
+                FROM emendas_base
+                GROUP BY funcao
+                ORDER BY valor_total DESC
+            """
+            cursor.execute(query_areas, tuple(params_base))
+            areas_raw = cursor.fetchall()
             areas_formatadas = [
                 {
                     "nome": r[0] if r[0] else "Outros",
                     "valor": float(r[1]),
-                    "percentual": round((float(r[1]) / valor_total_global) * 100, 1)
+                    "percentual": round((float(r[1]) / base_percentual) * 100, 1)
                 }
                 for r in areas_raw
             ]
 
-            # 3. Top 10 Senadores (Optimized with CTE)
-            if legislatura:
-                query_top = """
-                    WITH senadores_nomes AS (
-                        SELECT codigo as id, lower(nome_completo) as nome FROM senado.parlamentar
-                        UNION
-                        SELECT codigo as id, lower(nome_parlamentar) as nome FROM senado.parlamentar
-                    )
-                    SELECT 
-                        p.codigo, p.nome_parlamentar, p.sigla_partido, p.uf, p.url_foto,
-                        SUM(e.valor_pago) as total_valor
-                    FROM portal.emendas e
-                    JOIN senadores_nomes s ON lower(e.nome_autor) = s.nome
-                    JOIN senado.parlamentar p ON s.id = p.codigo
-                    WHERE CAST(e.ano AS INTEGER) BETWEEN %s AND %s
-                      AND EXISTS (
-                          SELECT 1 FROM senado.mandato m 
-                          WHERE m.codigo_parlamentar = p.codigo 
-                          AND (
-                              CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - CAST(m.primeira_legislatura AS INTEGER)) * 4 AND 2023 - (57 - CAST(m.primeira_legislatura AS INTEGER)) * 4 + 3
-                              OR
-                              CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - CAST(m.segunda_legislatura AS INTEGER)) * 4 AND 2023 - (57 - CAST(m.segunda_legislatura AS INTEGER)) * 4 + 3
-                          )
-                      )
-                    GROUP BY p.codigo, p.nome_parlamentar, p.sigla_partido, p.uf, p.url_foto
-                    ORDER BY total_valor DESC
-                    LIMIT 10
-                """
-                start_year = 2023 - (57 - legislatura) * 4
-                end_year = start_year + 3
-                cursor.execute(query_top, (start_year, end_year))
-            else:
-                query_top = """
-                    WITH senadores_nomes AS (
-                        SELECT codigo as id, lower(nome_completo) as nome FROM senado.parlamentar
-                        UNION
-                        SELECT codigo as id, lower(nome_parlamentar) as nome FROM senado.parlamentar
-                    )
-                    SELECT 
-                        p.codigo, p.nome_parlamentar, p.sigla_partido, p.uf, p.url_foto,
-                        SUM(e.valor_pago) as total_valor
-                    FROM portal.emendas e
-                    JOIN senadores_nomes s ON lower(e.nome_autor) = s.nome
-                    JOIN senado.parlamentar p ON s.id = p.codigo
-                    WHERE EXISTS (
-                          SELECT 1 FROM senado.mandato m 
-                          WHERE m.codigo_parlamentar = p.codigo 
-                          AND (
-                              CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - CAST(m.primeira_legislatura AS INTEGER)) * 4 AND 2023 - (57 - CAST(m.primeira_legislatura AS INTEGER)) * 4 + 3
-                              OR
-                              CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - CAST(m.segunda_legislatura AS INTEGER)) * 4 AND 2023 - (57 - CAST(m.segunda_legislatura AS INTEGER)) * 4 + 3
-                          )
-                      )
-                    GROUP BY p.codigo, p.nome_parlamentar, p.sigla_partido, p.uf, p.url_foto
-                    ORDER BY total_valor DESC
-                    LIMIT 10
-                """
-                cursor.execute(query_top)
-            
+            # 3. Top 10 senadores
+            query_top = base_cte + """
+                SELECT
+                    codigo, nome_parlamentar, sigla_partido, uf, url_foto,
+                    SUM(valor_pago) as total_valor
+                FROM emendas_base
+                GROUP BY codigo, nome_parlamentar, sigla_partido, uf, url_foto
+                ORDER BY total_valor DESC
+                LIMIT 10
+            """
+            cursor.execute(query_top, tuple(params_base))
             top_senadores = cursor.fetchall()
 
             return {
@@ -1084,7 +1095,7 @@ def get_resumo_emendas(legislatura: int):
                     "senadores": totais_row[0],
                     "municipios": totais_row[1],
                     "areas": totais_row[2],
-                    "valor_total": valor_total_global
+                    "valor_total": valor_total_real
                 },
                 "areas": areas_formatadas,
                 "ranking": [
@@ -1177,37 +1188,57 @@ def get_emendas_lista_senador(legislatura: int, senador_codigo: int, pagina: int
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
         with conn.cursor() as cursor:
+            filtros_base = []
+            params_base = [senador_codigo]
+
+            if legislatura:
+                start_year, end_year = _periodo_legislatura(legislatura)
+                filtros_base.append("CAST(e.ano AS INTEGER) BETWEEN %s AND %s")
+                params_base.extend([start_year, end_year])
+                filtros_base.append("""
+                    EXISTS (
+                        SELECT 1
+                        FROM senado.mandato m
+                        WHERE m.codigo_parlamentar = s.codigo
+                          AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)
+                    )
+                """)
+                params_base.extend([str(legislatura), str(legislatura)])
+            else:
+                filtros_base.append("""
+                    EXISTS (
+                        SELECT 1
+                        FROM senado.mandato m
+                        WHERE m.codigo_parlamentar = s.codigo
+                          AND (
+                              CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - CAST(m.primeira_legislatura AS INTEGER)) * 4
+                                                         AND 2023 - (57 - CAST(m.primeira_legislatura AS INTEGER)) * 4 + 3
+                              OR
+                              CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - CAST(m.segunda_legislatura AS INTEGER)) * 4
+                                                         AND 2023 - (57 - CAST(m.segunda_legislatura AS INTEGER)) * 4 + 3
+                          )
+                    )
+                """)
+
+            where_clause = " AND ".join(filtros_base)
+
             # 1. Total para paginação
-            query_count = """
+            query_count = f"""
                 SELECT COUNT(*)
                 FROM portal.emendas e
                 JOIN senado.parlamentar s 
                    ON (lower(e.nome_autor) = lower(s.nome_completo) 
                        OR lower(e.nome_autor) = lower(s.nome_parlamentar))
                 WHERE s.codigo = %s
-                  AND EXISTS (
-                      SELECT 1 FROM senado.mandato m 
-                      WHERE m.codigo_parlamentar = s.codigo 
-                      AND (
-                          CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - CAST(m.primeira_legislatura AS INTEGER)) * 4 AND 2023 - (57 - CAST(m.primeira_legislatura AS INTEGER)) * 4 + 3
-                          OR
-                          CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - CAST(m.segunda_legislatura AS INTEGER)) * 4 AND 2023 - (57 - CAST(m.segunda_legislatura AS INTEGER)) * 4 + 3
-                      )
-                  )
+                  AND {where_clause}
             """
-            params_count = [senador_codigo]
-            if legislatura:
-                start_year = 2023 - (57 - legislatura) * 4
-                end_year = start_year + 3
-                query_count += " AND CAST(e.ano AS INTEGER) BETWEEN %s AND %s"
-                params_count.extend([start_year, end_year])
 
-            cursor.execute(query_count, tuple(params_count))
+            cursor.execute(query_count, tuple(params_base))
             total_items = cursor.fetchone()[0]
             total_paginas = (total_items + itens_per_page - 1) // itens_per_page
 
             # 2. Dados paginados (Seleção Seletiva)
-            query = """
+            query = f"""
                 SELECT 
                     e.codigo_emenda as codigo,
                     e.ano,
@@ -1220,25 +1251,10 @@ def get_emendas_lista_senador(legislatura: int, senador_codigo: int, pagina: int
                   ON (lower(e.nome_autor) = lower(s.nome_completo) 
                       OR lower(e.nome_autor) = lower(s.nome_parlamentar))
                 WHERE s.codigo = %s
-                  AND EXISTS (
-                      SELECT 1 FROM senado.mandato m 
-                      WHERE m.codigo_parlamentar = s.codigo 
-                      AND (
-                          CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - CAST(m.primeira_legislatura AS INTEGER)) * 4 AND 2023 - (57 - CAST(m.primeira_legislatura AS INTEGER)) * 4 + 3
-                          OR
-                          CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - CAST(m.segunda_legislatura AS INTEGER)) * 4 AND 2023 - (57 - CAST(m.segunda_legislatura AS INTEGER)) * 4 + 3
-                      )
-                  )
+                  AND {where_clause}
             """
-            params = [senador_codigo]
-            if legislatura:
-                start_year = 2023 - (57 - legislatura) * 4
-                end_year = start_year + 3
-                query += " AND CAST(e.ano AS INTEGER) BETWEEN %s AND %s"
-                params.extend([start_year, end_year])
-
-            query += " ORDER BY e.ano DESC, e.valor_pago DESC LIMIT %s OFFSET %s"
-            params.extend([itens_per_page, offset])
+            query += " ORDER BY CAST(e.ano AS INTEGER) DESC, e.valor_pago DESC LIMIT %s OFFSET %s"
+            params = [*params_base, itens_per_page, offset]
             cursor.execute(query, tuple(params))
             res = cursor.fetchall()
             

@@ -269,16 +269,14 @@ const allPieSegments = computed(() => {
 // ── Categorias ──────────────────────────────────────────────────────────────
 const categoriasAgregadas = computed(() => {
   if (!store.generalStats?.categorias?.length) return []
-  const maxValor = store.generalStats.categorias[0]?.total || 1
   const totalCats = store.generalStats.categorias.reduce((s, c) => s + c.total, 0) || 1
   return store.generalStats.categorias.map(c => ({
-    nome: c.categoria,
+    nome: c.categoria || 'Não informado',
     total: c.total,
     valorFormatado: c.total >= 1000000
       ? `R$ ${(c.total / 1000000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}M`
       : `R$ ${(c.total / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} mil`,
-    percentual: (c.total / maxValor) * 100,
-    percentualTotal: (c.total / totalCats) * 100
+    percentual: (c.total / totalCats) * 100
   }))
 })
 
