@@ -137,7 +137,7 @@ const router = createRouter({
 router.afterEach((to) => {
   const baseTitle = 'Fiscaliza Brasil'
   const pageTitle = to.meta.title as string
-  
+
   if (pageTitle) {
     document.title = `${pageTitle} | ${baseTitle}`
   } else if (!document.title.includes(baseTitle)) {
