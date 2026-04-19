@@ -9,7 +9,7 @@
             </div>
             <div>
               <p class="text-sm text-muted-foreground">Total de Projetos Legislativos</p>
-              <p class="text-2xl font-bold text-foreground">{{ store.filteredProjetosLegislativos.length }}</p>
+              <p class="text-2xl font-bold text-foreground">{{ store.totalProjetosLegislativos.toLocaleString('pt-BR') }}</p>
             </div>
           </div>
         </BaseCard>

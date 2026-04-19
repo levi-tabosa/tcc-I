@@ -29,9 +29,9 @@ const loadingStore = useLoadingStore()
 
 const formatLegislatura = (legis: number) => {
   if (legis === 0) return 'Todas as legislaturas'
-  // Calculates the start year. 57th started in 2023, each legislature is 4 years.
+  // 57ª inicia em 2023 e cada legislatura cobre 4 anos corridos (ex.: 2023-2026).
   const startYear = 2023 - (57 - legis) * 4
-  const endYear = startYear + 4
+  const endYear = startYear + 3
   return `${legis}ª (${startYear}-${endYear})`
 }
 

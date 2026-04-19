@@ -53,6 +53,7 @@ http://localhost:8000/api/senado/{senador_codigo}/despesas
 - **`GET /lista`**: Lista todos os deputados ativos.
     - **Params**: `legislatura` (int, opcional) - Filtra quem exerceu mandato naquela legislatura.
 - **`GET /estatisticas`**: Estatísticas gerais (total de deputados, distribuição por região).
+    - **Resposta**: inclui `total_deputados`, `total_regioes`, `total_ufs` e `deputados_por_regiao`.
     - **Params**: `legislatura` (int, opcional).
 - **`GET /{deputado_id}`**: Perfil detalhado de um deputado.
     - **Params**: `legislatura` (int, opcional) - Se passado, mostra as estatísticas focadas naquele período.
@@ -72,6 +73,7 @@ http://localhost:8000/api/senado/{senador_codigo}/despesas
 ### Projetos Legislativos
 - **`GET /proposicoes`**: Lista de projetos de lei e outras proposições.
     - **Params**: `siglaTipo`, `ano`, `ementa`, `deputado` (nome), `legislatura`, `pagina`.
+    - **Resposta**: retorna `proposicoes`, `paginacao` e `estatisticas` (total, tipo mais frequente e distribuição por tipo no conjunto filtrado completo).
 - **`GET /proposicoes/{id}/votos`**: Histórico de votação nominal de um projeto específico.
 
 ---
@@ -99,7 +101,8 @@ http://localhost:8000/api/senado/{senador_codigo}/despesas
 - **`GET /empresas/estatisticas`**: Ranking das empresas fornecedoras do Senado.
     - **Params**: `legislatura` (int, opcional).
 - **`GET /materia/listar`**: Consulta de matérias legislativas (projetos).
-    - **Params**: `siglaTipo`, `ano`, `ementa`, `senador` (nome), `legislatura`, `pagina`.
+    - **Params**: `siglaTipo`, `ano`, `ementa`, `senador` (nome), `legislatura`, `pagina`, `limite`.
+    - **Resposta**: retorna `materia`, `paginacao` e `estatisticas` (total, tipo mais frequente e distribuição por tipo).
 
 ### Emendas Parlamentares
 - **`GET /emendas`**: Lista de emendas do Senado.

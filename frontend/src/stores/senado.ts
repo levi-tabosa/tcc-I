@@ -41,6 +41,7 @@ export interface EmendaSenado {
 export interface EstatisticasSenadoGerais {
     total_senadores: number
     total_gastos: number
+    total_regioes: number
     senadores_por_regiao: { name: string; value: number }[]
 }
 
@@ -165,6 +166,8 @@ export const useSenadoStore = defineStore("senado", () => {
         senador: "",
     })
     const projetosLegislativosList = ref<ProjetoLegislativoSenado[]>([])
+    const totalProjetosLegislativos = ref(0)
+    const projetosLegislativosDistribuicao = ref<{ tipo: string; quantidade: number }[]>([])
     const loadingProjetosLegislativos = ref(false)
     const projetosLegislativosPage = ref(1)
     const hasMoreProjetosLegislativos = ref(true)
@@ -356,9 +359,11 @@ export const useSenadoStore = defineStore("senado", () => {
 
     const fetchProjetosLegislativos = async (pagina = 1) => {
         loadingProjetosLegislativos.value = true
+        error.value = null
         try {
             const params = new URLSearchParams()
             params.append("pagina", String(pagina))
+            params.append("limite", "15")
 
             if (projetosLegislativosFilters.value.siglaTipo) {
                 params.append("siglaTipo", projetosLegislativosFilters.value.siglaTipo)
@@ -377,7 +382,7 @@ export const useSenadoStore = defineStore("senado", () => {
             if (!response.ok) throw new Error("Falha ao buscar projetos legislativos")
             const data = await response.json()
 
-            const mapped = data.materia.map((m: any) => ({
+            const mapped = (data.materia || []).map((m: any) => ({
                 id: m.id,
                 siglaTipo: m.siglaTipo,
                 numero: m.numero,
@@ -389,14 +394,19 @@ export const useSenadoStore = defineStore("senado", () => {
 
             if (pagina === 1) {
                 projetosLegislativosList.value = mapped
+                selectedProjetoLegislativoId.value = null
+                currentVotos.value = null
             } else {
                 projetosLegislativosList.value = [...projetosLegislativosList.value, ...mapped]
             }
 
+            totalProjetosLegislativos.value = data.paginacao?.total || 0
+            projetosLegislativosDistribuicao.value = data.estatisticas?.distribuicao_tipos || []
             projetosLegislativosPage.value = pagina
-            hasMoreProjetosLegislativos.value = mapped.length === 15
+            hasMoreProjetosLegislativos.value = projetosLegislativosList.value.length < totalProjetosLegislativos.value
         } catch (e: any) {
             console.error("Erro ao buscar projetos legislativos:", e)
+            error.value = "Erro ao carregar projetos legislativos."
         } finally {
             loadingProjetosLegislativos.value = false
         }
@@ -433,23 +443,10 @@ export const useSenadoStore = defineStore("senado", () => {
         await fetchVotacaoMateria(id)
     }
 
-    const filteredProjetosLegislativos = computed(() => {
-        return projetosLegislativosList.value.filter((p) => {
-            if (projetosLegislativosFilters.value.search && !p.ementa.toLowerCase().includes(projetosLegislativosFilters.value.search.toLowerCase())) {
-                return false
-            }
-            if (projetosLegislativosFilters.value.siglaTipo && p.siglaTipo !== projetosLegislativosFilters.value.siglaTipo) {
-                return false
-            }
-            if (projetosLegislativosFilters.value.ano && p.ano !== Number(projetosLegislativosFilters.value.ano)) {
-                return false
-            }
-            return true
-        })
-    })
+    const filteredProjetosLegislativos = computed(() => projetosLegislativosList.value)
 
     const tiposUnicosProjetosLegislativos = computed(() => {
-        const tipos = new Set(projetosLegislativosList.value.map((p) => p.siglaTipo))
+        const tipos = new Set(projetosLegislativosDistribuicao.value.map((p) => p.tipo))
         return Array.from(tipos).sort()
     })
 
@@ -458,15 +455,7 @@ export const useSenadoStore = defineStore("senado", () => {
         return Array.from(anos).sort((a, b) => b - a)
     })
 
-    const projetosLegislativosPorTipo = computed(() => {
-        const contagem: Record<string, number> = {}
-        filteredProjetosLegislativos.value.forEach((p) => {
-            contagem[p.siglaTipo] = (contagem[p.siglaTipo] || 0) + 1
-        })
-        return Object.entries(contagem)
-            .map(([tipo, quantidade]) => ({ tipo, quantidade }))
-            .sort((a, b) => b.quantidade - a.quantidade)
-    })
+    const projetosLegislativosPorTipo = computed(() => projetosLegislativosDistribuicao.value)
 
     const setProjetosLegislativosFilter = (key: keyof ProjetosLegislativosFilters, value: string) => {
         projetosLegislativosFilters.value[key] = value
@@ -517,6 +506,7 @@ export const useSenadoStore = defineStore("senado", () => {
         // Projetos Legislativos
         projetosLegislativosFilters,
         projetosLegislativosList,
+        totalProjetosLegislativos,
         loadingProjetosLegislativos,
         filteredProjetosLegislativos,
         tiposUnicosProjetosLegislativos,

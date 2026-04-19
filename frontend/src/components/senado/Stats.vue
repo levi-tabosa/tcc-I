@@ -24,7 +24,7 @@
             </div>
             <div>
               <p class="text-sm text-muted-foreground">Regiões</p>
-              <p class="text-2xl font-bold text-foreground">5</p>
+              <p class="text-2xl font-bold text-foreground">{{ store.senadorStats?.total_regioes || '...' }}</p>
             </div>
           </div>
         </BaseCard>
@@ -162,7 +162,9 @@ const chartColors = ['bg-chart-1', 'bg-chart-2', 'bg-chart-3', 'bg-chart-4', 'bg
 const gastosUltimosMeses = computed(() => {
   if (!store.generalStats?.gastos_por_mes) return []
 
-  const ultimos = [...store.generalStats.gastos_por_mes].reverse().slice(0, 5).reverse()
+  const ultimos = [...store.generalStats.gastos_por_mes]
+    .sort((a, b) => (b.ano - a.ano) || (b.mes - a.mes))
+    .slice(0, 5)
   const maxValor = Math.max(...ultimos.map(m => m.valor), 1)
 
   return ultimos.map((m, i) => ({

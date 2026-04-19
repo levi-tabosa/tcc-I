@@ -247,7 +247,8 @@
                   <p class="mt-1 text-3xl font-bold" :class="totalA <= totalB ? 'text-green-600' : 'text-red-500'">
                     R$ {{ formatCurrency(totalA) }}
                   </p>
-                  <BaseBadge v-if="totalA <= totalB" variant="success" class="mt-2">Menor gasto</BaseBadge>
+                  <BaseBadge v-if="totalA === totalB" variant="secondary" class="mt-2">Empate</BaseBadge>
+                  <BaseBadge v-else-if="totalA <= totalB" variant="success" class="mt-2">Menor gasto</BaseBadge>
                   <BaseBadge v-else variant="destructive" class="mt-2">Maior gasto</BaseBadge>
                 </div>
               </BaseCard>
@@ -257,7 +258,8 @@
                   <p class="mt-1 text-3xl font-bold" :class="totalB <= totalA ? 'text-green-600' : 'text-red-500'">
                     R$ {{ formatCurrency(totalB) }}
                   </p>
-                  <BaseBadge v-if="totalB <= totalA" variant="success" class="mt-2">Menor gasto</BaseBadge>
+                  <BaseBadge v-if="totalA === totalB" variant="secondary" class="mt-2">Empate</BaseBadge>
+                  <BaseBadge v-else-if="totalB <= totalA" variant="success" class="mt-2">Menor gasto</BaseBadge>
                   <BaseBadge v-else variant="destructive" class="mt-2">Maior gasto</BaseBadge>
                 </div>
               </BaseCard>
@@ -270,10 +272,7 @@
                 <p class="mt-1 text-2xl font-bold text-foreground">
                   R$ {{ formatCurrency(Math.abs(totalA - totalB)) }}
                 </p>
-                <p class="mt-1 text-sm text-muted-foreground">
-                  <span class="font-medium text-foreground">{{ totalA > totalB ? senadorA.nome_civil : senadorB.nome_civil }}</span>
-                  gastou {{ percentDiff }}% a mais
-                </p>
+                <p class="mt-1 text-sm text-muted-foreground">{{ differenceSummary }}</p>
               </div>
             </BaseCard>
           </div>
@@ -610,7 +609,24 @@ const formatCurrencyShort = (value: number): string => {
 
 const percentDiff = computed(() => {
   const min = Math.min(totalA.value, totalB.value)
-  if (min === 0) return '0'
+  if (min <= 0) return null
   return (((Math.abs(totalA.value - totalB.value)) / min) * 100).toFixed(1)
+})
+
+const differenceSummary = computed(() => {
+  if (!senadorA.value || !senadorB.value) return ''
+
+  if (totalA.value === totalB.value) {
+    return 'Os dois tiveram o mesmo total de gastos.'
+  }
+
+  const senadorMaiorGasto = totalA.value > totalB.value ? senadorA.value.nome_civil : senadorB.value.nome_civil
+  const senadorMenorGasto = totalA.value > totalB.value ? senadorB.value.nome_civil : senadorA.value.nome_civil
+
+  if (percentDiff.value === null) {
+    return `${senadorMaiorGasto} registrou despesas, enquanto ${senadorMenorGasto} não teve gastos no período selecionado.`
+  }
+
+  return `${senadorMaiorGasto} gastou ${percentDiff.value}% a mais.`
 })
 </script>

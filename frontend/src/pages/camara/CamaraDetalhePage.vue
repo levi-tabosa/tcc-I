@@ -24,9 +24,9 @@
                 </option>
               </template>
               <template v-else>
-                <option :value="57">57ª Legislatura (2023-2027)</option>
-                <option :value="56">56ª Legislatura (2019-2023)</option>
-                <option :value="55">55ª Legislatura (2015-2019)</option>
+                <option :value="57">57ª Legislatura (2023-2026)</option>
+                <option :value="56">56ª Legislatura (2019-2022)</option>
+                <option :value="55">55ª Legislatura (2015-2018)</option>
               </template>
             </select>
           </div>
@@ -262,7 +262,7 @@ const formatDate = (dateString: string) => {
 const formatLegislatura = (legis: number) => {
   if (legis === 0) return 'Todas as legislaturas (Histórico)'
   const startYear = 2023 - (57 - legis) * 4
-  const endYear = startYear + 4
+  const endYear = startYear + 3
   return `${legis}ª Legislatura (${startYear}-${endYear})`
 }
 

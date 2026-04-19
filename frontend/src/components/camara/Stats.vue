@@ -24,7 +24,7 @@
             </div>
             <div>
               <p class="text-sm text-muted-foreground">Regiões</p>
-              <p class="text-2xl font-bold text-foreground">5</p>
+              <p class="text-2xl font-bold text-foreground">{{ totalRegioes || '...' }}</p>
             </div>
           </div>
         </BaseCard>
@@ -50,7 +50,7 @@
             </div>
             <div>
               <p class="text-sm text-muted-foreground">Estados (UF)</p>
-              <p class="text-2xl font-bold text-foreground">27</p>
+              <p class="text-2xl font-bold text-foreground">{{ totalUfs || '...' }}</p>
             </div>
           </div>
         </BaseCard>
@@ -156,6 +156,16 @@ const mesesPtBr: Record<number, string> = {
 }
 
 const chartColors = ['bg-chart-1', 'bg-chart-2', 'bg-chart-3', 'bg-chart-4', 'bg-chart-5']
+
+const totalRegioes = computed(() => {
+  if (store.deputadoStats?.total_regioes !== undefined) return store.deputadoStats.total_regioes
+  return store.deputadoStats?.deputados_por_regiao?.length ?? 0
+})
+
+const totalUfs = computed(() => {
+  if (store.deputadoStats?.total_ufs !== undefined) return store.deputadoStats.total_ufs
+  return store.estadosUnicos.length
+})
 
 const gastosUltimosMeses = computed(() => {
   if (!store.generalStats?.gastos_por_mes) return []
