@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router"
-import HomeView from "@/views/HomeView.vue"
+import HomePage from "@/pages/home/HomePage.vue"
 
 const router = createRouter({
   history: createWebHistory(),
@@ -7,7 +7,7 @@ const router = createRouter({
     {
       path: "/",
       name: "home",
-      component: HomeView,
+      component: HomePage,
       meta: { title: "Página Inicial" },
     },
 
@@ -15,43 +15,43 @@ const router = createRouter({
     {
       path: "/camara/deputados",
       name: "deputados",
-      component: () => import("@/views/camara/ListaView.vue"),
+      component: () => import("@/pages/camara/CamaraListaPage.vue"),
       meta: { title: "Deputados" },
     },
     {
       path: "/camara/deputados/:id",
       name: "deputado-detail",
-      component: () => import("@/views/camara/DetalheView.vue"),
+      component: () => import("@/pages/camara/CamaraDetalhePage.vue"),
       meta: { title: "Detalhes do Deputado" },
     },
     {
       path: "/camara/despesas",
       name: "despesas-camara",
-      component: () => import("@/views/camara/DespesasView.vue"),
+      component: () => import("@/pages/camara/CamaraDespesasPage.vue"),
       meta: { title: "Despesas da Câmara" },
     },
     {
       path: "/camara/emendas",
       name: "emendas-camara",
-      component: () => import("@/views/camara/EmendasView.vue"),
+      component: () => import("@/pages/camara/CamaraEmendasPage.vue"),
       meta: { title: "Emendas da Câmara" },
     },
     {
       path: "/camara/empresas",
       name: "empresas-camara",
-      component: () => import("@/views/camara/EmpresasView.vue"),
+      component: () => import("@/pages/camara/CamaraEmpresasPage.vue"),
       meta: { title: "Empresas e Fornecedores" },
     },
     {
       path: "/camara/projetos-legislativos",
       name: "projetos-legislativos-camara",
-      component: () => import("@/views/camara/ProjetosLegislativosView.vue"),
+      component: () => import("@/pages/camara/CamaraProjetosLegislativosPage.vue"),
       meta: { title: "Projetos Legislativos" },
     },
     {
       path: "/camara/comparar",
       name: "comparar-deputados",
-      component: () => import("@/views/camara/ComparacaoView.vue"),
+      component: () => import("@/pages/camara/CamaraComparacaoPage.vue"),
       meta: { title: "Comparar Deputados" },
     },
 
@@ -59,43 +59,43 @@ const router = createRouter({
     {
       path: "/senado/senadores",
       name: "senadores",
-      component: () => import("@/views/senado/ListaView.vue"),
+      component: () => import("@/pages/senado/SenadoListaPage.vue"),
       meta: { title: "Senadores" },
     },
     {
       path: "/senado/senadores/:id",
       name: "senador-detail",
-      component: () => import("@/views/senado/DetalheView.vue"),
+      component: () => import("@/pages/senado/SenadoDetalhePage.vue"),
       meta: { title: "Detalhes do Senador" },
     },
     {
       path: "/senado/despesas",
       name: "despesas-senado",
-      component: () => import("@/views/senado/DespesasView.vue"),
+      component: () => import("@/pages/senado/SenadoDespesasPage.vue"),
       meta: { title: "Despesas do Senado" },
     },
     {
       path: "/senado/emendas",
       name: "emendas-senado",
-      component: () => import("@/views/senado/EmendasView.vue"),
+      component: () => import("@/pages/senado/SenadoEmendasPage.vue"),
       meta: { title: "Emendas do Senado" },
     },
     {
       path: "/senado/projetos-legislativos",
       name: "projetos-legislativos-senado",
-      component: () => import("@/views/senado/ProjetosLegislativosView.vue"),
+      component: () => import("@/pages/senado/SenadoProjetosLegislativosPage.vue"),
       meta: { title: "Projetos do Senado" },
     },
     {
       path: "/senado/empresas",
       name: "empresas-senado",
-      component: () => import("@/views/senado/EmpresasView.vue"),
+      component: () => import("@/pages/senado/SenadoEmpresasPage.vue"),
       meta: { title: "Empresas e Fornecedores" },
     },
     {
       path: "/senado/comparar",
       name: "comparar-senadores",
-      component: () => import("@/views/senado/ComparacaoView.vue"),
+      component: () => import("@/pages/senado/SenadoComparacaoPage.vue"),
       meta: { title: "Comparar Senadores" },
     },
 
@@ -103,7 +103,7 @@ const router = createRouter({
     {
       path: "/metodologia",
       name: "metodologia",
-      component: () => import("@/views/MetodologiaView.vue"),
+      component: () => import("@/pages/MetodologiaPage.vue"),
       meta: { title: "Metodologia" },
     },
     {
