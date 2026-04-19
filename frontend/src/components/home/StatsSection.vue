@@ -42,34 +42,24 @@ onMounted(async () => {
   loading.value = true
   
   try {
-    const [depRes, senRes, camaraGastosRes, senadoGastosRes] = await Promise.all([
-      fetch(`${apiUrl}/api/camara/0/estatisticas`),
-      fetch(`${apiUrl}/api/senado/0/estatisticas`),
-      fetch(`${apiUrl}/api/camara/0/despesas/estatisticas`), 
-      fetch(`${apiUrl}/api/senado/0/despesas/estatisticas`)
+    const [camaraRes, senadoRes] = await Promise.all([
+      fetch(`${apiUrl}/api/camara/resumo-principal?legislatura=0`),
+      fetch(`${apiUrl}/api/senado/resumo-principal?legislatura=0`)
     ])
     
-    if (depRes.ok) {
-      const depData = await depRes.json()
-      deputadosTotal.value = depData.total_deputados
+    if (camaraRes.ok) {
+      const data = await camaraRes.json()
+      deputadosTotal.value = data.total_parlamentares
+      gastosCamara.value = data.gastos_12_meses
     }
     
-    if (senRes.ok) {
-      const senData = await senRes.json()
-      senadoresTotal.value = senData.total_senadores
-    }
-
-    if (camaraGastosRes.ok) {
-      const camaraData = await camaraGastosRes.json()
-      gastosCamara.value = camaraData.total_12_meses || camaraData.total_gastos_12_meses
-    }
-
-    if (senadoGastosRes.ok) {
-      const senadoData = await senadoGastosRes.json()
-      gastosSenado.value = senadoData.total_12_meses
+    if (senadoRes.ok) {
+      const data = await senadoRes.json()
+      senadoresTotal.value = data.total_parlamentares
+      gastosSenado.value = data.gastos_12_meses
     }
   } catch (err) {
-    console.error("Erro ao buscar estatísticas globais:", err)
+    console.error("Erro ao buscar resumo principal:", err)
   } finally {
     loading.value = false
   }

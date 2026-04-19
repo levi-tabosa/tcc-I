@@ -1333,3 +1333,66 @@ def get_estatisticas_empresas(legislatura: int):
     finally:
         if conn:
             db.release_db_connection(conn)
+
+@router.get("/resumo-principal", summary="Resumo otimizado para a página principal (Senado)")
+@lru_cache(maxsize=8)
+def get_resumo_principal_senado(legislatura: int = 0):
+    """
+    Retorna apenas o total de senadores e o total de gastos dos últimos 12 meses.
+    Ideal para dashboards e página inicial.
+    """
+    conn = None
+    try:
+        conn = db.get_db_connection()
+        if not conn:
+            raise HTTPException(status_code=503, detail="Banco de dados indisponível")
+        
+        with conn.cursor() as cursor:
+            # 1. Total de senadores
+            query_total = "SELECT COUNT(DISTINCT codigo_parlamentar) FROM senado.mandato"
+            params_total = []
+            if legislatura and legislatura > 0:
+                query_total += " WHERE primeira_legislatura = %s OR segunda_legislatura = %s"
+                params_total.extend([str(legislatura), str(legislatura)])
+            
+            cursor.execute(query_total, tuple(params_total))
+            total_senadores = cursor.fetchone()[0] or 0
+
+            # 2. Gastos dos últimos 12 meses
+            query_gastos = """
+                SELECT COALESCE(SUM(d.valor_reembolsado), 0)
+                FROM senado.despesa_ceaps d
+                WHERE d.data_despesa >= (CURRENT_DATE - INTERVAL '12 months')
+            """
+            params_gastos = []
+            if legislatura and legislatura > 0:
+                # Para filtrar por legislatura, é necessário garantir que o senador
+                # estava em exercício no período da despesa (baseado no ano)
+                start_year = 2023 - (57 - legislatura) * 4
+                end_year = start_year + 3
+                query_gastos = """
+                    SELECT COALESCE(SUM(d.valor_reembolsado), 0)
+                    FROM senado.despesa_ceaps d
+                    WHERE d.data_despesa >= (CURRENT_DATE - INTERVAL '12 months')
+                      AND CAST(d.ano AS INTEGER) BETWEEN %s AND %s
+                      AND EXISTS (
+                          SELECT 1 FROM senado.mandato m
+                          WHERE m.codigo_parlamentar = d.cod_senador
+                            AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)
+                      )
+                """
+                params_gastos.extend([start_year, end_year, str(legislatura), str(legislatura)])
+            
+            cursor.execute(query_gastos, tuple(params_gastos))
+            gastos_12_meses = float(cursor.fetchone()[0] or 0)
+
+            return {
+                "total_parlamentares": total_senadores,
+                "gastos_12_meses": gastos_12_meses
+            }
+    except Exception as e:
+        logging.error(f"Erro no resumo principal do Senado: {e}")
+        raise HTTPException(status_code=500, detail="Erro ao processar resumo")
+    finally:
+        if conn:
+            db.release_db_connection(conn)

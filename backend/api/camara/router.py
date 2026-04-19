@@ -1182,5 +1182,61 @@ def get_estatisticas_empresas(legislatura: int, limit: int = 20):
 
 
 
+@router.get("/resumo-principal", summary="Resumo otimizado para a página principal (Câmara)")
+@lru_cache(maxsize=8)
+def get_resumo_principal_camara(legislatura: int = 0):
+    """
+    Retorna apenas o total de deputados e o total de gastos dos últimos 12 meses.
+    Ideal para dashboards e página inicial.
+    """
+    conn = None
+    try:
+        conn = db.get_db_connection()
+        if not conn:
+            raise HTTPException(status_code=503, detail="Banco de dados indisponível")
+        
+        with conn.cursor() as cursor:
+            # 1. Total de deputados
+            query_total = "SELECT COUNT(DISTINCT deputado_id) FROM camara.deputados_mandatos"
+            params_total = []
+            if legislatura and legislatura > 0:
+                query_total += " WHERE legislatura_id = %s"
+                params_total.append(legislatura)
+            
+            cursor.execute(query_total, tuple(params_total))
+            total_deputados = cursor.fetchone()[0] or 0
 
+            # 2. Gastos dos últimos 12 meses
+            # Como a tabela de despesas tem ano e mês separados, fazemos o filtro por data
+            query_gastos = """
+                SELECT COALESCE(SUM(d.valor_documento), 0)
+                FROM camara.deputados_despesas d
+                WHERE TO_DATE(d.ano || '-' || LPAD(d.mes::text, 2, '0'), 'YYYY-MM')
+                      >= (CURRENT_DATE - INTERVAL '12 months')
+            """
+            params_gastos = []
+            if legislatura and legislatura > 0:
+                query_gastos = """
+                    SELECT COALESCE(SUM(d.valor_documento), 0)
+                    FROM camara.deputados_despesas d
+                    JOIN camara.deputados_mandatos m ON d.mandato_id = m.id
+                    WHERE m.legislatura_id = %s
+                      AND TO_DATE(d.ano || '-' || LPAD(d.mes::text, 2, '0'), 'YYYY-MM')
+                          >= (CURRENT_DATE - INTERVAL '12 months')
+                """
+                params_gastos.append(legislatura)
+            
+            cursor.execute(query_gastos, tuple(params_gastos))
+            gastos_12_meses = float(cursor.fetchone()[0] or 0)
+
+            return {
+                "total_parlamentares": total_deputados,
+                "gastos_12_meses": gastos_12_meses
+            }
+    except Exception as e:
+        logging.error(f"Erro no resumo principal da Câmara: {e}")
+        raise HTTPException(status_code=500, detail="Erro ao processar resumo")
+    finally:
+        if conn:
+            db.release_db_connection(conn)
 
