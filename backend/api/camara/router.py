@@ -323,8 +323,8 @@ def get_lista_proposicoes(
     ano: int = Query(None), 
     ementa: str = Query(None), 
     deputado: str = Query(None),
-    limite: int = Query(15),
-    pagina: int = 1
+    limite: int = Query(15, ge=1, le=200),
+    pagina: int = Query(1, ge=1)
 ):
     offset = (pagina - 1) * limite
     conn = None
@@ -334,87 +334,82 @@ def get_lista_proposicoes(
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
         with conn.cursor() as cursor:
-            # 1. Total para paginação
-            query_count = """
-                SELECT COUNT(DISTINCT p.id)
+            from_clause = """
                 FROM camara.proposicoes p
             """
             if deputado:
-                query_count += """
+                from_clause += """
                     INNER JOIN camara.votacoes_proposicoes vp ON p.id = vp.proposicao_id
                     INNER JOIN camara.votacoes_votos vv ON vp.votacao_id = vv.votacao_id
                     INNER JOIN camara.deputados d ON vv.deputado_id = d.id
                 """
-            query_count += " WHERE 1=1"
-            params_count = []
+
+            filtros = ["1=1"]
+            params = []
+
             if siglaTipo:
-                query_count += " AND p.sigla_tipo = %s"
-                params_count.append(siglaTipo)
+                filtros.append("p.sigla_tipo = %s")
+                params.append(siglaTipo)
             if ano:
-                query_count += " AND p.ano = %s"
-                params_count.append(ano)
-            if ementa:
-                query_count += " AND p.ementa ILIKE %s"
-                params_count.append(f"%{ementa}%")
-            if deputado:
-                query_count += " AND d.nome_civil ILIKE %s"
-                params_count.append(f"%{deputado}%")
+                filtros.append("p.ano = %s")
+                params.append(ano)
             if legislatura:
                 start_year = 2023 - (57 - legislatura) * 4
                 end_year = start_year + 3
-                query_count += " AND p.ano BETWEEN %s AND %s"
-                params_count.extend([start_year, end_year])
-            
-            cursor.execute(query_count, tuple(params_count))
+                filtros.append("p.ano BETWEEN %s AND %s")
+                params.extend([start_year, end_year])
+            if ementa:
+                filtros.append("p.ementa ILIKE %s")
+                params.append(f"%{ementa}%")
+            if deputado:
+                filtros.append("d.nome_civil ILIKE %s")
+                params.append(f"%{deputado}%")
+
+            where_clause = " WHERE " + " AND ".join(filtros)
+
+            # 1. Total para paginação
+            query_count = f"""
+                SELECT COUNT(DISTINCT p.id)
+                {from_clause}
+                {where_clause}
+            """
+            cursor.execute(query_count, tuple(params))
             total_items = cursor.fetchone()[0]
             total_paginas = (total_items + limite - 1) // limite
 
-            # 2. Dados paginados
-            query = """
-                SELECT DISTINCT ON (p.id)
-                    p.id, 
-                    p.sigla_tipo as "siglaTipo", 
-                    p.numero, 
-                    p.ano, 
-                    p.ementa, 
-                    p.data_apresentacao as "dataApresentacao"
-                FROM camara.proposicoes p
+            # 2. Distribuição por tipo (sobre todo o conjunto filtrado)
+            query_tipos = f"""
+                SELECT COALESCE(p.sigla_tipo, 'N/D') as sigla_tipo, COUNT(DISTINCT p.id) as quantidade
+                {from_clause}
+                {where_clause}
+                GROUP BY COALESCE(p.sigla_tipo, 'N/D')
+                ORDER BY quantidade DESC, sigla_tipo ASC
             """
-            params = []
-            
-            if deputado:
-                query += """
-                    INNER JOIN camara.votacoes_proposicoes vp ON p.id = vp.proposicao_id
-                    INNER JOIN camara.votacoes_votos vv ON vp.votacao_id = vv.votacao_id
-                    INNER JOIN camara.deputados d ON vv.deputado_id = d.id
-                """
-            
-            query += " WHERE 1=1"
-            
-            if siglaTipo:
-                query += " AND p.sigla_tipo = %s"
-                params.append(siglaTipo)
-            if ano:
-                query += " AND p.ano = %s"
-                params.append(ano)
-            if ementa:
-                query += " AND p.ementa ILIKE %s"
-                params.append(f"%{ementa}%")
-            if deputado:
-                query += " AND d.nome_civil ILIKE %s"
-                params.append(f"%{deputado}%")
-            if legislatura:
-                start_year = 2023 - (57 - legislatura) * 4
-                end_year = start_year + 3
-                query += " AND p.ano BETWEEN %s AND %s"
-                params.extend([start_year, end_year])
-                
-            query += " ORDER BY p.id DESC LIMIT %s OFFSET %s"
-            params.extend([limite, offset])
+            cursor.execute(query_tipos, tuple(params))
+            tipos_raw = cursor.fetchall()
+            distribuicao_tipos = [
+                {"tipo": r[0], "quantidade": int(r[1])}
+                for r in tipos_raw
+            ]
 
-            cursor.execute(query, tuple(params))
+            # 3. Dados paginados
+            query_data = f"""
+                SELECT DISTINCT ON (p.id)
+                    p.id,
+                    p.sigla_tipo as "siglaTipo",
+                    p.numero,
+                    p.ano,
+                    p.ementa,
+                    p.data_apresentacao as "dataApresentacao"
+                {from_clause}
+                {where_clause}
+                ORDER BY p.id DESC
+                LIMIT %s OFFSET %s
+            """
+            params_data = [*params, limite, offset]
+            cursor.execute(query_data, tuple(params_data))
             res = cursor.fetchall()
-            
+
             return {
                 "proposicoes": [
                     {
@@ -433,6 +428,12 @@ def get_lista_proposicoes(
                     "pagina": pagina,
                     "total_paginas": total_paginas,
                     "itens_por_pagina": limite
+                },
+                "estatisticas": {
+                    "total": total_items,
+                    "tipos_diferentes": len(distribuicao_tipos),
+                    "tipo_mais_frequente": distribuicao_tipos[0]["tipo"] if distribuicao_tipos else None,
+                    "distribuicao_tipos": distribuicao_tipos
                 }
             }
     except Exception as e:
@@ -594,8 +595,24 @@ def get_estatisticas_gerais(legislatura: int):
             cursor.execute(query_regiao, (legislatura,) if legislatura else ())
             deputados_regiao = [{"name": r[0], "value": int(r[1])} for r in cursor.fetchall()]
 
+            # 3. Total de UFs com deputados na seleção
+            query_ufs = """
+                SELECT COUNT(DISTINCT m.sigla_uf)
+                FROM camara.deputados_mandatos m
+                WHERE m.sigla_uf IS NOT NULL
+            """
+            params_ufs = []
+            if legislatura:
+                query_ufs += " AND m.legislatura_id = %s"
+                params_ufs.append(legislatura)
+
+            cursor.execute(query_ufs, tuple(params_ufs))
+            total_ufs = cursor.fetchone()[0] or 0
+
             return {
                 "total_deputados": int(total_deputados),
+                "total_regioes": len(deputados_regiao),
+                "total_ufs": int(total_ufs),
                 "deputados_por_regiao": deputados_regiao
             }
     except Exception as e:
@@ -690,15 +707,20 @@ def get_comparativo_deputados(legislatura: int, id1: int, id2: int, ano: int = N
                             "valor": valor
                         }
 
-            # 3. Buscar Últimas Despesas (Top 10)
+            # 3. Buscar Últimas Despesas (histórico completo, mais recentes primeiro)
             for dep_id in [id1, id2]:
                 cursor.execute("""
                     SELECT d.ano, d.mes, d.tipo_despesa, d.valor_documento as valor, d.url_documento
                     FROM camara.deputados_despesas d
                     JOIN camara.deputados_mandatos m ON d.mandato_id = m.id
                     WHERE m.deputado_id = %s
-                    ORDER BY d.ano DESC, d.mes DESC
-                    LIMIT 10
+                    ORDER BY
+                        COALESCE(
+                            d.data_documento,
+                            TO_DATE(d.ano::text || '-' || LPAD(d.mes::text, 2, '0') || '-01', 'YYYY-MM-DD')
+                        ) DESC,
+                        d.id DESC
+                    LIMIT 12
                 """, (dep_id,))
                 recentes = cursor.fetchall()
                 

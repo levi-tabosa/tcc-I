@@ -57,11 +57,14 @@ def get_lista_senadores(legislatura: int):
         
         with conn.cursor() as cursor:
             query = """
-                SELECT DISTINCT ON (p.codigo)
+                SELECT
                     p.codigo,
                     p.nome_parlamentar,
                     p.sigla_partido,
-                    p.uf,
+                    COALESCE(
+                        NULLIF(TRIM(p.uf::text), ''),
+                        NULLIF(TRIM(MAX(m.uf)::text), '')
+                    ) AS uf,
                     p.url_foto
                 FROM senado.parlamentar p
                 INNER JOIN senado.mandato m ON p.codigo = m.codigo_parlamentar
@@ -71,7 +74,10 @@ def get_lista_senadores(legislatura: int):
                 query += " WHERE m.primeira_legislatura = %s OR m.segunda_legislatura = %s"
                 params.extend([str(legislatura), str(legislatura)])
                 
-            query += " ORDER BY p.codigo, p.nome_parlamentar ASC"
+            query += """
+                GROUP BY p.codigo, p.nome_parlamentar, p.sigla_partido, p.uf, p.url_foto
+                ORDER BY p.codigo, p.nome_parlamentar ASC
+            """
             cursor.execute(query, tuple(params))
             
             resultados = cursor.fetchall()
@@ -142,26 +148,39 @@ def get_estatisticas_senado(legislatura: int):
 
             # Distribuição por Região
             query_regiao = """
-                SELECT 
-                    CASE
-                        WHEN p.uf IN ('AC','AP','AM','PA','RO','RR','TO') THEN 'Norte'
-                        WHEN p.uf IN ('AL','BA','CE','MA','PB','PE','PI','RN','SE') THEN 'Nordeste'
-                        WHEN p.uf IN ('DF','GO','MT','MS') THEN 'Centro-Oeste'
-                        WHEN p.uf IN ('ES','MG','RJ','SP') THEN 'Sudeste'
-                        WHEN p.uf IN ('PR','RS','SC') THEN 'Sul'
-                        ELSE 'Outros'
-                    END AS regiao,
-                    COUNT(DISTINCT p.codigo) AS quantidade
-                FROM senado.parlamentar p
-                INNER JOIN senado.mandato m ON p.codigo = m.codigo_parlamentar
-                WHERE 1=1
+                WITH base_senadores AS (
+                    SELECT
+                        p.codigo,
+                        COALESCE(
+                            NULLIF(TRIM(MAX(p.uf)::text), ''),
+                            NULLIF(TRIM(MAX(m.uf)::text), '')
+                        ) AS uf_ref
+                    FROM senado.parlamentar p
+                    INNER JOIN senado.mandato m ON p.codigo = m.codigo_parlamentar
+                    WHERE 1=1
             """
             params_reg = []
             if legislatura:
                 query_regiao += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
                 params_reg.extend([str(legislatura), str(legislatura)])
                 
-            query_regiao += " GROUP BY regiao ORDER BY quantidade DESC"
+            query_regiao += """
+                    GROUP BY p.codigo
+                )
+                SELECT 
+                    CASE
+                        WHEN uf_ref IN ('AC','AP','AM','PA','RO','RR','TO') THEN 'Norte'
+                        WHEN uf_ref IN ('AL','BA','CE','MA','PB','PE','PI','RN','SE') THEN 'Nordeste'
+                        WHEN uf_ref IN ('DF','GO','MT','MS') THEN 'Centro-Oeste'
+                        WHEN uf_ref IN ('ES','MG','RJ','SP') THEN 'Sudeste'
+                        WHEN uf_ref IN ('PR','RS','SC') THEN 'Sul'
+                        ELSE 'Outros'
+                    END AS regiao,
+                    COUNT(*) AS quantidade
+                FROM base_senadores
+                GROUP BY regiao
+                ORDER BY quantidade DESC
+            """
             cursor.execute(query_regiao, tuple(params_reg))
             regioes = cursor.fetchall()
             
@@ -249,9 +268,16 @@ WHERE d.cod_senador IN (%s, %s)
     data_despesa
 FROM senado.despesa_ceaps
 WHERE cod_senador = %s
-  AND data_despesa >= CURRENT_DATE - INTERVAL '12 months'
-ORDER BY data_despesa DESC;
+ORDER BY
+    COALESCE(
+        data_despesa,
+        TO_DATE(CAST(ano AS TEXT) || '-' || LPAD(CAST(mes AS TEXT), 2, '0') || '-01', 'YYYY-MM-DD')
+    ) DESC,
+    CAST(ano AS INTEGER) DESC,
+    CAST(mes AS INTEGER) DESC
+LIMIT 12;
 """
+
             cursor.execute(query_despesas_recentes, (id1,))
             despesas_recentes_1 = cursor.fetchall()
             cursor.execute(query_despesas_recentes, (id2,))
@@ -317,6 +343,8 @@ ORDER BY data_despesa DESC;
                     for r in despesas_recentes_2
                 ]       
             }
+    except HTTPException:
+        raise
     except Exception as e:
         logging.error(f"Erro ao buscar senador: {e}")
         raise HTTPException(status_code=500, detail="Erro ao processar senador")
@@ -648,12 +676,14 @@ def get_despesas_estatisticas(legislatura: int):
             # 6. Evolução Mensal (últimos 12 meses registrados na legislatura ou total)
             query_evolucao = f"""
                 SELECT 
-                    EXTRACT(YEAR FROM d.data_despesa)::int AS ano,
-                    EXTRACT(MONTH FROM d.data_despesa)::int AS mes,
+                    d.ano AS ano,
+                    d.mes AS mes,
                     SUM(d.valor_reembolsado) AS valor
                 FROM senado.despesa_ceaps d
                 {join_mandato}
-                WHERE d.data_despesa IS NOT NULL {where_leg}
+                WHERE d.mes BETWEEN 1 AND 12
+                  AND make_date(d.ano, d.mes, 1) <= date_trunc('month', CURRENT_DATE)::date
+                  {where_leg}
                 GROUP BY 1, 2
                 ORDER BY 1 DESC, 2 DESC
                 LIMIT 12

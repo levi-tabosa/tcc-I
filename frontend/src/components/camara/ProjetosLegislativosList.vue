@@ -15,7 +15,7 @@
     <!-- Lista -->
     <div v-else class="space-y-4">
       <div
-        v-for="projeto in displayedProjetos"
+        v-for="projeto in store.projetosLegislativosList"
         :key="projeto.id"
       >
         <BaseCard
@@ -206,18 +206,13 @@ import BaseBadge from '@/components/ui/BaseBadge.vue'
 import BaseLoading from '@/components/ui/BaseLoading.vue'
 import { useCamaraStore } from '@/stores/camara'
 import type { VotoDeputado } from '@/stores/camara'
-import { computed } from 'vue'
 
 const store = useCamaraStore()
 const expandedVotacaoIds = ref<Set<string>>(new Set())
 
-const displayedProjetos = computed(() => {
-  return store.projetosLegislativosList.slice(0, store.displayedProjetosCount)
-})
-
 onMounted(() => {
   if (store.projetosLegislativosList.length === 0) {
-    store.fetchProjetosLegislativos()
+    store.fetchProjetosLegislativos(1)
   }
 })
 

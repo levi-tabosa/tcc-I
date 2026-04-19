@@ -41,6 +41,7 @@ export interface EmendaSenado {
 export interface EstatisticasSenadoGerais {
     total_senadores: number
     total_gastos: number
+    total_regioes: number
     senadores_por_regiao: { name: string; value: number }[]
 }
 
