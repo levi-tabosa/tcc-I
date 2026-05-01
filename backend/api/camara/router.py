@@ -993,21 +993,17 @@ def get_estatisticas_despesas(legislatura: int):
             
             gastos_categoria = []
             total_outros = 0.0
-            LIMITE_TOP = 9
-            
             for i, r in enumerate(resultados_categoria):
                 nome_formatado = r[0].title().replace("_", " ") if r[0] else "Outros"
                 valor = float(r[1])
-                
-                if i < LIMITE_TOP:
+                if i < 9:
                     gastos_categoria.append({"categoria": nome_formatado, "valor": valor})
                 else:
                     total_outros += valor
-            
             if total_outros > 0:
                 gastos_categoria.append({"categoria": "Outros", "valor": total_outros})
 
-            # 2. Evolução Mensal
+            # 2. Evolução Mensal (Últimos 12 meses)
             query_mensal = """
                 SELECT d.ano, d.mes, SUM(d.valor_documento) as valor
                 FROM camara.deputados_despesas d
@@ -1023,106 +1019,55 @@ def get_estatisticas_despesas(legislatura: int):
             cursor.execute(query_mensal, tuple(params_mensal))
             gastos_mensais = [{"ano": r[0], "mes": r[1], "valor": float(r[2])} for r in cursor.fetchall()]
             
-            # 3. Gastos por Estado
-            query_estado = """
-                SELECT m.sigla_uf as estado, SUM(desp.valor_documento) as valor
-                FROM camara.deputados_mandatos m
-                JOIN camara.deputados_despesas desp ON m.id = desp.mandato_id
-                WHERE m.sigla_uf IS NOT NULL
-            """
-            params_est = []
-            if legislatura:
-                query_estado += " AND m.legislatura_id = %s"
-                params_est.append(legislatura)
-            
-            query_estado += " GROUP BY m.sigla_uf ORDER BY valor DESC"
-            cursor.execute(query_estado, tuple(params_est))
+            # 3. Gastos por Estado e Partido (Simplificado)
+            cursor.execute(f"SELECT m.sigla_uf, SUM(d.valor_documento) FROM camara.deputados_mandatos m JOIN camara.deputados_despesas d ON m.id = d.mandato_id {'WHERE m.legislatura_id = %s' if legislatura else ''} GROUP BY 1 ORDER BY 2 DESC", (legislatura,) if legislatura else ())
             gastos_estado = [{"estado": r[0], "valor": float(r[1])} for r in cursor.fetchall()]
 
-            # 4. Gastos por Partido
-            query_partido = """
-                SELECT m.sigla_partido as partido, SUM(desp.valor_documento) as valor
-                FROM camara.deputados_mandatos m
-                JOIN camara.deputados_despesas desp ON m.id = desp.mandato_id
-                WHERE m.sigla_partido IS NOT NULL
-            """
-            params_part = []
-            if legislatura:
-                query_partido += " AND m.legislatura_id = %s"
-                params_part.append(legislatura)
-                
-            query_partido += " GROUP BY m.sigla_partido ORDER BY valor DESC"
-            cursor.execute(query_partido, tuple(params_part))
+            cursor.execute(f"SELECT m.sigla_partido, SUM(d.valor_documento) FROM camara.deputados_mandatos m JOIN camara.deputados_despesas d ON m.id = d.mandato_id {'WHERE m.legislatura_id = %s' if legislatura else ''} GROUP BY 1 ORDER BY 2 DESC", (legislatura,) if legislatura else ())
             gastos_partido = [{"partido": r[0], "valor": float(r[1])} for r in cursor.fetchall()]
 
-            # 5. Totais
-            cursor.execute("""
-                SELECT SUM(valor_documento)
-                FROM camara.deputados_despesas
-                WHERE TO_DATE(CAST(ano AS TEXT) || '-' || CAST(mes AS TEXT), 'YYYY-MM') >= (CURRENT_DATE - INTERVAL '1 year')
-            """)
-            total_12_row = cursor.fetchone()
-            total_12_meses = total_12_row[0] or 0
+            # 4. Totais Otimizados (Usando busca numérica e Summary Tables)
+            today = date.today()
+            limit_year = today.year - 1
+            limit_month = today.month
 
-            query_total_geral = "SELECT SUM(valor_documento) FROM camara.deputados_despesas desp"
-            params_total = []
-            if legislatura:
-                query_total_geral = """
-                    SELECT SUM(desp.valor_documento)
-                    FROM camara.deputados_despesas desp
-                    JOIN camara.deputados_mandatos m ON desp.mandato_id = m.id
-                    WHERE m.legislatura_id = %s
-                """
-                params_total.append(legislatura)
-            
-            cursor.execute(query_total_geral, tuple(params_total))
-            total_geral = cursor.fetchone()[0] or 0
-            
-            query_total_fornecedores = "SELECT COUNT(DISTINCT UPPER(TRIM(REGEXP_REPLACE(desp.nome_fornecedor, '\\s+(S/A|S\\.A\\.|SA|LTDA|EIRELI|ME|EPP|EI|LIMITADA).*$', '', 'gi')))) FROM camara.deputados_despesas desp WHERE LENGTH(REGEXP_REPLACE(desp.cnpj_cpf_fornecedor, '[^0-9]', '', 'g')) > 11"
-            params_forn = []
-            if legislatura:
-                query_total_fornecedores = """
-                    SELECT COUNT(DISTINCT UPPER(TRIM(REGEXP_REPLACE(desp.nome_fornecedor, '\\s+(S/A|S\\.A\\.|SA|LTDA|EIRELI|ME|EPP|EI|LIMITADA).*$', '', 'gi'))))
-                    FROM camara.deputados_despesas desp
-                    JOIN camara.deputados_mandatos m ON desp.mandato_id = m.id
-                    WHERE m.legislatura_id = %s AND LENGTH(REGEXP_REPLACE(desp.cnpj_cpf_fornecedor, '[^0-9]', '', 'g')) > 11
-                """
-                params_forn.append(legislatura)
-                
-            cursor.execute(query_total_fornecedores, tuple(params_forn))
-            total_empresas = cursor.fetchone()[0] or 0
+            query_12m = """
+                SELECT SUM(valor_documento) FROM camara.deputados_despesas 
+                WHERE (ano > %s) OR (ano = %s AND mes >= %s)
+            """
+            cursor.execute(query_12m, (limit_year, limit_year, limit_month))
+            total_12_meses = cursor.fetchone()[0] or 0
 
-            query_gastos_dep = """
-            SELECT 
-                d.id AS deputado_id,
-                d.nome_civil,
-                m.sigla_partido,
-                m.sigla_uf AS estado,
-                SUM(desp.valor_documento) AS total_gasto
-            FROM camara.deputados_despesas desp
-            JOIN camara.deputados_mandatos m ON desp.mandato_id = m.id
-            JOIN camara.deputados d ON m.deputado_id = d.id
-            WHERE 1=1
-            """
-            params_dep = []
+            # Busca Totais e Empresas nos Resumos Pré-calculados
             if legislatura:
-                query_gastos_dep += " AND m.legislatura_id = %s"
-                params_dep.append(legislatura)
+                cursor.execute("SELECT total_pago, total_empresas FROM camara.summary_empresas_geral WHERE legislatura_id = %s", (legislatura,))
+            else:
+                cursor.execute("SELECT SUM(total_pago), SUM(total_empresas) FROM camara.summary_empresas_geral")
             
-            query_gastos_dep += """
-            GROUP BY d.id, d.nome_civil, m.sigla_partido, m.sigla_uf
-            ORDER BY total_gasto DESC
-            LIMIT 10;
+            row_sum = cursor.fetchone()
+            total_geral = (row_sum[0] or 0) if row_sum else 0
+            total_empresas = (row_sum[1] or 0) if row_sum else 0
+
+            # 5. Top 10 Deputados (Query otimizada via CTE)
+            query_top_dep = f"""
+                WITH desp AS (
+                    SELECT desp.mandato_id, SUM(desp.valor_documento) as total
+                    FROM camara.deputados_despesas desp
+                    {'JOIN camara.deputados_mandatos m2 ON desp.mandato_id = m2.id WHERE m2.legislatura_id = %s' if legislatura else ''}
+                    GROUP BY desp.mandato_id
+                )
+                SELECT d.id AS deputado_id, d.nome_civil, m.sigla_partido, m.sigla_uf AS estado, SUM(desp.total) AS total_gasto
+                FROM desp
+                JOIN camara.deputados_mandatos m ON desp.mandato_id = m.id
+                JOIN camara.deputados d ON m.deputado_id = d.id
+                GROUP BY d.id, d.nome_civil, m.sigla_partido, m.sigla_uf
+                ORDER BY total_gasto DESC
+                LIMIT 10;
             """
-            cursor.execute(query_gastos_dep, tuple(params_dep))
-            gastos_dep_raw = cursor.fetchall()
-            
+            cursor.execute(query_top_dep, (legislatura,) if legislatura else ())
             gastos_deputados = [
-                {
-                    "deputado_id": r[0], "nome_civil": r[1], "sigla_partido": r[2],
-                    "estado": r[3], "total_gasto": float(r[4])
-                } 
-                for r in gastos_dep_raw
+                {"deputado_id": r[0], "nome_civil": r[1], "sigla_partido": r[2], "estado": r[3], "total_gasto": float(r[4])}
+                for r in cursor.fetchall()
             ]
 
             return {
@@ -1142,6 +1087,65 @@ def get_estatisticas_despesas(legislatura: int):
     finally:
         if conn:
             db.release_db_connection(conn)
+
+
+@router.get("/resumo-principal", summary="Resumo otimizado para a página principal (Câmara)")
+@lru_cache(maxsize=8)
+def get_resumo_principal_camara(legislatura: int = 0):
+    conn = None
+    try:
+        conn = db.get_db_connection()
+        if not conn:
+            raise HTTPException(status_code=503, detail="Banco de dados indisponível")
+        
+        with conn.cursor() as cursor:
+            # 1. Total de deputados
+            query_total = "SELECT COUNT(DISTINCT deputado_id) FROM camara.deputados_mandatos"
+            params = []
+            if legislatura > 0:
+                query_total += " WHERE legislatura_id = %s"
+                params.append(legislatura)
+            cursor.execute(query_total, tuple(params))
+            total_deputados = cursor.fetchone()[0] or 0
+
+            # 2. Gastos dos últimos 12 meses (Otimizado para usar índices numéricos)
+            today = date.today()
+            limit_year = today.year - 1
+            limit_month = today.month
+
+            query_gastos = """
+                SELECT COALESCE(SUM(d.valor_documento), 0)
+                FROM camara.deputados_despesas d
+                {join_mandato}
+                WHERE ((d.ano > %s) OR (d.ano = %s AND d.mes >= %s))
+                {filter_leg}
+            """
+            
+            # Dinamiza a query se houver legislatura
+            if legislatura > 0:
+                query_gastos = query_gastos.format(
+                    join_mandato="JOIN camara.deputados_mandatos m ON d.mandato_id = m.id",
+                    filter_leg="AND m.legislatura_id = %s"
+                )
+                sql_params = (limit_year, limit_year, limit_month, legislatura)
+            else:
+                query_gastos = query_gastos.format(join_mandato="", filter_leg="")
+                sql_params = (limit_year, limit_year, limit_month)
+            
+            cursor.execute(query_gastos, sql_params)
+            gastos_12_meses = float(cursor.fetchone()[0] or 0)
+
+            return {
+                "total_parlamentares": total_deputados,
+                "gastos_12_meses": gastos_12_meses
+            }
+    except Exception as e:
+        logging.error(f"Erro no resumo principal da Câmara: {e}")
+        raise HTTPException(status_code=500, detail="Erro ao processar resumo")
+    finally:
+        if conn:
+            db.release_db_connection(conn)
+
 
 @router.get("/{legislatura}/empresas/estatisticas", summary="Obtém as estatísticas e ranking das empresas contratadas")
 @lru_cache(maxsize=4)
@@ -1198,66 +1202,6 @@ def get_estatisticas_empresas(legislatura: int, limit: int = 20):
     except Exception as e:
         logging.error(f"Erro ao buscar estatísticas de empresas (summary): {e}")
         raise HTTPException(status_code=500, detail="Erro ao processar estatísticas de empresas")
-    finally:
-        if conn:
-            db.release_db_connection(conn)
-
-
-
-@router.get("/resumo-principal", summary="Resumo otimizado para a página principal (Câmara)")
-@lru_cache(maxsize=8)
-def get_resumo_principal_camara(legislatura: int = 0):
-    """
-    Retorna apenas o total de deputados e o total de gastos dos últimos 12 meses.
-    Ideal para dashboards e página inicial.
-    """
-    conn = None
-    try:
-        conn = db.get_db_connection()
-        if not conn:
-            raise HTTPException(status_code=503, detail="Banco de dados indisponível")
-        
-        with conn.cursor() as cursor:
-            # 1. Total de deputados
-            query_total = "SELECT COUNT(DISTINCT deputado_id) FROM camara.deputados_mandatos"
-            params_total = []
-            if legislatura and legislatura > 0:
-                query_total += " WHERE legislatura_id = %s"
-                params_total.append(legislatura)
-            
-            cursor.execute(query_total, tuple(params_total))
-            total_deputados = cursor.fetchone()[0] or 0
-
-            # 2. Gastos dos últimos 12 meses
-            # Como a tabela de despesas tem ano e mês separados, fazemos o filtro por data
-            query_gastos = """
-                SELECT COALESCE(SUM(d.valor_documento), 0)
-                FROM camara.deputados_despesas d
-                WHERE TO_DATE(d.ano || '-' || LPAD(d.mes::text, 2, '0'), 'YYYY-MM')
-                      >= (CURRENT_DATE - INTERVAL '12 months')
-            """
-            params_gastos = []
-            if legislatura and legislatura > 0:
-                query_gastos = """
-                    SELECT COALESCE(SUM(d.valor_documento), 0)
-                    FROM camara.deputados_despesas d
-                    JOIN camara.deputados_mandatos m ON d.mandato_id = m.id
-                    WHERE m.legislatura_id = %s
-                      AND TO_DATE(d.ano || '-' || LPAD(d.mes::text, 2, '0'), 'YYYY-MM')
-                          >= (CURRENT_DATE - INTERVAL '12 months')
-                """
-                params_gastos.append(legislatura)
-            
-            cursor.execute(query_gastos, tuple(params_gastos))
-            gastos_12_meses = float(cursor.fetchone()[0] or 0)
-
-            return {
-                "total_parlamentares": total_deputados,
-                "gastos_12_meses": gastos_12_meses
-            }
-    except Exception as e:
-        logging.error(f"Erro no resumo principal da Câmara: {e}")
-        raise HTTPException(status_code=500, detail="Erro ao processar resumo")
     finally:
         if conn:
             db.release_db_connection(conn)

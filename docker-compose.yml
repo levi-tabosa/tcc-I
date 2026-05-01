@@ -7,7 +7,6 @@ services:
     container_name: backend
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/fiscaliza_db
-      - API_KEY=${API_KEY} # obtido  .env na pasta raiz do projeto
     ports:
       - "8000:8000"
     volumes:
@@ -43,6 +42,9 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       PGDATA: /var/lib/postgresql/data/pgdata
+    command: >
+      postgres
+      -c log_min_duration_statement=1000
     ports:
       - "5432:5432"
     volumes:
