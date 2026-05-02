@@ -173,6 +173,30 @@
                         </table>
                     </div>
                 </BaseCard>
+
+                <div v-if="store.emendasTotalPages > 1" class="mt-4 flex items-center justify-between">
+                    <p class="text-sm text-muted-foreground">
+                        Página {{ store.emendasPage }} de {{ store.emendasTotalPages }}
+                    </p>
+                    <div class="flex gap-2">
+                        <BaseButton
+                            variant="outline"
+                            size="sm"
+                            :disabled="store.emendasPage <= 1"
+                            @click="store.fetchEmendasDeputado(store.currentDeputado!.id, store.emendasPage - 1)"
+                        >
+                            <ChevronLeft class="h-4 w-4 mr-1" /> Anterior
+                        </BaseButton>
+                        <BaseButton
+                            variant="outline"
+                            size="sm"
+                            :disabled="store.emendasPage >= store.emendasTotalPages"
+                            @click="store.fetchEmendasDeputado(store.currentDeputado!.id, store.emendasPage + 1)"
+                        >
+                            Próxima <ChevronRight class="h-4 w-4 ml-1" />
+                        </BaseButton>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -192,7 +216,7 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-border bg-card">
-                                <tr v-for="(despesa, index) in store.currentDespesas.slice(0, 50)" :key="index" class="hover:bg-muted/50 transition-colors">
+                                <tr v-for="(despesa, index) in store.currentDespesas" :key="index" class="hover:bg-muted/50 transition-colors">
                                     <td class="whitespace-nowrap px-4 py-3">{{ despesa.mes }}/{{ despesa.ano }}</td>
                                     <td class="truncate max-w-xs px-4 py-3">{{ despesa.tipo_despesa }}</td>
                                     <td class="text-right whitespace-nowrap font-medium px-4 py-3">R$ {{ despesa.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</td>
@@ -210,6 +234,30 @@
                         </table>
                     </div>
                 </BaseCard>
+
+                <div v-if="store.despesasTotalPages > 1" class="mt-4 flex items-center justify-between">
+                    <p class="text-sm text-muted-foreground">
+                        Página {{ store.despesasPage }} de {{ store.despesasTotalPages }}
+                    </p>
+                    <div class="flex gap-2">
+                        <BaseButton
+                            variant="outline"
+                            size="sm"
+                            :disabled="store.despesasPage <= 1"
+                            @click="store.fetchDespesasDeputado(store.currentDeputado!.id, store.despesasPage - 1)"
+                        >
+                            <ChevronLeft class="h-4 w-4 mr-1" /> Anterior
+                        </BaseButton>
+                        <BaseButton
+                            variant="outline"
+                            size="sm"
+                            :disabled="store.despesasPage >= store.despesasTotalPages"
+                            @click="store.fetchDespesasDeputado(store.currentDeputado!.id, store.despesasPage + 1)"
+                        >
+                            Próxima <ChevronRight class="h-4 w-4 ml-1" />
+                        </BaseButton>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -225,10 +273,11 @@
 <script setup lang="ts">
 import { computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { ChevronLeft, Mail, Calendar, GraduationCap,  FileText } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight, Mail, Calendar, GraduationCap, FileText } from 'lucide-vue-next'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import BaseLoading from '@/components/ui/BaseLoading.vue'
+import BaseButton from '@/components/ui/BaseButton.vue'
 import { useCamaraStore } from "@/stores/camara"
 
 const route = useRoute()

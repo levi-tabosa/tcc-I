@@ -164,8 +164,12 @@ export const useCamaraStore = defineStore("camara", () => {
   const currentDespesas = ref<Despesa[]>([])
   const currentCategorias = ref<Categoria[]>([])
   const totalDespesas = ref(0)
+  const despesasPage = ref(1)
+  const despesasTotalPages = ref(1)
   const currentEmendas = ref<Emenda[]>([])
   const totalEmendas = ref(0)
+  const emendasPage = ref(1)
+  const emendasTotalPages = ref(1)
   const loadingDetail = ref(false)
 
   // General Stats state
@@ -218,7 +222,14 @@ export const useCamaraStore = defineStore("camara", () => {
     error.value = null
     currentDeputado.value = null
     currentDespesas.value = []
+    currentCategorias.value = []
     totalDespesas.value = 0
+    despesasPage.value = 1
+    despesasTotalPages.value = 1
+    currentEmendas.value = []
+    totalEmendas.value = 0
+    emendasPage.value = 1
+    emendasTotalPages.value = 1
 
     try {
       const response = await fetch(`${apiUrl}/api/camara/${legislatura.value}/${id}`)
@@ -232,12 +243,9 @@ export const useCamaraStore = defineStore("camara", () => {
         legislatura.value = data.legislatura_exibida
       }
 
-      currentDespesas.value = data.despesas || []
-      currentCategorias.value = data.categorias || []
-      totalDespesas.value = data.total_despesas || 0
       totalEmendas.value = data.total_emendas || 0
-      
-      // Also fetch the full list of emendas
+
+      await fetchDespesasDeputado(id)
       await fetchEmendasDeputado(id)
     } catch (e: any) {
       console.error("Erro ao buscar detalhes:", e)
@@ -357,13 +365,32 @@ export const useCamaraStore = defineStore("camara", () => {
     }
   }
 
-  const fetchEmendasDeputado = async (id: number) => {
+  const fetchEmendasDeputado = async (id: number, page: number = 1) => {
     try {
-      const response = await fetch(`${apiUrl}/api/camara/${legislatura.value}/${id}/emendas`)
+      const response = await fetch(`${apiUrl}/api/camara/${legislatura.value}/${id}/emendas?pagina=${page}`)
       if (!response.ok) throw new Error("Falha ao buscar emendas")
-      currentEmendas.value = await response.json()
+      const data = await response.json()
+      currentEmendas.value = data.emendas || []
+      emendasPage.value = data.paginacao?.pagina || 1
+      emendasTotalPages.value = data.paginacao?.total_paginas || 1
     } catch (e: any) {
       console.error("Erro ao buscar emendas do deputado:", e)
+    }
+  }
+
+  const fetchDespesasDeputado = async (id: number, page: number = 1) => {
+    loadingDetail.value = true
+    try {
+      const response = await fetch(`${apiUrl}/api/camara/${legislatura.value}/${id}/despesas?pagina=${page}`)
+      if (!response.ok) throw new Error("Falha ao buscar despesas do deputado")
+      const data = await response.json()
+      currentDespesas.value = data.despesas || []
+      currentCategorias.value = data.categorias || []
+      totalDespesas.value = data.total_despesas || 0
+      despesasPage.value = data.paginacao?.pagina || 1
+      despesasTotalPages.value = data.paginacao?.total_paginas || 1
+    } finally {
+      loadingDetail.value = false
     }
   }
 
@@ -463,8 +490,12 @@ export const useCamaraStore = defineStore("camara", () => {
     currentDespesas,
     currentCategorias,
     totalDespesas,
+    despesasPage,
+    despesasTotalPages,
     currentEmendas,
     totalEmendas,
+    emendasPage,
+    emendasTotalPages,
     loadingDetail,
     generalStats,
     deputadoStats,
@@ -473,6 +504,8 @@ export const useCamaraStore = defineStore("camara", () => {
     loadingCategorias,
     fetchDeputados,
     fetchDeputado,
+    fetchDespesasDeputado,
+    fetchEmendasDeputado,
     fetchEstatisticasGerais,
     fetchEstatisticasDeputados,
     projetosLegislativosList,

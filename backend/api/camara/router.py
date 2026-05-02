@@ -906,8 +906,98 @@ def get_perfil_deputado(legislatura: int, deputado_id: int):
         if conn:
             db.release_db_connection(conn)
 
+@router.get("/{legislatura}/{deputado_id}/despesas", summary="Obtém o extrato de despesas de um deputado")
+def get_despesas_deputado(legislatura: int, deputado_id: int, pagina: int = Query(1, ge=1)):
+    itens_per_page = 20
+    offset = (pagina - 1) * itens_per_page
+    conn = None
+    try:
+        conn = db.get_db_connection()
+        if not conn:
+            raise HTTPException(status_code=503, detail="Banco de dados indisponível")
+
+        with conn.cursor() as cursor:
+            query_count = """
+                SELECT COUNT(*)
+                FROM camara.deputados_despesas AS desp
+                JOIN camara.deputados_mandatos AS mand ON desp.mandato_id = mand.id
+                WHERE mand.deputado_id = %s
+            """
+            params_count = [deputado_id]
+            if legislatura:
+                query_count += " AND mand.legislatura_id = %s"
+                params_count.append(legislatura)
+
+            cursor.execute(query_count, tuple(params_count))
+            total_items = cursor.fetchone()[0]
+            total_paginas = (total_items + itens_per_page - 1) // itens_per_page
+
+            query_recente = """
+                SELECT
+                    desp.ano, desp.mes, desp.tipo_despesa,
+                    desp.valor_documento as valor, desp.url_documento
+                FROM camara.deputados_despesas AS desp
+                JOIN camara.deputados_mandatos AS mand ON desp.mandato_id = mand.id
+                WHERE mand.deputado_id = %s
+            """
+            params_recente = [deputado_id]
+            if legislatura:
+                query_recente += " AND mand.legislatura_id = %s"
+                params_recente.append(legislatura)
+
+            query_recente += " ORDER BY desp.ano DESC, desp.mes DESC LIMIT %s OFFSET %s"
+            params_recente.extend([itens_per_page, offset])
+            cursor.execute(query_recente, tuple(params_recente))
+            despesas_raw = cursor.fetchall()
+
+            query_categorias = """
+                SELECT desp.tipo_despesa as categoria, SUM(desp.valor_documento) as valor
+                FROM camara.deputados_despesas AS desp
+                JOIN camara.deputados_mandatos AS mand ON desp.mandato_id = mand.id
+                WHERE mand.deputado_id = %s
+            """
+            params_cat = [deputado_id]
+            if legislatura:
+                query_categorias += " AND mand.legislatura_id = %s"
+                params_cat.append(legislatura)
+
+            query_categorias += " GROUP BY desp.tipo_despesa ORDER BY valor DESC"
+            cursor.execute(query_categorias, tuple(params_cat))
+            categorias_raw = cursor.fetchall()
+            categorias = [{"categoria": r[0], "valor": float(r[1])} for r in categorias_raw]
+            total_despesas = sum(c["valor"] for c in categorias)
+
+            return {
+                "despesas": [
+                    {
+                        "ano": r[0],
+                        "mes": r[1],
+                        "tipo_despesa": r[2],
+                        "valor": float(r[3]),
+                        "url_documento": r[4]
+                    }
+                    for r in despesas_raw
+                ],
+                "total_despesas": total_despesas,
+                "categorias": categorias,
+                "paginacao": {
+                    "total": total_items,
+                    "pagina": pagina,
+                    "total_paginas": total_paginas,
+                    "itens_por_pagina": itens_per_page
+                }
+            }
+    except Exception as e:
+        logging.error(f"Erro ao buscar despesas do deputado: {e}")
+        raise HTTPException(status_code=500, detail="Erro ao processar despesas")
+    finally:
+        if conn:
+            db.release_db_connection(conn)
+
 @router.get("/{legislatura}/{deputado_id}/emendas", summary="Obtém a lista de emendas parlamentares de um deputado")
-def get_emendas_deputado(legislatura: int, deputado_id: int):
+def get_emendas_deputado(legislatura: int, deputado_id: int, pagina: int = Query(1, ge=1)):
+    itens_per_page = 15
+    offset = (pagina - 1) * itens_per_page
     conn = None
     try:
         conn = db.get_db_connection()
@@ -915,14 +1005,7 @@ def get_emendas_deputado(legislatura: int, deputado_id: int):
             raise HTTPException(status_code=503, detail="Banco de dados indisponível")
         
         with conn.cursor() as cursor:
-            query = """
-                SELECT 
-                    e.codigo_emenda as codigo,
-                    e.ano,
-                    e.tipo_emenda as tipo,
-                    e.valor_pago,
-                    e.funcao,
-                    e.localidade_gasto as localidade
+            filtros = """
                 FROM portal.emendas e
                 JOIN (
                     SELECT id, lower(nome_civil) as nome FROM camara.deputados
@@ -931,33 +1014,57 @@ def get_emendas_deputado(legislatura: int, deputado_id: int):
                 ) d ON lower(e.autor) = d.nome
                 WHERE d.id = %s
                   AND EXISTS (
-                      SELECT 1 FROM camara.deputados_mandatos m 
-                      WHERE m.deputado_id = d.id 
+                      SELECT 1 FROM camara.deputados_mandatos m
+                      WHERE m.deputado_id = d.id
                       AND CAST(e.ano AS INTEGER) BETWEEN 2023 - (57 - m.legislatura_id) * 4 AND 2023 - (57 - m.legislatura_id) * 4 + 3
                   )
             """
-            params = [deputado_id]
+            params_base = [deputado_id]
             if legislatura:
                 start_year = 2023 - (57 - legislatura) * 4
                 end_year = start_year + 3
-                query += " AND CAST(e.ano AS INTEGER) BETWEEN %s AND %s"
-                params.extend([start_year, end_year])
-            
-            query += " ORDER BY e.ano DESC, e.valor_pago DESC"
+                filtros += " AND CAST(e.ano AS INTEGER) BETWEEN %s AND %s"
+                params_base.extend([start_year, end_year])
+
+            query_count = "SELECT COUNT(*) " + filtros
+            cursor.execute(query_count, tuple(params_base))
+            total_items = cursor.fetchone()[0]
+            total_paginas = (total_items + itens_per_page - 1) // itens_per_page
+
+            query = """
+                SELECT 
+                    e.codigo_emenda as codigo,
+                    e.ano,
+                    e.tipo_emenda as tipo,
+                    e.valor_pago,
+                    e.funcao,
+                    e.localidade_gasto as localidade
+            """
+            query += filtros
+            query += " ORDER BY CAST(e.ano AS INTEGER) DESC, e.valor_pago DESC LIMIT %s OFFSET %s"
+            params = [*params_base, itens_per_page, offset]
             cursor.execute(query, tuple(params))
             res = cursor.fetchall()
             
-            return [
-                {
-                    "codigo": r[0],
-                    "ano": r[1],
-                    "tipo": r[2],
-                    "valorPago": float(r[3]),
-                    "funcao": r[4],
-                    "localidade": r[5]
+            return {
+                "emendas": [
+                    {
+                        "codigo": r[0],
+                        "ano": r[1],
+                        "tipo": r[2],
+                        "valorPago": float(r[3]),
+                        "funcao": r[4],
+                        "localidade": r[5]
+                    }
+                    for r in res
+                ],
+                "paginacao": {
+                    "total": total_items,
+                    "pagina": pagina,
+                    "total_paginas": total_paginas,
+                    "itens_por_pagina": itens_per_page
                 }
-                for r in res
-            ]
+            }
     except Exception as e:
         logging.error(f"Erro ao buscar emendas do deputado: {e}")
         raise HTTPException(status_code=500, detail="Erro ao processar emendas")
