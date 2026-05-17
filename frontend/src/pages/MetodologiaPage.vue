@@ -14,16 +14,6 @@
           <p class="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
             Saiba de onde vêm os dados, como são processados e o que cada seção do Fiscaliza Brasil oferece para você acompanhar a atuação parlamentar.
           </p>
-          <div class="mt-8 flex flex-wrap justify-center gap-4">
-            <BaseButton to="/camara/deputados" size="lg">
-              <Building2 class="mr-2 h-4 w-4" />
-              Explorar Deputados
-            </BaseButton>
-            <BaseButton to="/senado/senadores" variant="outline" size="lg">
-              <Landmark class="mr-2 h-4 w-4" />
-              Explorar Senadores
-            </BaseButton>
-          </div>
         </div>
       </section>
 
@@ -103,13 +93,6 @@
                       {{ tip }}
                     </li>
                   </ul>
-                  <router-link
-                    :to="feature.href"
-                    class="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
-                  >
-                    {{ feature.cta }}
-                    <ArrowRight class="h-4 w-4" />
-                  </router-link>
                 </div>
               </div>
               <!-- Visual -->
@@ -118,25 +101,6 @@
                   <component :is="feature.icon" class="h-16 w-16 text-primary/30" />
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Dicas rápidas -->
-      <section class="py-16">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div class="text-center mb-10">
-            <h2 class="text-3xl font-bold text-foreground">Dicas Rápidas</h2>
-          </div>
-          <div class="grid gap-4 sm:grid-cols-2">
-            <div
-              v-for="tip in tips"
-              :key="tip"
-              class="flex items-start gap-3 bg-card rounded-lg border border-border p-4"
-            >
-              <Lightbulb class="h-5 w-5 text-chart-2 mt-0.5 flex-shrink-0" />
-              <p class="text-sm text-muted-foreground leading-relaxed">{{ tip }}</p>
             </div>
           </div>
         </div>
@@ -184,15 +148,13 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import {
-  BookOpen, Building2, Landmark, Database, Receipt, FileText,
-  Vote, ChevronRight, ChevronDown, Check, ArrowRight,
-  Lightbulb,  Scale, Users
+  BookOpen, Database, Receipt, FileText,
+  Vote, ChevronRight, ChevronDown, Check, Scale, Users
 } from 'lucide-vue-next'
-import BaseButton from '@/components/ui/BaseButton.vue'
 
 // Steps
 const steps = [
-  { number: 1, title: 'Coletamos', description: 'Dados públicos oficiais da Câmara dos Deputados, Senado Federal e Portal da Transparência são coletados automaticamente via APIs.' },
+  { number: 1, title: 'Coletamos', description: 'Dados públicos oficiais da Câmara dos Deputados, Senado Federal e Portal da Transparência são integrados periodicamente à plataforma.' },
   { number: 2, title: 'Processamos', description: 'As informações são organizadas, categorizadas e armazenadas em nosso banco de dados para consulta rápida e análise.' },
   { number: 3, title: 'Você Fiscaliza', description: 'Navegue pelos dados, compare parlamentares, analise gastos e acompanhe votações de forma clara e acessível.' },
 ]
@@ -214,9 +176,9 @@ const dataSources = [
     items: [
       'Emendas individuais e de bancada',
       'Classificadas por área e município beneficiado',
-      'Status de execução e valores empenhados',
+      'Valores pagos e classificação por função',
     ],
-    fonte: 'Portal da Transparência / SIOP',
+    fonte: 'Portal da Transparência e bases oficiais integradas',
   },
   {
     title: 'Votações',
@@ -256,57 +218,39 @@ const features = [
     title: 'Veja quem mais gasta',
     description: 'O painel de despesas mostra os parlamentares e partidos que mais utilizam a cota parlamentar, com rankings, totais e análises por categoria.',
     tips: ['Filtre por partido ou estado', 'Veja gastos por categoria', 'Câmara e Senado disponíveis'],
-    href: '/camara/despesas',
-    cta: 'Ver despesas',
     icon: Receipt,
   },
   {
     title: 'Compare parlamentares lado a lado',
     description: 'Escolha dois parlamentares e compare perfis, gastos totais, categorias de despesas e últimas notas fiscais em uma única tela.',
     tips: ['Compare parlamentares do mesmo estado', 'Veja diferença percentual de gastos', 'Disponível para Câmara e Senado'],
-    href: '/camara/comparar',
-    cta: 'Iniciar comparação',
     icon: Scale,
   },
   {
     title: 'Acompanhe as votações',
     description: 'Veja como cada parlamentar votou nos projetos legislativos. Descubra padrões de votação e alinhamento partidário.',
     tips: ['Veja o placar completo de cada votação', 'Filtre por projeto legislativo ou parlamentar', 'Dados desde 2007'],
-    href: '/camara/projetos-legislativos',
-    cta: 'Ver projetos legislativos',
     icon: Vote,
   },
   {
     title: 'Acompanhe emendas parlamentares',
     description: 'Descubra quais parlamentares mais destinaram emendas, para quais municípios e em quais áreas como saúde, educação e infraestrutura.',
-    tips: ['Emendas individuais e de bancada', 'Valores empenhados e pagos', 'Classificação por área'],
-    href: '/camara/emendas',
-    cta: 'Ver emendas',
+    tips: ['Emendas individuais e de bancada', 'Valores pagos por parlamentar', 'Classificação por área'],
     icon: FileText,
   },
   {
     title: 'Conheça cada parlamentar a fundo',
     description: 'Clique em qualquer parlamentar para ver o perfil completo: histórico de gastos, despesas detalhadas, partido e informações pessoais.',
     tips: ['Veja a evolução dos gastos', 'Confira as últimas despesas', 'Acesse informações de contato'],
-    href: '/camara/deputados',
-    cta: 'Buscar parlamentar',
     icon: Users,
   },
-]
-
-// Tips
-const tips = [
-  'Acompanhe dados atualizados diariamente para uma fiscalização efetiva.',
-  'Use filtros por estado para comparar parlamentares da mesma região.',
-  'Na comparação, preste atenção nas categorias — dois deputados podem gastar o mesmo total, mas em áreas muito diferentes.',
-  'Compartilhe os dados nas redes sociais — quanto mais gente fiscalizando, melhor para a democracia.',
 ]
 
 // FAQ
 const faqs = [
   {
     question: 'De onde vêm os dados?',
-    answer: 'Todos os dados são obtidos através das APIs oficiais da Câmara dos Deputados (dadosabertos.camara.leg.br) e do Portal da Transparência do Governo Federal. São dados públicos, disponíveis para qualquer cidadão.',
+    answer: 'Os dados são obtidos de fontes oficiais, incluindo as bases da Câmara dos Deputados, do Senado Federal e do Portal da Transparência do Governo Federal. São dados públicos, disponíveis para qualquer cidadão.',
   },
   {
     question: 'O que é a Cota Parlamentar (CEAP)?',
