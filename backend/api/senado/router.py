@@ -69,7 +69,7 @@ def get_lista_senadores(legislatura: int):
                 FROM senado.parlamentar p
                 INNER JOIN senado.mandato m ON p.codigo = m.codigo_parlamentar
             """
-            params = []
+            params: list[object] = []
             if legislatura:
                 query += " WHERE m.primeira_legislatura = %s OR m.segunda_legislatura = %s"
                 params.extend([str(legislatura), str(legislatura)])
@@ -116,7 +116,7 @@ def get_estatisticas_senado(legislatura: int):
         
         with conn.cursor() as cursor:
             query_total = "SELECT COUNT(DISTINCT codigo_parlamentar) FROM senado.mandato"
-            params = []
+            params: list[object] = []
             if legislatura:
                 query_total += " WHERE primeira_legislatura = %s OR segunda_legislatura = %s"
                 params.extend([str(legislatura), str(legislatura)])
@@ -129,7 +129,7 @@ def get_estatisticas_senado(legislatura: int):
                 SELECT COALESCE(SUM(d.valor_reembolsado), 0) 
                 FROM senado.despesa_ceaps d
             """
-            params_gastos = []
+            params_gastos: list[object] = []
             if legislatura:
                 start_year = 2023 - (57 - legislatura) * 4
                 end_year = start_year + 3
@@ -162,7 +162,7 @@ def get_estatisticas_senado(legislatura: int):
             params_reg = []
             if legislatura:
                 query_regiao += " AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)"
-                params_reg.extend([str(legislatura), str(legislatura)])
+                params_reg.extend([legislatura, legislatura])
                 
             query_regiao += """
                     GROUP BY p.codigo
@@ -254,7 +254,7 @@ WHERE d.cod_senador IN (%s, %s)
                     )
                     AND CAST(d.ano AS INTEGER) BETWEEN %s AND %s
                 """
-                params_stat.extend([str(legislatura), str(legislatura), start_year, end_year])
+                params_stat.extend([legislatura, legislatura, start_year, end_year])
                 
             query_despesas += " GROUP BY d.cod_senador, d.tipo_despesa"
             cursor.execute(query_despesas, tuple(params_stat))
@@ -380,6 +380,26 @@ WHERE codigo = %s;"""
 
             if not resultado:
                 raise HTTPException(status_code=404, detail="Senador não encontrado")
+
+            uf_parlamentar = resultado[5].strip() if resultado[5] and str(resultado[5]).strip() else None
+            query_uf_mandato = """
+                SELECT NULLIF(TRIM(m.uf::text), '') as uf
+                FROM senado.mandato m
+                WHERE m.codigo_parlamentar = %s
+                  AND NULLIF(TRIM(m.uf::text), '') IS NOT NULL
+                ORDER BY
+                    CASE
+                        WHEN %s <> 0 AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s) THEN 0
+                        ELSE 1
+                    END,
+                    m.primeira_legislatura DESC NULLS LAST,
+                    m.segunda_legislatura DESC NULLS LAST
+                LIMIT 1
+            """
+            cursor.execute(query_uf_mandato, (senador_codigo, legislatura, legislatura, legislatura))
+            uf_mandato_row = cursor.fetchone()
+            uf_mandato = uf_mandato_row[0] if uf_mandato_row and uf_mandato_row[0] else None
+            uf_referencia = uf_parlamentar or uf_mandato
             
             # 2. Buscar Resumo de Emendas (Optimized with CTE)
             query_emendas = """
@@ -404,7 +424,8 @@ WHERE codigo = %s;"""
                           AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)
                     )
                 """
-                params_emendas.extend([start_year, end_year, str(legislatura), str(legislatura)])
+             
+                params_emendas.extend([start_year, end_year, legislatura, legislatura])
             else:
                 query_emendas += """
                     AND EXISTS (
@@ -455,7 +476,7 @@ WHERE codigo = %s;"""
                     "nomeCompleto": resultado[2],
                     "sexo": resultado[3],
                     "siglaPartido": resultado[4],
-                    "uf": resultado[5],
+                    "uf": uf_referencia,
                     "email": resultado[6],
                     "urlFoto": resultado[7],
                     "urlPagina": resultado[8],
@@ -598,7 +619,7 @@ def get_despesas_estatisticas(legislatura: int):
                         WHERE primeira_legislatura = %s OR segunda_legislatura = %s
                     ) m ON d.cod_senador = m.codigo_parlamentar
                 """
-                params.extend([str(legislatura), str(legislatura), start_year, end_year])
+                params.extend([legislatura, legislatura, start_year, end_year])
             
             # 1. Total de Gastos
             query_total = f"SELECT COALESCE(SUM(d.valor_reembolsado), 0) FROM senado.despesa_ceaps d {join_mandato} WHERE 1=1 {where_leg}"
@@ -912,7 +933,7 @@ def get_lista_emendas(
                           AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)
                     )
                 """)
-                params_base.extend([str(legislatura), str(legislatura)])
+                params_base.extend([legislatura, legislatura])
             else:
                 filtros_base.append("""
                     EXISTS (
@@ -1034,7 +1055,7 @@ def get_resumo_emendas(legislatura: int):
                           AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)
                     )
                 """
-                params_base.extend([start_year, end_year, str(legislatura), str(legislatura)])
+                params_base.extend([start_year, end_year, legislatura, legislatura])
             else:
                 where_base = """
                     EXISTS (
@@ -1233,7 +1254,7 @@ def get_emendas_lista_senador(legislatura: int, senador_codigo: int, pagina: int
                           AND (m.primeira_legislatura = %s OR m.segunda_legislatura = %s)
                     )
                 """)
-                params_base.extend([str(legislatura), str(legislatura)])
+                params_base.extend([legislatura, legislatura])
             else:
                 filtros_base.append("""
                     EXISTS (
@@ -1396,7 +1417,7 @@ def get_resumo_principal_senado(legislatura: int = 0):
         with conn.cursor() as cursor:
             # 1. Total de senadores
             query_total = "SELECT COUNT(DISTINCT codigo_parlamentar) FROM senado.mandato"
-            params_total = []
+            params_total: list[object] = []
             if legislatura and legislatura > 0:
                 query_total += " WHERE primeira_legislatura = %s OR segunda_legislatura = %s"
                 params_total.extend([str(legislatura), str(legislatura)])
@@ -1410,7 +1431,7 @@ def get_resumo_principal_senado(legislatura: int = 0):
                 FROM senado.despesa_ceaps d
                 WHERE d.data_despesa >= (CURRENT_DATE - INTERVAL '12 months')
             """
-            params_gastos = []
+            params_gastos: list[object] = []
             if legislatura and legislatura > 0:
                 # Para filtrar por legislatura, é necessário garantir que o senador
                 # estava em exercício no período da despesa (baseado no ano)

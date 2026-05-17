@@ -185,8 +185,8 @@
                   </div>
                   <h3 class="mt-3 text-lg font-bold text-foreground">{{ deputadoA.nome_civil }}</h3>
                   <div class="mt-2 flex flex-wrap items-center justify-center gap-2">
-                    <BaseBadge variant="outline">{{ deputadoA.sigla_partido }}</BaseBadge>
-                    <BaseBadge v-if="deputadoA.uf_nascimento" variant="outline">{{ deputadoA.uf_nascimento }}</BaseBadge>
+                    <BaseBadge variant="outline">Partido: {{ deputadoA.sigla_partido }}</BaseBadge>
+                    <BaseBadge v-if="deputadoA.sigla_uf" variant="outline">Estado: {{ deputadoA.sigla_uf }}</BaseBadge>
                   </div>
                   <div class="mt-4 space-y-2 text-sm text-left">
                     <div class="flex items-center gap-3 text-muted-foreground" v-if="deputadoA.email">
@@ -218,8 +218,8 @@
                   </div>
                   <h3 class="mt-3 text-lg font-bold text-foreground">{{ deputadoB.nome_civil }}</h3>
                   <div class="mt-2 flex flex-wrap items-center justify-center gap-2">
-                    <BaseBadge variant="outline">{{ deputadoB.sigla_partido }}</BaseBadge>
-                    <BaseBadge v-if="deputadoB.uf_nascimento" variant="outline">{{ deputadoB.uf_nascimento }}</BaseBadge>
+                    <BaseBadge variant="outline">Partido: {{ deputadoB.sigla_partido }}</BaseBadge>
+                    <BaseBadge v-if="deputadoB.sigla_uf" variant="outline">Estado: {{ deputadoB.sigla_uf }}</BaseBadge>
                   </div>
                   <div class="mt-4 space-y-2 text-sm text-left">
                     <div class="flex items-center gap-3 text-muted-foreground" v-if="deputadoB.email">
@@ -460,8 +460,10 @@ const selectedA = ref<Deputado | null>(null)
 const selectedB = ref<Deputado | null>(null)
 
 // Comparison data
-const deputadoA = ref<DeputadoDetail | null>(null)
-const deputadoB = ref<DeputadoDetail | null>(null)
+type DeputadoComparacao = DeputadoDetail & { sigla_uf?: string }
+
+const deputadoA = ref<DeputadoComparacao | null>(null)
+const deputadoB = ref<DeputadoComparacao | null>(null)
 const despesasA = ref<Despesa[]>([])
 const despesasB = ref<Despesa[]>([])
 const totalA = ref(0)
@@ -547,8 +549,13 @@ const compareDeputados = async () => {
     const data = await response.json()
     
     // O backend retorna uma lista com os dois deputados [depA, depB]
-    deputadoA.value = data[0]
-    deputadoB.value = data[1]
+    const mapDeputadoComparacao = (depData: any, fallbackUf?: string): DeputadoComparacao => ({
+      ...depData,
+      sigla_uf: depData.sigla_uf || fallbackUf || depData.uf_nascimento || '',
+    })
+
+    deputadoA.value = mapDeputadoComparacao(data[0], selectedA.value?.estado)
+    deputadoB.value = mapDeputadoComparacao(data[1], selectedB.value?.estado)
     
     despesasA.value = data[0].despesas || []
     despesasB.value = data[1].despesas || []

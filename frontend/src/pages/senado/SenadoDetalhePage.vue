@@ -59,8 +59,8 @@
                   <h1 class="mt-4 text-xl font-bold text-foreground">{{ store.currentSenador.nome_civil }}</h1>
 
                   <div class="mt-2 flex flex-wrap items-center justify-center gap-2">
-                    <BaseBadge variant="outline">{{ store.currentSenador.sigla_partido }}</BaseBadge>
-                    <BaseBadge v-if="store.currentSenador.uf" variant="outline">{{ store.currentSenador.uf }}</BaseBadge>
+                    <BaseBadge variant="outline">Partido: {{ store.currentSenador.sigla_partido }}</BaseBadge>
+                    <BaseBadge v-if="store.currentSenador.uf" variant="outline">Estado: {{ store.currentSenador.uf }}</BaseBadge>
                   </div>
 
                   <div class="mt-6 space-y-3 text-sm text-left">

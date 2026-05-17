@@ -185,8 +185,8 @@
                   </div>
                   <h3 class="mt-3 text-lg font-bold text-foreground">{{ senadorA.nome_civil }}</h3>
                   <div class="mt-2 flex flex-wrap items-center justify-center gap-2">
-                    <BaseBadge variant="outline">{{ senadorA.sigla_partido }}</BaseBadge>
-                    <BaseBadge variant="outline">{{ senadorA.uf }}</BaseBadge>
+                    <BaseBadge variant="outline">Partido: {{ senadorA.sigla_partido }}</BaseBadge>
+                    <BaseBadge v-if="senadorA.uf" variant="outline">Estado: {{ senadorA.uf }}</BaseBadge>
                   </div>
                   <div class="mt-4 space-y-2 text-sm text-left">
                     <div class="flex items-center gap-3 text-muted-foreground" v-if="senadorA.email">
@@ -214,8 +214,8 @@
                   </div>
                   <h3 class="mt-3 text-lg font-bold text-foreground">{{ senadorB.nome_civil }}</h3>
                   <div class="mt-2 flex flex-wrap items-center justify-center gap-2">
-                    <BaseBadge variant="outline">{{ senadorB.sigla_partido }}</BaseBadge>
-                    <BaseBadge variant="outline">{{ senadorB.uf }}</BaseBadge>
+                    <BaseBadge variant="outline">Partido: {{ senadorB.sigla_partido }}</BaseBadge>
+                    <BaseBadge v-if="senadorB.uf" variant="outline">Estado: {{ senadorB.uf }}</BaseBadge>
                   </div>
                   <div class="mt-4 space-y-2 text-sm text-left">
                     <div class="flex items-center gap-3 text-muted-foreground" v-if="senadorB.email">
@@ -524,7 +524,7 @@ const compareSenadores = async () => {
     const data = await response.json()
     
     // Adapt the backend structure to the frontend needs
-    const buildSenadorEquivalent = (senadorData: any, despesasTotais: any[]) => {
+    const buildSenadorEquivalent = (senadorData: any, despesasTotais: any[], fallbackUf?: string) => {
       const minhasDespesas = despesasTotais.filter((d: any) => d.senador === senadorData.codigo)
       const totalGasto = minhasDespesas.reduce((acc: number, curr: any) => acc + curr.total, 0)
       const categorias = minhasDespesas.map((d: any) => ({ categoria: d.tipoDespesa, valor: d.total }))
@@ -535,14 +535,15 @@ const compareSenadores = async () => {
         nome_civil: senadorData.nomeCompleto || senadorData.nomeParlamentar,
         nome_parlamentar: senadorData.nomeParlamentar,
         sigla_partido: senadorData.siglaPartido,
+        uf: senadorData.uf || fallbackUf || '',
         foto: senadorData.urlFoto,
         total_gasto: totalGasto,
         categorias: categorias
       }
     }
 
-    senadorA.value = buildSenadorEquivalent(data.senador1, data.despesas)
-    senadorB.value = buildSenadorEquivalent(data.senador2, data.despesas)
+    senadorA.value = buildSenadorEquivalent(data.senador1, data.despesas, selectedA.value?.estado)
+    senadorB.value = buildSenadorEquivalent(data.senador2, data.despesas, selectedB.value?.estado)
     
     despesasA.value = data.despesas_recentes_1 || []
     despesasB.value = data.despesas_recentes_2 || []
